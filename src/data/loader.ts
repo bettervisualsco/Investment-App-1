@@ -24,6 +24,8 @@ export interface SyncResult {
   changed: string[]
   /** Files that changed on the website but couldn't be downloaded (the old copy is kept). */
   failed: string[]
+  /** Files no longer on the website, so removed from the device. */
+  removed: string[]
   meta: Meta | null
   /** When the website was last reached (ms), even if that was an earlier sync. */
   checkedAt: number | null
@@ -58,6 +60,7 @@ export async function syncData(opts: SyncOptions = {}): Promise<SyncResult> {
       status: 'offline',
       changed: [],
       failed: [],
+      removed: [],
       meta: saved?.meta ?? null,
       checkedAt: saved?.checkedAt ?? null,
       error: e instanceof Error ? e.message : String(e),
@@ -100,7 +103,7 @@ export async function syncData(opts: SyncOptions = {}): Promise<SyncResult> {
   const checkedAt = Date.now()
   await db.info.put({ key: 'meta', meta, hashes, checkedAt })
   changed.sort()
-  return { status: changed.length ? 'updated' : 'unchanged', changed, failed: failed.sort(), meta, checkedAt }
+  return { status: changed.length || gone.length ? 'updated' : 'unchanged', changed, failed: failed.sort(), removed: gone, meta, checkedAt }
 }
 
 /** A data file from the device's saved copy (undefined if it hasn't been downloaded yet). */

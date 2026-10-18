@@ -133,7 +133,7 @@ export function RealismSettings({
                 Use historical average{historicalInflation ? ` (${historicalInflation.rate.toFixed(2)}%)` : ''}
               </button>
               <span className="toggle-hint">
-                {historicalInflation ? historicalInflation.label : 'Needs the price history from the data update (stage 2), so it isn’t ready yet.'}
+                {historicalInflation ? historicalInflation.label : 'Waiting for the inflation data to download. Open the app online once to get it.'}
               </span>
             </div>
             <div className="block-hint">

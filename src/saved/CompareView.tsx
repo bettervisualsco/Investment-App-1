@@ -50,6 +50,7 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
   const outcomes: PlanOutcome[] = useMemo(() => plans.map(runPlan), [plans])
   const results = useMemo(() => outcomes.map((o) => (o.ok ? o.result : null)), [outcomes])
   const mixedCurrency = new Set(plans.map((p) => p.currency)).size > 1
+  const anyPrediction = plans.some((p) => p.prediction?.mode === 'prediction')
   const mixedSwitches = new Set(results.filter((r) => r).map((r) => switchesText(r!))).size > 1
   const overlapping = useMemo(() => {
     const same = (a: ManualResult, b: ManualResult) => a.series.length === b.series.length && a.series.every((p, i) => p.day === b.series[i].day && p.balance === b.series[i].balance)
@@ -78,6 +79,11 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
           ))}
         </ul>
         {results.some(Boolean) ? <CompareChart plans={plans} results={results} /> : <p className="block-hint">None of these plans can be worked out yet.</p>}
+        {anyPrediction && (
+          <p className="block-hint">
+            Compare uses each plan’s typed return rates (Manual mode), even for plans set to Prediction mode. Open a plan to see its worst, likely and best results.
+          </p>
+        )}
         {mixedSwitches && (
           <p className="block-hint">These plans use different Fees, Tax and Inflation switches, so their numbers aren’t like for like. The chart shows amounts before inflation.</p>
         )}
@@ -101,6 +107,7 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
             </thead>
             <tbody>
               <Row label="At the end" outcomes={outcomes} plans={plans} strong value={(r, p) => money(r.finalBalance, p.currency)} />
+              <Row label="Mode" outcomes={outcomes} plans={plans} value={(_, p) => (p.prediction?.mode === 'prediction' ? 'Prediction (shown with typed rates)' : 'Manual')} />
               <Row label="Switches on" outcomes={outcomes} plans={plans} value={(r) => switchesText(r)} />
               <Row label="In today’s dollars" outcomes={outcomes} plans={plans} value={(r, p) => (r.switches.inflation ? money(r.finalReal, p.currency) : '—')} />
               <Row label="Fees paid" outcomes={outcomes} plans={plans} value={(r, p) => (r.switches.fees ? money(r.fees.total, p.currency) : '—')} />

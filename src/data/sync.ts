@@ -51,7 +51,8 @@ export function refreshData(): Promise<SyncResult> {
     set({ status: 'checking' })
     try {
       const result = await syncData(options)
-      const changedAnything = result.changed.length > 0
+      // A removed file counts too, so open screens stop showing it.
+      const changedAnything = result.changed.length > 0 || result.removed.length > 0
       set({
         status: result.status === 'offline' ? 'offline' : 'ready',
         meta: result.meta ?? state.meta,
@@ -59,7 +60,7 @@ export function refreshData(): Promise<SyncResult> {
         last: result,
         version: changedAnything ? state.version + 1 : state.version,
       })
-      if (changedAnything && result.meta) changeListeners.forEach((l) => l(result.changed, result.meta as Meta))
+      if (changedAnything && result.meta) changeListeners.forEach((l) => l([...result.changed, ...result.removed], result.meta as Meta))
       return result
     } finally {
       running = null
