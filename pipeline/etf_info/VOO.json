@@ -1,0 +1,53 @@
+{
+  "name": {
+    "value": "Vanguard S&P 500 ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  },
+  "index": {
+    "value": "S&P 500 Index",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  },
+  "mer": {
+    "value": 0.03,
+    "unit": "% p.a.",
+    "note": "Expense ratio as of 28 Apr 2026",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  },
+  "yield": {
+    "value": 1.06,
+    "unit": "% a year",
+    "note": "Trailing 12 months of dividends / price on 16 Oct 2026 (30-day SEC yield 1.00% at 30 Sep 2026)",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Not applicable (US fund). US withholding tax applies to Australians instead.",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  },
+  "exchange": {
+    "value": "NYSE Arca",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  },
+  "currency": {
+    "value": "USD",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  },
+  "inception": {
+    "value": "2010-09-07",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/voo"
+  }
+}

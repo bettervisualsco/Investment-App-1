@@ -1,0 +1,55 @@
+{
+  "name": {
+    "value": "Betashares Nasdaq 100 ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
+  },
+  "index": {
+    "value": "Nasdaq-100 Index",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
+  },
+  "mer": {
+    "value": 0.48,
+    "unit": "% p.a.",
+    "note": "Management fee 0.38% + expenses capped at 0.10%",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
+  },
+  "yield": {
+    "value": 1.4,
+    "unit": "% a year",
+    "note": "12-month distribution yield as at 30 Sep 2026",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Not stated; US shares carry no franking credits",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
+  },
+  "inception": {
+    "value": "2015-05-26",
+    "note": "Fund inception and ASX listing",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
+  },
+  "distributions": {
+    "value": "twice a year",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
+  }
+}

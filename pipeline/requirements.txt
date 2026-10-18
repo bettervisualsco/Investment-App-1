@@ -1,0 +1,9 @@
+# Data pipeline dependencies (installed by GitHub Actions and in pipeline/.venv on the Mac).
+# Versions are pinned so a surprise upgrade can't break the scheduled job.
+# GitHub Actions uses Python 3.12. The Mac only has Python 3.9, and the newest yfinance needs 3.10+.
+yfinance==1.7.0; python_version >= "3.10"
+yfinance==1.2.0; python_version < "3.10"
+pandas==2.3.3
+requests==2.32.5
+tzdata==2026.5
+pytest==8.4.2

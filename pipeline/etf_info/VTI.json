@@ -1,0 +1,54 @@
+{
+  "name": {
+    "value": "Vanguard Morningstar Total Stock Market ETF",
+    "note": "Renamed from Vanguard Total Stock Market ETF on 29 Jul 2026",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  },
+  "index": {
+    "value": "Morningstar US Total Market Index (formerly CRSP US Total Market Index)",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  },
+  "mer": {
+    "value": 0.03,
+    "unit": "% p.a.",
+    "note": "Expense ratio as of 28 Apr 2026",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  },
+  "yield": {
+    "value": 1.06,
+    "unit": "% a year",
+    "note": "Trailing 12 months of dividends / price on 16 Oct 2026 (30-day SEC yield 1.03% at 30 Sep 2026)",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Not applicable (US fund)",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  },
+  "exchange": {
+    "value": "NYSE Arca",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  },
+  "currency": {
+    "value": "USD",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  },
+  "inception": {
+    "value": "2001-05-24",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://investor.vanguard.com/investment-products/etfs/profile/vti"
+  }
+}

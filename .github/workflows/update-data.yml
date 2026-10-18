@@ -1,0 +1,93 @@
+# Fetches market data on a schedule, saves it to data/, and redeploys the website.
+#
+# GitHub's cron uses UTC and ignores daylight saving, so these schedules cover the widest UTC
+# range that Sydney (AEST/AEDT) or New York (EST/EDT) could need. pipeline/datapipe/schedule.py
+# then checks the real local time and only does what is due. Scheduled runs often start a few
+# minutes late; that's expected. Minutes 2/17/32/47 avoid the busy top of the hour.
+
+name: Update market data
+
+on:
+  schedule:
+    - cron: '2,17,32,47 23 * * 0-4'    # ASX 10:00-11:00 Sydney in summer time (Mon-Fri in Sydney = Sun-Thu in UTC)
+    - cron: '2,17,32,47 0-7 * * 1-5'   # ASX rest of the day in both seasons, then the day's closing prices
+    - cron: '2,17,32,47 13-21 * * 1-5' # NYSE 9:30-16:00 New York in both seasons, then the day's closing prices
+    - cron: '23 9 * * *'               # every day 7-8pm Sydney: inflation, cash rate, exchange rates, catch-up
+  workflow_dispatch:
+    inputs:
+      tasks:
+        description: 'What to update'
+        type: choice
+        default: auto
+        options: [auto, all, 'daily_asx,daily_us', 'intraday_asx,intraday_us', macro, proxies]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      deploy: ${{ steps.run.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pipeline/requirements.txt
+
+      - name: Install the pipeline's Python packages
+        run: pip install -r pipeline/requirements.txt
+
+      # Intraday prices aren't kept in git (they change every 15 minutes). The live website has
+      # the latest copy, so bring it back first. Skipped quietly until the website exists.
+      - name: Bring back live-only files from the website
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          NAME="${GITHUB_REPOSITORY#*/}"
+          python pipeline/run.py restore-live --base-url "https://${OWNER}.github.io/${NAME}/"
+
+      - name: Run the data pipeline
+        id: run
+        run: python pipeline/run.py update --tasks "${{ inputs.tasks || 'auto' }}"
+
+      - name: Save new data to the repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data pipeline/cache
+          # meta.json changes on every run; only commit when real data changed.
+          if git diff --cached --name-only | grep -qv '^data/meta.json$'; then
+            git commit -q -m "Update market data $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git pull -q --rebase --autostash
+            git push -q
+          else
+            git reset -q
+            echo "No data changes to save."
+          fi
+
+      - name: Hand the data to the deploy job
+        if: steps.run.outputs.deploy == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: data
+          path: data/
+          retention-days: 1
+
+  deploy:
+    needs: update
+    if: needs.update.outputs.deploy == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      data-artifact: data

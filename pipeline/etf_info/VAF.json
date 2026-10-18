@@ -1,0 +1,60 @@
+{
+  "name": {
+    "value": "Vanguard Australian Fixed Interest Index ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  },
+  "index": {
+    "value": "Bloomberg AusBond Composite 0+ Yr Index",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  },
+  "mer": {
+    "value": 0.1,
+    "unit": "% p.a.",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  },
+  "yield": {
+    "value": 3.49,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026. Vanguard's 1-year income return was 3.38% to 30 Sep 2026.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.vanguard.com.au/personal/api/data/products/characteristics/8207"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Bonds pay no franked income",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  },
+  "inception": {
+    "value": "2012-10-29",
+    "note": "Fund inception; listed on the ASX 31 Oct 2012",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  },
+  "duration": {
+    "value": 4.8,
+    "unit": "years",
+    "note": "Effective duration at 30 Sep 2026 (yield to maturity 5.36%)",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
+  }
+}

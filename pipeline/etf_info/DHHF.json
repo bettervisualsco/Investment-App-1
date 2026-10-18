@@ -1,0 +1,64 @@
+{
+  "name": {
+    "value": "Betashares Diversified All Growth ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
+  },
+  "index": {
+    "value": "None (actively allocated; compared with a reference benchmark)",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
+  },
+  "mer": {
+    "value": 0.19,
+    "unit": "% p.a.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
+  },
+  "yield": {
+    "value": 2.0,
+    "unit": "% a year",
+    "note": "12-month distribution yield as at 30 Sep 2026",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
+  },
+  "franking": {
+    "value": null,
+    "unit": "%",
+    "note": "Not published. Only the ~37% Australian shares part pays franked income.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
+  },
+  "inception": {
+    "value": "2019-12-03",
+    "note": "Fund inception; listed 5 Dec 2019. The current all-growth strategy started 15 Dec 2020.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
+  },
+  "allocation": {
+    "value": {
+      "Australian shares (A200)": 37,
+      "International shares (VTI, SPDW, SPEM; unhedged)": 63
+    },
+    "unit": "% target",
+    "note": "PDS dated 24 Jul 2026. The international split follows world market sizes, reset each quarter.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/files/collateral/pds/Diversified-Funds-pds.pdf"
+  }
+}

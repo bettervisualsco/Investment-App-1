@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python (data pipeline)
+pipeline/.venv
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Live-only data: intraday prices are deployed to the website but not kept in git
+data/intraday/
+
+# Claude Code local settings
+.claude/

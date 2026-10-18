@@ -1,0 +1,57 @@
+{
+  "name": {
+    "value": "Invesco QQQ ETF",
+    "note": "Formerly Invesco QQQ Trust, Series 1",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.invesco.com/qqq-etf/en/home.html"
+  },
+  "index": {
+    "value": "Nasdaq-100 Index",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.invesco.com/qqq-etf/en/home.html"
+  },
+  "mer": {
+    "value": 0.18,
+    "unit": "% p.a.",
+    "note": "Total expense ratio since it became an open-end ETF (Dec 2025); was 0.20%",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.invesco.com/qqq-etf/en/home.html"
+  },
+  "yield": {
+    "value": 0.44,
+    "unit": "% a year",
+    "note": "Trailing 12 months, from a secondary source (Invesco's site blocks automated reading)",
+    "checkedOn": "2026-10-18",
+    "source": "https://stockanalysis.com/etf/qqq/dividend/",
+    "verified": false
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Not applicable (US fund)",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.invesco.com/qqq-etf/en/home.html"
+  },
+  "exchange": {
+    "value": "Nasdaq",
+    "checkedOn": "2026-10-18",
+    "source": "https://stockanalysis.com/etf/qqq/dividend/",
+    "verified": false
+  },
+  "currency": {
+    "value": "USD",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.invesco.com/qqq-etf/en/home.html"
+  },
+  "inception": {
+    "value": "1999-03-10",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.invesco.com/qqq-etf/en/home.html"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://stockanalysis.com/etf/qqq/dividend/",
+    "verified": false
+  }
+}

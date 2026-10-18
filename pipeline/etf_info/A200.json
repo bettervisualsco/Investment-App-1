@@ -1,0 +1,54 @@
+{
+  "name": {
+    "value": "Betashares Australia 200 ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  },
+  "index": {
+    "value": "Solactive Australia 200 Index",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  },
+  "mer": {
+    "value": 0.04,
+    "unit": "% p.a.",
+    "note": "Management fee and costs; Betashares notes certain additional costs apply",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  },
+  "yield": {
+    "value": 3.3,
+    "unit": "% a year",
+    "note": "12-month distribution yield as at 30 Sep 2026 (4.3% including franking credits)",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  },
+  "franking": {
+    "value": 71.1,
+    "unit": "%",
+    "note": "Total franking level over the 12 months to 30 Sep 2026",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  },
+  "inception": {
+    "value": "2018-05-07",
+    "note": "Fund inception; listed on the ASX 8 May 2018",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.betashares.com.au/fund/australia-200-etf/"
+  }
+}
