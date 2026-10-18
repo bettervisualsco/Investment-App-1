@@ -4,6 +4,7 @@ import { decodeDaily } from '../data/decode'
 import type { DailyFile, IntradayFile } from '../data/types'
 import { maxDrawdown } from '../engine/bootstrap'
 import {
+  addBackFee,
   addMonthsISO,
   asGrowth,
   averageYearly,
@@ -222,5 +223,16 @@ describe('latest price', () => {
       { time: 1600, value: 103 },
     ])
     expect(intradayPoints(undefined, 'VAS')).toEqual([])
+  })
+})
+
+describe('Use in Planner', () => {
+  it('adds the fund fee back, the way the Planner takes it off (1/12 each month)', () => {
+    const gross = addBackFee(0.08, 0.07)
+    // taking 0.07%/12 off for 12 months gets back to exactly 8%
+    expect((1 + gross) * Math.pow(1 - 0.0007 / 12, 12) - 1).toBeCloseTo(0.08, 12)
+    expect(gross - 0.08).toBeGreaterThan(0.0007)
+    expect(gross - 0.08).toBeLessThan(0.0008)
+    expect(addBackFee(0.08, 0)).toBeCloseTo(0.08, 12)
   })
 })

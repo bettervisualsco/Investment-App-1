@@ -292,3 +292,14 @@ export function toAud(dates: string[], usd: ArrayLike<number>, rate: (date: stri
     return r ? usd[i] / r : null
   })
 }
+
+// ---- Use in Planner ------------------------------------------------------------------------------
+
+/**
+ * The Planner's return rate is BEFORE the fund's fee (its Fees switch takes the fee off, 1/12 each
+ * month). Market prices are already AFTER the fee, so add it back: the rate that, after the
+ * Planner takes `merPct` % a year off monthly, leaves `net`.
+ */
+export function addBackFee(net: number, merPct: number): number {
+  return (1 + net) / Math.pow(1 - merPct / 100 / 12, 12) - 1
+}

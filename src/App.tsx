@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { InflationIcon, MarketsIcon, PlannerIcon, SavedIcon, SettingsIcon } from './components/Icons'
 import { ComingSoon, DisclaimerSheet, SettingsPage } from './pages/OtherPages'
+import { MarketsPage } from './markets/MarketsPage'
 import { PlannerPage } from './planner/PlannerPage'
 import { SaveBar } from './saved/SaveBar'
 import { SavedPage } from './saved/SavedPage'
@@ -71,7 +72,7 @@ export default function App() {
           ) : (
             <div className="loading">Loading your plan…</div>
           ))}
-        {tab === 'markets' && <ComingSoon title="Markets" stage={5} what="Live-ish ETF prices, detailed charts and prediction lines." />}
+        {tab === 'markets' && <MarketsPage plan={plan} setPlan={setPlan} />}
         {tab === 'inflation' && <ComingSoon title="Inflation" stage={6} what="Australian and US inflation history, predictions and a purchasing power calculator." />}
         {tab === 'saved' && <SavedPage plan={plan} setPlan={setPlan} saved={savedPlans} openPlanner={() => go('planner')} />}
         {tab === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} onShowSaved={() => go('saved')} />}
