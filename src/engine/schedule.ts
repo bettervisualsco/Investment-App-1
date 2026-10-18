@@ -31,11 +31,36 @@ export interface PhaseRange {
   end: number
 }
 
-/** Phases run back to back from the plan's start date. */
+/** Calendar months in a month-based duration (months, years, decades), or null for days, weeks and fortnights. */
+function monthsIn(duration: Duration): number | null {
+  if (duration.unit === 'months') return duration.count
+  if (duration.unit === 'years') return 12 * duration.count
+  if (duration.unit === 'decades') return 120 * duration.count
+  return null
+}
+
+/**
+ * Phases run back to back from the plan's start date.
+ *
+ * Month-based ends are counted from an anchor (the plan's start, or the end of the last phase measured in days,
+ * weeks or fortnights), never from the previous phase's end. Otherwise a clamped month end would carry on:
+ * from 31 Jan, "1 month" ends on 28 Feb and "11 more months" should end on 31 Jan, not 28 Jan.
+ */
 export function phaseRanges(plan: Plan): PhaseRange[] {
   let start = toDayNumber(plan.startDate)
+  let anchor = fromDayNumber(start)
+  let monthsSinceAnchor = 0
   return plan.phases.map((phase) => {
-    const end = addDuration(start, phase.duration)
+    const months = monthsIn(phase.duration)
+    let end: number
+    if (months === null) {
+      end = addDuration(start, phase.duration)
+      anchor = fromDayNumber(end)
+      monthsSinceAnchor = 0
+    } else {
+      monthsSinceAnchor += months
+      end = toDayNumber(addMonths(anchor, monthsSinceAnchor))
+    }
     const range = { phaseId: phase.id, start, end }
     start = end
     return range

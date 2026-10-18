@@ -10,6 +10,8 @@
 //   2. Fees on: waiting cash is invested if it's a buying day (brokerage etc.).
 //   3. One day of growth. Waiting cash earns the cash rate.
 //   4. Last day of a month: the management fee (MER) and a monthly platform fee come off.
+//      The MER builds up day by day at the rate of the phase you're in that day, so a
+//      phase that starts mid-month pays its own fee for its own days.
 //   5. Tax on: distributions are paid on their payout days and taxed.
 //   6. Last day of a financial year (30 June) or of the plan: a yearly platform
 //      fee, the end-of-plan sale (if chosen), and the year's tax is settled.
@@ -17,6 +19,9 @@
 // How the investment is tracked: you hold `units`, each worth `price` cents,
 // plus `accrued`: distribution income built up inside the fund since the last
 // payout (it counts as part of your balance, like a real fund's unit price).
+// With Tax on, the franked part, the foreign part and the foreign tax of that
+// income are tracked as it builds up, using each day's phase, so a payout after
+// a phase change uses each phase's settings for its own days.
 // With Tax on, every purchase is kept as its own lot (units, cost base, date)
 // for capital gains tax. Sales use the oldest lots first.
 //
@@ -30,7 +35,7 @@ import { brokerageFor, grossForNet, saleCosts } from './fees'
 import type { MarketPath } from './path'
 import { emptyYearIncome, frankingCredit, tableFor, yearTax, type TaxYearContext, type YearIncome } from './tax'
 import { dayToISO, toDayNumber } from './dates'
-import { CGT_REFORM } from './taxTables'
+import { CGT_REFORM, WORKING_OFFSET } from './taxTables'
 
 export interface Switches {
   fees: boolean
@@ -212,7 +217,12 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   let price = 1 // cents per unit; units start as whole cents
   let units = 0
   let accrued = 0
+  // Tax on: how much of `accrued` is franked, and the foreign tax already taken from its foreign part.
+  let accFranked = 0
+  let accForeignTax = 0
   let cash = 0
+  // Fees on: the management fee built up so far this month (sum of each day's yearly MER %).
+  let merDays = 0
   // Purchase lots (Tax on only), oldest first. `head` is the oldest lot still held.
   const lotUnits: number[] = []
   const lotCost: number[] = []
@@ -311,8 +321,13 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
       } else into.losses += -gain
     }
     if (t < reformT) return addGain(proceeds - cost)
-    // From 1 July 2027: the gain up to then keeps the old rules; the gain after uses an inflation-adjusted cost base.
-    addGain(lotPre[i] * share)
+    // From 1 July 2027: the gain up to then is a "deferred" gain under the old rules (with the 50% discount if held
+    // at least 12 months by the day of this sale); the gain after uses an inflation-adjusted cost base.
+    const pre = lotPre[i] * share
+    if (pre >= 0) {
+      if (longTerm) into.deferredDiscountableGains += pre
+      else into.deferredOtherGains += pre
+    } else into.losses += -pre
     if (proceeds < cost) into.losses += cost - proceeds
     else if (longTerm) into.indexedGains += Math.max(0, proceeds - Math.max(cost, (cost * cpi) / lotCpi[i]))
     else into.otherGains += proceeds - cost
@@ -363,10 +378,13 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     if (all) {
       units = 0
       accrued = 0
+      accFranked = accForeignTax = 0
       head = lotUnits.length
     } else {
       units -= units * share
       accrued -= accrued * share
+      accFranked -= accFranked * share
+      accForeignTax -= accForeignTax * share
     }
     return net
   }
@@ -380,10 +398,13 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     return got
   }
 
+  /** Money settle() may use after cash and selling run out: a withdrawal that emptied the investment, before it's paid to you. */
+  let reserve = 0
+
   /**
    * Re-works this year's tax from the running totals and charges (or refunds) the difference.
-   * Tax is paid first from `pot` (e.g. the distribution being taxed), then from cash, then by selling.
-   * Returns what's left in the pot (refunds are added to it).
+   * Tax is paid first from `pot` (e.g. the distribution being taxed), then from cash, then by selling,
+   * then from `reserve`. Returns what's left in the pot (refunds are added to it).
    */
   const settle = (t: number, pot = 0): number => {
     for (let i = 0; i < 8; i++) {
@@ -395,6 +416,11 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
         pot -= fromPot
         let paid = fromPot
         if (due - fromPot > 0) paid += takeFromBalance(due - fromPot, t)
+        if (paid < due && reserve > 0) {
+          const fromReserve = Math.min(reserve, due - paid)
+          reserve -= fromReserve
+          paid += fromReserve
+        }
         if (paid < due - 0.5) {
           tax.unpaid += due - paid
           warn('unpaid', 'At some point there wasn’t enough left in the investment to pay the estimated tax, so part of it is shown as unpaid.')
@@ -434,16 +460,31 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
         got += remaining
       } else got += net
     }
-    if (got < wanted - 0.5) {
+    // Tax on the sale comes out of what's left in the investment. If the withdrawal took everything, there's
+    // nothing left, so the tax comes out of the money being withdrawn and you get the rest.
+    let taxFromWithdrawal = 0
+    if (taxOn) {
+      reserve = got
+      const left = settle(t)
+      taxFromWithdrawal = got - reserve
+      reserve = 0
+      got -= taxFromWithdrawal
+      putBack(left, t)
+    }
+    if (got + taxFromWithdrawal < wanted - 0.5) {
       warnings.push(
-        `“${name || 'Withdrawal'}” on ${dayToISO(c.startDay + t)} wanted $${(wanted / 100).toFixed(2)} but only $${(got / 100).toFixed(2)} was there, so the balance went to $0.`,
+        `“${name || 'Withdrawal'}” on ${dayToISO(c.startDay + t)} wanted $${(wanted / 100).toFixed(2)} but only $${((got + taxFromWithdrawal) / 100).toFixed(2)} was there, so the balance went to $0.` +
+          (taxFromWithdrawal > 0.5 ? ` $${(taxFromWithdrawal / 100).toFixed(2)} of that went on the estimated tax on the sale, so $${(got / 100).toFixed(2)} was paid out.` : ''),
+      )
+    } else if (taxFromWithdrawal > 0.5) {
+      warnings.push(
+        `“${name || 'Withdrawal'}” on ${dayToISO(c.startDay + t)} sold everything, so the estimated tax on the sale ($${(taxFromWithdrawal / 100).toFixed(2)}) came out of it and $${(got / 100).toFixed(2)} was paid out.`,
       )
     }
     totalWithdrawn += got
     year.withdrawals += got
     year.real.withdrawals += got / cpi
     real.withdrawn += got / cpi
-    if (taxOn) putBack(settle(t), t)
   }
 
   const chargeFee = (amount: number, t: number) => {
@@ -454,11 +495,10 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
 
   const payDistribution = (t: number) => {
     const d = accrued
-    accrued = 0
-    const dist = ph[c.phaseOf[t]].distribution
-    const credits = frankingCredit((d * dist.frankedPct) / 100)
-    const foreignPart = (d * dist.foreignPct) / 100
-    const foreignTax = dist.foreignTaxPct < 100 ? (foreignPart * dist.foreignTaxPct) / (100 - dist.foreignTaxPct) : 0
+    // Each phase's franked %, foreign % and foreign tax % applied to the income built up while it was in force.
+    const credits = frankingCredit(accFranked)
+    const foreignTax = accForeignTax
+    accrued = accFranked = accForeignTax = 0
     income.distributions += d
     income.frankingCredits += credits
     income.foreignTax += foreignTax
@@ -499,9 +539,16 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     if (!taxOn) return
     let index = 1
     if (ts.brackets === 'indexed' && info.fy > latestTableFy) {
-      // Thresholds rise each year with inflation, starting from the latest tax year we have (or the plan's start, if later).
-      const base = c.fys.findIndex((f) => f.fy === latestTableFy)
-      index = cpi / (base >= 0 ? cpiAtFyStart[base] : 1)
+      // Thresholds rise each year with inflation: prices on this year's 1 July compared with 1 July of the latest
+      // tax year we have (1 July 2027), whenever the plan starts. Days before the plan's start use the first
+      // inflation rate (compile.ts works those out).
+      const julyCpi = info.julyCpi ?? cpi
+      let baseCpi = c.bracketBaseCpi
+      if (baseCpi === null) {
+        const base = c.fys.findIndex((f) => f.fy === latestTableFy)
+        baseCpi = base >= 0 ? cpiAtFyStart[base] : 1
+      }
+      index = julyCpi / baseCpi
     }
     ctx = {
       year: tableFor(r.taxYears, info.fy),
@@ -512,6 +559,8 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
       marginalRate: info.marginalRate,
       minorRates: info.minor && ts.minorMoney === 'family',
       cgtMinimumPct: ts.cgtRules === 'law' && ts.cgtMinimum && info.lastT >= reformT ? CGT_REFORM.minimumRatePct : 0,
+      // Working Australians tax offset (from 2027–28), with "other income" counted as job income.
+      workingOffsetMax: ts.basis === 'income' && info.fy >= WORKING_OFFSET.fromFy ? WORKING_OFFSET.max : 0,
     }
     income = emptyYearIncome()
     income.losses = carriedLosses
@@ -599,7 +648,16 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
       const before = holdings()
       const after = before * g
       price = (price * g) / h
+      const grown = accrued * g
       accrued = after - units * price
+      if (taxOn) {
+        // Split today's income by this phase's settings; what was already built up just grows.
+        const earned = accrued - grown
+        const dist = rp.distribution
+        const foreign = (earned * dist.foreignPct) / 100
+        accFranked = accFranked * g + (earned * dist.frankedPct) / 100
+        accForeignTax = accForeignTax * g + (dist.foreignTaxPct < 100 ? (foreign * dist.foreignTaxPct) / (100 - dist.foreignTaxPct) : 0)
+      }
       const growth = after - before
       totalGrowth += growth
       year.growth += growth
@@ -616,13 +674,18 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     }
 
     // 4. Last day of a month: management fee (MER) and monthly platform fee, for the part of the month in the plan.
+    //    The MER is 1/12 of the yearly fee for a whole month, built up day by day at the rate of each day's phase.
+    if (feesOn) merDays += rp.mer
     const monthShare = c.monthEndShare[t]
     if (feesOn && monthShare > 0) {
-      if (rp.mer > 0) {
-        const keep = 1 - (rp.mer / 100 / 12) * monthShare
+      if (merDays > 0) {
+        const keep = 1 - merDays / (100 * 12 * c.dim[t])
+        merDays = 0
         const fee = holdings() * (1 - keep)
         price *= keep
         accrued *= keep
+        accFranked *= keep
+        accForeignTax *= keep
         addFee('mer', fee)
       }
       if (fs.platformFeePer === 'month') chargeFee(fs.platformFee * monthShare, t)

@@ -18,6 +18,10 @@ export const TAX_SOURCES = {
   minorsIncome: 'https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/income-you-must-declare/your-income-if-you-are-under-18-years-old',
   cgtDiscount: 'https://www.ato.gov.au/individuals-and-families/investments-and-assets/capital-gains-tax/calculating-your-cgt/cgt-discount',
   cgtReform: 'https://www.ato.gov.au/individuals-and-families/investments-and-assets/capital-gains-tax/capital-gains-tax-reform',
+  // Treasury Laws Amendment (Tax Reform No. 1) Act 2026 (Act No. 49 of 2026): the Bill as passed by both Houses
+  // (CGT changes, the minimum tax, and the Working Australians tax offset) and the Supplementary Explanatory Memorandum.
+  taxReformAct: 'https://parlinfo.aph.gov.au/parlInfo/download/legislation/bills/r7493_aspassed/toc_pdf/26072b01.pdf;fileType=application%2Fpdf',
+  taxReformSupplementaryEM: 'https://parlinfo.aph.gov.au/parlInfo/download/legislation/ems/r7493_ems_e5a9c782-fb39-4705-968e-e258fc04c742/upload_pdf/Supplementary%20EM_JC018520.pdf;fileType=application%2Fpdf',
   franking: 'https://www.ato.gov.au/individuals-and-families/investments-and-assets/shares-funds-and-trusts/investing-in-shares/refund-of-franking-credits-for-individuals',
   frankingRate: 'https://www.ato.gov.au/businesses-and-organisations/corporate-tax-measures-and-assurance/imputation/paying-dividends-and-other-distributions/allocating-franking-credits',
   fito: 'https://www.ato.gov.au/forms-and-instructions/foreign-income-tax-offset-rules-guide-2026/calculate-your-fito-or-offset-limit',
@@ -57,14 +61,16 @@ export const ATO_TAX_YEARS: TaxYear[] = [
     minor: MINOR,
   },
   {
-    fy: 2027, // 2026–27: 16% rate cut to 15%. Medicare thresholds for this year aren't published yet, so 2025–26's are used.
+    // 2026–27: 16% rate cut to 15%. Medicare thresholds for this year (and later years) aren't published yet, so 2025–26's
+    // are used ("frozen"). The government usually raises them each year, so the levy may be a little too high near them.
+    fy: 2027,
     brackets: bracketsFrom(15),
     medicare: { rate: 2, lowerThreshold: 28_011, upperThreshold: 35_013, shadeInRate: 10 },
     lito: LITO,
     minor: MINOR,
   },
   {
-    fy: 2028, // 2027–28 and later (already law): 15% rate cut to 14%.
+    fy: 2028, // 2027–28 and later (already law): 15% rate cut to 14%. Medicare thresholds: 2025–26's (see above).
     brackets: bracketsFrom(14),
     medicare: { rate: 2, lowerThreshold: 28_011, upperThreshold: 35_013, shadeInRate: 10 },
     lito: LITO,
@@ -81,6 +87,19 @@ export const CGT_REFORM = {
   /** First day of the new rules. */
   startDate: '2027-07-01',
   minimumRatePct: 30,
+} as const
+
+/**
+ * Working Australians tax offset (Act No. 49 of 2026, Schedule 3: ITAA 1997 s61-155 and s61-160), from 2027–28:
+ * the lesser of $250 and the basic tax on your net labour income alone, if that income is above the tax-free
+ * threshold. Not refundable. The $250 is a fixed amount in the law (the app raises it with "brackets rise with
+ * inflation", like the low income tax offset).
+ */
+export const WORKING_OFFSET = {
+  /** First financial year (named by the year it ends): 2027–28. */
+  fromFy: 2028,
+  /** Dollars. */
+  max: 250,
 } as const
 
 /** Company tax rate used for franking credits on ETF distributions (large companies). */

@@ -441,8 +441,8 @@ function TaxTableEditor({ tax, onChange }: { tax: TaxSettings; onChange: (patch:
         <a href={TAX_SOURCES.rates} target="_blank" rel="noreferrer">
           ato.gov.au
         </a>
-        , checked {dateLong(toDayNumber(TAX_RATES_CHECKED_ON))}. 2027–28 (the 14% rate) is already law and is used for every later year. Medicare thresholds for 2026–27 aren’t
-        published yet, so 2025–26’s are used. You can change any number.
+        , checked {dateLong(toDayNumber(TAX_RATES_CHECKED_ON))}. 2027–28 (the 14% rate) is already law and is used for every later year. Medicare thresholds for 2026–27 and later aren’t
+        published yet, so 2025–26’s are used for every later year. You can change any number.
       </p>
       {tables.map((t) => (
         <div className="tax-year" key={t.fy}>

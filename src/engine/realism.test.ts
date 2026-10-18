@@ -43,15 +43,28 @@ function expectAddsUp(r: ManualResult) {
     expect(y.closing).toBeCloseTo(y.opening + y.deposits - y.withdrawals + y.growth - y.fees - y.tax - y.paidOut, 4)
   }
   for (let i = 1; i < r.years.length; i++) expect(r.years[i].opening).toBeCloseTo(r.years[i - 1].closing, 6)
-  // The same in today's dollars.
-  const real = r.real
-  expect(r.finalReal).toBeCloseTo(real.netContributed + real.growth - real.fees - real.tax - real.paidOut, 4)
-  for (const y of r.years) {
-    const v = y.real
-    expect(v.closing).toBeCloseTo(v.opening + v.deposits - v.withdrawals + v.growth - v.fees - v.tax - v.paidOut, 4)
-    expect(v.closing).toBeCloseTo(y.closing / y.cpiClosing, 4)
-  }
+  // Today's dollars. The plan's totals and the year-by-year rows are added up separately, so they must agree.
+  const sum = (f: (y: (typeof r.years)[number]) => number) => r.years.reduce((a, y) => a + f(y), 0)
+  expect(sum((y) => y.real.deposits)).toBeCloseTo(r.real.deposited, 4)
+  expect(sum((y) => y.real.withdrawals)).toBeCloseTo(r.real.withdrawn, 4)
+  expect(sum((y) => y.real.fees)).toBeCloseTo(r.real.fees, 4)
+  expect(sum((y) => y.real.tax)).toBeCloseTo(r.real.tax, 4)
+  expect(sum((y) => y.real.paidOut)).toBeCloseTo(r.real.paidOut, 4)
   for (let i = 1; i < r.years.length; i++) expect(r.years[i].real.opening).toBeCloseTo(r.years[i - 1].real.closing, 6)
+  // When prices only rise, an amount in today's dollars is at most its face value and at least its value at the end's prices.
+  const rising = r.cpis.every((c, i) => i === 0 || c >= r.cpis[i - 1])
+  if (rising) {
+    const pairs: [number, number][] = [
+      [r.real.deposited, r.totalDeposited],
+      [r.real.withdrawn, r.totalWithdrawn],
+      [r.real.fees, r.fees.total],
+      [r.real.paidOut, r.totalPaidOut],
+    ]
+    for (const [realValue, nominal] of pairs) {
+      expect(realValue).toBeLessThanOrEqual(nominal + 1e-6)
+      expect(realValue).toBeGreaterThanOrEqual(nominal / r.cpiEnd - 1e-6)
+    }
+  }
 }
 
 describe('old plans and switches off', () => {
@@ -361,8 +374,10 @@ describe('capital gains tax', () => {
     const indexedGain = 1_331_000 - 1_100_000 * indexRatio
     const preGain = 100_000
     expect(run(30, true).tax.total).toBeCloseTo(0.3 * (0.5 * preGain + indexedGain), 2)
-    // At a 10% rate, the minimum 30% tax applies to the indexed part.
-    expect(run(10, true).tax.total).toBeCloseTo(0.1 * 0.5 * preGain + 0.3 * indexedGain, 2)
+    // At a 10% rate, the minimum 30% tax applies to the indexed part: a top-up of the missing 20%, rounded down to
+    // whole dollars (s119-10(2) Step 6).
+    const topUp = Math.floor((0.2 * indexedGain) / 100) * 100
+    expect(run(10, true).tax.total).toBeCloseTo(0.1 * (0.5 * preGain + indexedGain) + topUp, 2)
     expect(run(10, false).tax.total).toBeCloseTo(0.1 * (0.5 * preGain + indexedGain), 2)
   })
 
@@ -462,8 +477,19 @@ describe('show the cost', () => {
     const cmp = runCostComparison(p)
     expect(cmp.steps.map((s) => s.switch)).toEqual(['fees', 'tax', 'inflation'])
     for (const s of cmp.steps) expect(s.cost).toBeGreaterThan(0)
-    const totalCost = cmp.steps.reduce((a, s) => a + s.cost, 0)
-    expect(cmp.allOff.finalBalance - totalCost).toBeCloseTo(cmp.actual.finalReal, 4)
+    // Hand-worked: all off, $10,000 grows 7% a year for 20 years, and the $500 paid on the 1st of month k (k = 0…239)
+    // grows for (240 − k) months, each month exactly 1/12 of a year.
+    let allOff = 1_000_000 * Math.pow(1.07, 20)
+    for (let k = 0; k < 240; k++) allOff += 50_000 * Math.pow(1.07, (240 - k) / 12)
+    expect(cmp.allOff.finalBalance).toBeCloseTo(allOff, 2)
+    // Fees on: each $500 pays $5 brokerage, so $495 is invested; every month grows 7%/12 and then loses 0.2%/12 (MER).
+    const month = Math.pow(1.07, 1 / 12) * (1 - 0.002 / 12)
+    let afterFees = 1_000_000 * Math.pow(month, 240)
+    for (let k = 0; k < 240; k++) afterFees += 49_500 * Math.pow(month, 240 - k)
+    expect(cmp.steps[0].after).toBeCloseTo(afterFees, 2)
+    // Inflation on: the after-tax amount divided by 20 years of 2.5% price rises.
+    expect(cmp.actual.cpiEnd).toBeCloseTo(Math.pow(1.025, 20), 10)
+    expect(cmp.steps[2].after).toBeCloseTo(cmp.steps[1].after / Math.pow(1.025, 20), 4)
     expect(cmp.actual.finalBalance).toBeCloseTo(runManual(p).finalBalance, 6)
     expectAddsUp(cmp.actual)
   })
@@ -529,5 +555,174 @@ describe('speed (for Prediction mode)', () => {
     for (let t = 0; t < c.n; t++) growth[t] = Math.pow(t < 31 ? 1.1 : 0.95, 1 / c.dim[t]) // +10% in Jan, −5% in Feb
     const r = simulate(c, { growth, inflation: new Float64Array(c.n).fill(dailyFactor(0, 31)), warnings: [] })
     expect(r.finalBalance).toBeCloseTo(1_000_000 * 1.1 * 0.95, 4)
+  })
+})
+
+describe('accuracy-audit fixes (hand-worked)', () => {
+  it('the minimum 30% tax also covers short-term gains made from 1 July 2027', () => {
+    // $10,000 on 1 Jan 2028 at 10%, sold 30 Jun 2028: gain 10,000 × (√1.1 − 1) = $488.09. At a 10% rate: $48.81,
+    // plus the 20% gap ($97.62) rounded down to $97 → $145.81 (it was $48.81).
+    const r = runManual(
+      plan({
+        startDate: '2028-01-01',
+        startingBalance: 1_000_000,
+        phases: [phase({ duration: { count: 6, unit: 'months' }, returnRate: { kind: 'fixed', value: 10 }, marginalRate: 10 })],
+        realism: { ...taxOn({ atEnd: 'sell', cgtRules: 'law', cgtMinimum: true }), inflationSettings: { rate: { kind: 'fixed', value: 0 } } },
+      }),
+    )
+    const gain = 1_000_000 * (Math.sqrt(1.1) - 1)
+    expect(r.tax.total).toBeCloseTo(0.1 * gain + 9_700, 4)
+    expect(r.tax.total).toBeCloseTo(14_580.88, 1)
+  })
+
+  it('from 2027–28, carried-forward losses reduce the deferred gain up to 30 June 2027 first', () => {
+    // $20,000 bought 1 Jul 2026 halves to $10,000 by 1 Jan 2027; $5,000 is withdrawn (a $5,000 loss, carried forward).
+    // The rest ($5,000, cost $10,000) grows to $20,000 by 1 Jul 2027 (deferred discountable gain $10,000), then to
+    // $30,000 by 30 Jun 2028 (indexed gain $10,000 with 0% inflation) and is sold. At 30%:
+    // (10,000 − 5,000) × 50% + 10,000 = $12,500 → $3,750 (it was $3,000: the loss came off the indexed gain).
+    const r = runManual(
+      plan({
+        startDate: '2026-07-01',
+        startingBalance: 2_000_000,
+        phases: [
+          phase({ duration: { count: 6, unit: 'months' }, returnRate: { kind: 'fixed', value: -75 }, marginalRate: 30 }),
+          phase({ duration: { count: 6, unit: 'months' }, returnRate: { kind: 'fixed', value: 1_500 }, marginalRate: 30 }),
+          phase({ duration: { count: 1, unit: 'years' }, returnRate: { kind: 'fixed', value: 50 }, marginalRate: 30 }),
+        ],
+        events: [{ id: 'w', name: 'Out', date: '2027-01-01', amount: -500_000 }],
+        realism: { ...taxOn({ atEnd: 'sell', cgtRules: 'law', cgtMinimum: true }), inflationSettings: { rate: { kind: 'fixed', value: 0 } } },
+      }),
+    )
+    expect(r.years.find((y) => y.fy === 2027)?.tax).toBeCloseTo(0, 4)
+    expect(r.tax.netCapitalGains).toBeCloseTo(1_250_000, 2)
+    expect(r.tax.total).toBeCloseTo(375_000, 2)
+  })
+
+  describe('"brackets rise with inflation" always counts from 1 July 2027', () => {
+    // 10% inflation, $48,000 other income, Medicare on, a 4% return all paid as one yearly distribution (30 June).
+    // Marginal rate on the distribution: index 1 → 30% + 1.5% LITO taper + 2% = 33.5%; index 1.1 or 1.21 → 14% + 5% + 2% = 21%;
+    // index 1.331 → 14% + 2% = 16% (full LITO).
+    const run = (startDate: string, months: number) =>
+      runManual(
+        plan({
+          startDate,
+          startingBalance: 1_000_000,
+          phases: [phase({ duration: { count: months, unit: 'months' }, returnRate: { kind: 'fixed', value: 4 }, distribution: dist({ yield: 4 }), otherIncome: 4_800_000 })],
+          realism: { ...taxOn({ basis: 'income', medicare: true, brackets: 'indexed' }), inflationSettings: { rate: { kind: 'fixed', value: 10 } } },
+        }),
+      )
+
+    it('a plan starting mid-2027–28 (1 Jan 2028): 2028–29 uses 10% higher thresholds, not 4.9%', () => {
+      const r = run('2028-01-01', 18)
+      const d1 = 1_000_000 * (Math.sqrt(1.04) - 1)
+      expect(r.years[0].tax).toBeCloseTo(0.335 * d1, 4)
+      const d2 = (1_000_000 + d1 - 0.335 * d1) * 0.04
+      expect(r.years[1].tax).toBeCloseTo(0.21 * d2, 4)
+    })
+
+    it('a plan starting 1 Jul 2029: thresholds are already 21% higher, then 33.1%', () => {
+      const r = run('2029-07-01', 24)
+      expect(r.years[0].tax).toBeCloseTo(0.21 * 40_000, 4)
+      expect(r.years[1].tax).toBeCloseTo(0.16 * (1_000_000 + 40_000 - 8_400) * 0.04, 4)
+    })
+
+    it('a plan starting mid-year after that (1 Jan 2030): the year uses prices on its own 1 July (21% higher)', () => {
+      const r = run('2030-01-01', 6)
+      expect(r.years[0].tax).toBeCloseTo(0.21 * 1_000_000 * (Math.sqrt(1.04) - 1), 4)
+    })
+  })
+
+  it('the Working Australians tax offset: $22,000 job + $3,000 distributions in 2028–29 → $2 of tax', () => {
+    // $100,000 at 3%, all paid on 30 Jun 2029. Brackets fixed, Medicare off. $952 − $700 LITO − $250 = $2.
+    const r = runManual(
+      plan({
+        startDate: '2028-07-01',
+        startingBalance: 10_000_000,
+        phases: [phase({ returnRate: { kind: 'fixed', value: 3 }, distribution: dist({ yield: 3 }), otherIncome: 2_200_000 })],
+        realism: taxOn({ basis: 'income', medicare: false, brackets: 'fixed' }),
+      }),
+    )
+    expect(r.tax.total).toBeCloseTo(200, 4)
+  })
+
+  describe('a phase change mid-month', () => {
+    const mer = (first: number, second: number) =>
+      runManual(
+        plan({
+          startingBalance: 1_000_000,
+          phases: [phase({ duration: { count: 10, unit: 'days' }, mer: first }), phase({ duration: { count: 21, unit: 'days' }, mer: second })],
+          realism: feesOn(),
+        }),
+      ).fees.mer
+
+    it('each phase pays the management fee for its own days', () => {
+      // 1–10 Jan at 1.2%, 11–31 Jan at 0%: $10,000 × 0.1% × 10/31 = $3.23 (it was $0, from the month-end phase).
+      expect(mer(1.2, 0)).toBeCloseTo(1_000_000 * 0.001 * (10 / 31), 6)
+      expect(mer(0, 1.2)).toBeCloseTo(1_000_000 * 0.001 * (21 / 31), 6)
+    })
+
+    it('a payout uses each phase’s franking for the income built up in it', () => {
+      // $10,000 from 1 Jul 2026, 4% return all as income, paid once on 30 Jun 2027. Jul–Dec 100% franked, Jan–Jun 0%.
+      // Income to 31 Dec: 10,000 × (√1.04 − 1), which then grows by √1.04 → franked part 10,000 × (1.04 − √1.04) = $201.96.
+      // Credit = 3/7 of that. Tax at 30% on ($400 + credit) − credit.
+      const r = runManual(
+        plan({
+          startDate: '2026-07-01',
+          startingBalance: 1_000_000,
+          phases: [
+            phase({ duration: { count: 6, unit: 'months' }, returnRate: { kind: 'fixed', value: 4 }, distribution: dist({ yield: 4, frankedPct: 100 }), marginalRate: 30 }),
+            phase({ duration: { count: 6, unit: 'months' }, returnRate: { kind: 'fixed', value: 4 }, distribution: dist({ yield: 4, frankedPct: 0 }), marginalRate: 30 }),
+          ],
+          realism: taxOn(),
+        }),
+      )
+      const credit = (1_000_000 * (1.04 - Math.sqrt(1.04)) * 3) / 7
+      expect(r.tax.frankingCredits).toBeCloseTo(credit, 4)
+      expect(r.tax.total).toBeCloseTo(0.3 * (40_000 + credit) - credit, 4)
+    })
+  })
+
+  it('withdrawing more than everything with Tax on: the sale’s tax comes out of what’s paid out', () => {
+    // $10,000 grows 10% a year for 18 months → 10,000 × 1.1^1.5 = $11,536.90 on 1 Jul 2031; a $20,000 withdrawal sells
+    // it all. Gain $1,536.90, halved, at 30% = $230.53 → $11,306.36 is paid out, nothing is left unpaid.
+    const r = runManual(
+      plan({
+        startDate: '2030-01-01',
+        startingBalance: 1_000_000,
+        phases: [phase({ duration: { count: 2, unit: 'years' }, returnRate: { kind: 'fixed', value: 10 }, marginalRate: 30 })],
+        events: [{ id: 'w', name: 'House', date: '2031-07-01', amount: -2_000_000 }],
+        realism: taxOn(),
+      }),
+    )
+    const value = 1_000_000 * Math.pow(1.1, 1.5)
+    const tax = 0.3 * 0.5 * (value - 1_000_000)
+    expect(r.tax.total).toBeCloseTo(tax, 4)
+    expect(r.tax.unpaid).toBe(0)
+    expect(r.totalWithdrawn).toBeCloseTo(value - tax, 4)
+    expect(r.finalBalance).toBeCloseTo(0, 6)
+    expect(r.warnings.join(' ')).toMatch(/\$230\.53 of that went on the estimated tax on the sale, so \$11306\.36 was paid out/)
+    expectAddsUp(r)
+  })
+
+  it('today’s dollars: each deposit and fee counts at the prices of its own day', () => {
+    // $100 on the 1st of each month for 2 years, no growth, 12% inflation, $10 platform fee on each month's last day.
+    // Deposit k is worth 100 / 1.12^(k/12). The fee on month k's last day: prices at the start of that day are
+    // 1.12^((k + 1)/12 − 1/(12 × days in month)).
+    const r = runManual(
+      plan({
+        phases: [phase({ duration: { count: 2, unit: 'years' }, depositFrequency: 'monthly', deposit: { kind: 'fixed', value: 10_000 }, mer: 0 })],
+        realism: { ...feesOn({ platformFee: 1_000, platformFeePer: 'month' }), inflation: true, inflationSettings: { rate: { kind: 'fixed', value: 12 } } },
+      }),
+    )
+    const dim = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    let deposits = 0
+    let fees = 0
+    for (let k = 0; k < 24; k++) {
+      deposits += 10_000 / Math.pow(1.12, k / 12)
+      fees += 1_000 / Math.pow(1.12, (k + 1) / 12 - 1 / (12 * dim[k % 12]))
+    }
+    expect(r.real.deposited).toBeCloseTo(deposits, 4)
+    expect(r.real.fees).toBeCloseTo(fees, 4)
+    expect(r.finalReal).toBeCloseTo((240_000 - 24_000) / 1.12 ** 2, 4)
   })
 })

@@ -6,9 +6,10 @@
 
 import { addMonths, daysInMonth, fromDayNumber, toDayNumber } from './dates'
 import { resolveRealism, type ResolvedRealism } from './defaults'
+import { dailyFactor } from './path'
 import { paymentDays, phaseRanges, type PhaseRange } from './schedule'
 import type { DistributionFrequency, Plan } from './types'
-import { depositAmounts } from './varying'
+import { depositAmounts, valueByDay } from './varying'
 
 export interface FyInfo {
   /** Financial year, named by the year it ends. */
@@ -23,6 +24,11 @@ export interface FyInfo {
   marginalRate: number
   /** Under-18 rules apply this year. */
   minor: boolean
+  /**
+   * Price level (1 = the plan's start) on this year's 1 July, when that is before the plan starts (a plan starting
+   * mid-year), worked out at the first inflation rate. Null when 1 July is inside the plan (the simulation knows it).
+   */
+  julyCpi: number | null
 }
 
 export interface CompiledEvent {
@@ -58,6 +64,12 @@ export interface CompiledPlan {
   payoutDay: Uint8Array
   /** For a purchase on day t: the first day it can be sold with the 50% CGT discount (held at least 12 months). */
   discountFrom: Int32Array
+  /**
+   * "Brackets rise with inflation" measures prices from 1 July of the latest tax year we have (1 July 2027).
+   * If that's before the plan starts: the price level then (1 = the plan's start), at the first inflation rate.
+   * Null when it's inside the plan.
+   */
+  bracketBaseCpi: number | null
   depositCount: number[]
   warnings: string[]
 }
@@ -94,7 +106,7 @@ export function compilePlan(plan: Plan): CompiledPlan {
     const last = Math.min(n, t + daysLeftInMonth) - 1
     const fy = m >= 7 ? y + 1 : y
     if (fys.length === 0 || fys[fys.length - 1].fy !== fy) {
-      fys.push({ fy, firstT: t, lastT: t, share: 0, otherIncome: 0, marginalRate: 0, minor: false })
+      fys.push({ fy, firstT: t, lastT: t, share: 0, otherIncome: 0, marginalRate: 0, minor: false, julyCpi: null })
     }
     const fyIndex = fys.length - 1
     for (let k = t; k <= last; k++) {
@@ -132,6 +144,27 @@ export function compilePlan(plan: Plan): CompiledPlan {
     const fyLastDay = toDayNumber({ y: info.fy, m: 6, d: 30 })
     info.minor = tax.owner === 'minor' && (birthday18 === null || birthday18 > fyLastDay)
   }
+
+  // Prices before the plan starts (for "brackets rise with inflation"): the first inflation rate, run backwards.
+  const firstInflation = Math.max(-99, valueByDay(realism.inflationSettings.rate, startDay, endDay)(startDay))
+  const cpiBeforeStart = (day: number) => {
+    // Same as multiplying each day's factor, a month at a time.
+    let growth = 1
+    for (let d = day; d < startDay; ) {
+      const { y, m, d: dom } = fromDayNumber(d)
+      const len = daysInMonth(y, m)
+      const stop = Math.min(d + len - dom + 1, startDay)
+      growth *= Math.pow(dailyFactor(firstInflation, len), stop - d)
+      d = stop
+    }
+    return 1 / growth
+  }
+  if (fys.length > 0) {
+    const firstJuly = toDayNumber({ y: fys[0].fy - 1, m: 7, d: 1 })
+    if (firstJuly < startDay) fys[0].julyCpi = cpiBeforeStart(firstJuly)
+  }
+  const baseJuly = toDayNumber({ y: realism.taxYears[realism.taxYears.length - 1].fy - 1, m: 7, d: 1 })
+  const bracketBaseCpi = baseJuly <= startDay ? cpiBeforeStart(baseJuly) : null
 
   // Regular deposits.
   const deposit = new Float64Array(n)
@@ -196,6 +229,7 @@ export function compilePlan(plan: Plan): CompiledPlan {
     buyDay,
     payoutDay,
     discountFrom,
+    bracketBaseCpi,
     depositCount,
     warnings,
   }

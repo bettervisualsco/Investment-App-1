@@ -152,6 +152,41 @@ describe('deposit timing', () => {
   })
 })
 
+describe('phase dates don’t drift from month-end clamping', () => {
+  it('from 31 Jan: 1 month then 11 months at 7% ends on 31 Jan 2027 with exactly $10,700', () => {
+    const r = runManual(
+      plan({
+        startDate: '2026-01-31',
+        startingBalance: 1_000_000,
+        phases: [phase({ duration: { count: 1, unit: 'months' }, returnRate: { kind: 'fixed', value: 7 } }), phase({ duration: { count: 11, unit: 'months' }, returnRate: { kind: 'fixed', value: 7 } })],
+      }),
+    )
+    expect(dayToISO(r.phases[1].start)).toBe('2026-02-28')
+    expect(dayToISO(r.endDay)).toBe('2027-01-31') // was 28 Jan 2027 ($10,694.16)
+    expect(r.finalBalance).toBeCloseTo(1_070_000, 4)
+  })
+
+  it('from 31 Mar: month phases end on 30 Apr, then 31 May (not 30 May)', () => {
+    const r = runManual(plan({ startDate: '2026-03-31', phases: [phase({ duration: { count: 1, unit: 'months' } }), phase({ duration: { count: 1, unit: 'months' } })] }))
+    expect(dayToISO(r.phases[1].start)).toBe('2026-04-30')
+    expect(dayToISO(r.endDay)).toBe('2026-05-31')
+  })
+
+  it('a phase measured in days restarts the count from its own end', () => {
+    // 31 Jan + 1 month = 28 Feb; + 3 days = 3 Mar; + 1 month = 3 Apr.
+    const r = runManual(
+      plan({ startDate: '2026-01-31', phases: [phase({ duration: { count: 1, unit: 'months' } }), phase({ duration: { count: 3, unit: 'days' } }), phase({ duration: { count: 1, unit: 'months' } })] }),
+    )
+    expect(dayToISO(r.phases[2].start)).toBe('2026-03-03')
+    expect(dayToISO(r.endDay)).toBe('2026-04-03')
+  })
+
+  it('years from 29 Feb: 28 Feb in normal years, back to 29 Feb in a leap year', () => {
+    const r = runManual(plan({ startDate: '2024-02-29', phases: [phase(), phase(), phase(), phase()] }))
+    expect(r.phases.map((p) => dayToISO(p.end))).toEqual(['2025-02-28', '2026-02-28', '2027-02-28', '2028-02-29'])
+  })
+})
+
 describe('step-ups', () => {
   it('a straight-line ramp from $100 to $200 starts and ends on the exact amounts', () => {
     const r = runManual(

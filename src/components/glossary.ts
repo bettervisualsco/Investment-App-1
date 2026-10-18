@@ -89,11 +89,11 @@ export const glossary = {
   },
   taxBasis: {
     title: 'How tax is worked out',
-    body: 'From your other income: the app adds your investment income on top of your job income and uses the real tax brackets, low income tax offset and Medicare levy. Or just pick your marginal rate: the % you pay on your last dollar.',
+    body: 'From your other income: the app adds your investment income on top of your job income and uses the real tax brackets, low income tax offset, Working Australians tax offset (from 2027–28) and Medicare levy. Or just pick your marginal rate: the % you pay on your last dollar.',
   },
   otherIncome: {
     title: 'Other taxable income',
-    body: 'Your income from everything else (job etc.) for a full year. It decides which tax bracket your investment income lands in. If a financial year covers two phases, each phase counts for its share of the days.',
+    body: 'Your income from everything else (job etc.) for a full year. It decides which tax bracket your investment income lands in. If a financial year covers two phases, each phase counts for its share of the days. From 2027–28 the app treats all of it as job income for the Working Australians tax offset (up to $250 off your tax if it’s above $18,200), which can also cancel a little tax on low earners’ investment income.',
   },
   marginalRate: {
     title: 'Marginal tax rate',
@@ -101,7 +101,7 @@ export const glossary = {
   },
   medicare: {
     title: 'Medicare levy',
-    body: '2% of taxable income, paying for Medicare. People on low incomes pay less or none (no levy up to $28,011 in 2025–26).',
+    body: '2% of taxable income, paying for Medicare. People on low incomes pay less or none (no levy up to $28,011 in 2025–26). The thresholds for 2026–27 and later aren’t published yet, so 2025–26’s are used (they usually rise a little each year, so near them the levy may be slightly overstated).',
   },
   brackets: {
     title: 'Future tax brackets',
@@ -133,11 +133,11 @@ export const glossary = {
   },
   cgt2027: {
     title: 'CGT changes from 1 July 2027',
-    body: 'Now law: for gains from 1 July 2027, instead of halving the gain, the price you paid is raised by inflation (cost base indexation), and a minimum 30% tax applies to those gains. Gains you made before then keep the 50% discount. Some details are still being finalised, so this is an estimate.',
+    body: 'Now law: for gains from 1 July 2027, instead of halving the gain, the price you paid is raised by inflation (cost base indexation), and a minimum 30% tax applies to those gains. Gains you made before then keep the 50% discount, and capital losses come off those older gains first. One detail, an optional “apportionment method” for valuing what you held on 1 July 2027, is still being made; the app uses the market value. Treat it as an estimate.',
   },
   minimumTax: {
     title: 'Minimum 30% tax on gains',
-    body: 'From 1 July 2027, the basic tax on your (inflation-adjusted) capital gains must be at least 30% of them, counting them as your last dollars of income. People getting certain government payments (like JobSeeker or the Age Pension) are exempt.',
+    body: 'From 1 July 2027, the basic tax (before offsets, without the Medicare levy) on all the capital gains you make from that date must be at least 30% of them, counting them as your last dollars of income. That includes short-term gains and inflation-adjusted ones, but not the part of a gain from before 1 July 2027. Any shortfall is added, rounded down to whole dollars. People getting certain government payments (like JobSeeker or the Age Pension) are exempt; the app doesn’t model that exemption.',
   },
   atEnd: {
     title: 'At the end of the plan',
@@ -145,7 +145,7 @@ export const glossary = {
   },
   under18: {
     title: 'Under 18',
-    body: 'Under-18s pay special high tax on investment income from money given by family: nothing up to $416, 66% of the amount over $416 up to $1,307, then 45% of all of it. Income from investing their own job earnings is taxed at normal rates. The rules use their age on 30 June.',
+    body: 'Under-18s pay special high tax on investment income from money given by family: nothing up to $416, 66% of the amount over $416 up to $1,307, then 45% of all of it, or the normal tax on it if that’s more (counting it as their last dollars of income, e.g. alongside a part-time job). Income from investing their own job earnings is taxed at normal rates. The rules use their age on 30 June.',
   },
   inflation: {
     title: 'Inflation',
