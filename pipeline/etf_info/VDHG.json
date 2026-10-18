@@ -1,0 +1,68 @@
+{
+  "name": {
+    "value": "Vanguard Diversified High Growth Index ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
+  },
+  "index": {
+    "value": "High Growth Composite Index (blend of the underlying funds' indexes)",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
+  },
+  "mer": {
+    "value": 0.27,
+    "unit": "% p.a.",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
+  },
+  "yield": {
+    "value": 3.48,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 15 Oct 2026. Vanguard's 1-year income return was 3.73% to 30 Sep 2026.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8221/overview"
+  },
+  "franking": {
+    "value": 24,
+    "unit": "%",
+    "note": "ESTIMATE: Vanguard doesn't publish one. Worked out from the FY2026 distribution breakdown (franking credits / (cash x 30/70)).",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8221/overview",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
+  },
+  "inception": {
+    "value": "2017-11-20",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
+  },
+  "allocation": {
+    "value": {
+      "Australian shares": 36,
+      "International shares (unhedged)": 26.5,
+      "International shares (hedged to AUD)": 16,
+      "International small companies": 6.5,
+      "Emerging markets shares": 5,
+      "Australian bonds": 3,
+      "International bonds (hedged to AUD)": 7
+    },
+    "unit": "% target",
+    "note": "Strategic asset allocation; each part can drift about 2% either way",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
+  }
+}

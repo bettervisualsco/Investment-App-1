@@ -1,0 +1,54 @@
+{
+  "name": {
+    "value": "iShares S&P 500 ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  },
+  "index": {
+    "value": "S&P 500 (BlackRock: S&P 500 Net TR Index (AUD)), unhedged",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  },
+  "mer": {
+    "value": 0.04,
+    "unit": "% p.a.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  },
+  "yield": {
+    "value": 1.0,
+    "unit": "% a year",
+    "note": "12-month trailing yield as at 15 Oct 2026",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Not stated by BlackRock; US shares carry no franking credits",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  },
+  "inception": {
+    "value": "2007-10-10",
+    "note": "ASX listing date (cross-listing of the US fund, which started 15 May 2000). Became an Australian-domiciled fund on 7 Sep 2018; 15-for-1 unit split in early Dec 2022.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  }
+}

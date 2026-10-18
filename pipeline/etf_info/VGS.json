@@ -1,0 +1,53 @@
+{
+  "name": {
+    "value": "Vanguard MSCI Index International Shares ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+  },
+  "index": {
+    "value": "MSCI World ex-Australia Index (net dividends reinvested) in AUD, unhedged",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+  },
+  "mer": {
+    "value": 0.18,
+    "unit": "% p.a.",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+  },
+  "yield": {
+    "value": 1.2,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 15 Oct 2026. Vanguard's 1-year income return was 1.38% to 30 Sep 2026.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8212/overview"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Franking credits are effectively nil (overseas shares)",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8212/overview"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+  },
+  "inception": {
+    "value": "2014-11-18",
+    "note": "Fund inception; listed on the ASX 20 Nov 2014",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+  }
+}

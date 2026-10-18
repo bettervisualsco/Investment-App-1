@@ -1,0 +1,54 @@
+{
+  "name": {
+    "value": "Vanguard Australian Shares Index ETF",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
+  },
+  "index": {
+    "value": "S&P/ASX 300 Index",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
+  },
+  "mer": {
+    "value": 0.07,
+    "unit": "% p.a.",
+    "note": "Management fee (some older pages still say 0.10%)",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
+  },
+  "yield": {
+    "value": 3.17,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026 (about 4.25% including franking credits). Vanguard's 1-year income return was 3.21% to 30 Sep 2026.",
+    "checkedOn": "2026-10-18",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8205/overview"
+  },
+  "franking": {
+    "value": 79.59,
+    "unit": "%",
+    "note": "Vanguard's published franking level for FY2026 (Jul 2025-Jun 2026). FY2025: 74.83%, FY2024: 78.28%.",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
+  },
+  "inception": {
+    "value": "2009-05-04",
+    "note": "Fund inception; listed on the ASX 8 May 2009",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-18",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
+  }
+}
