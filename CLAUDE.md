@@ -12,7 +12,7 @@ This folder is my investment planner app. **Read SPEC.md fully before doing anyt
 - When I need to do something myself (install something, make an account, click a button), give me short numbered steps in plain English.
 - Explain what you're doing in simple language. No jargon without a one-line explanation.
 - Budget is **$0**. Ask me before anything that costs money or needs a new account.
-- Build in the stages in SPEC.md section 8. After each stage, tell me exactly how to try it, then wait for my OK before starting the next one.
+- Build in the stages in SPEC.md section 8. Stages that don't depend on each other can be built at the same time in separate sessions (each in its own git worktree). After each batch, tell me exactly how to try it, then wait for my OK before starting the next batch.
 - Use git and commit after every working step, so we can always go back.
 - Keep a short `PROGRESS.md`: what's done, what's next, any problems.
 

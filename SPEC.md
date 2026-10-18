@@ -222,7 +222,7 @@ Bottom tab bar on iPhone and sidebar on Mac: **Planner · Markets · Inflation �
 
 ---
 
-## 8. Build order: one stage at a time, check with Soham after each
+## 8. Build order: in batches, check with Soham after each batch
 
 1. **Setup + Planner, Manual mode.** Phases, durations, deposit frequencies, step-ups, events, results chart. Runs on the Mac.
 2. **Data pipeline + hosting.** Historical data built in, scheduled updates, deployed to GitHub Pages, installed on the iPhone home screen and the Mac Dock.
@@ -233,6 +233,11 @@ Bottom tab bar on iPhone and sidebar on Mac: **Planner · Markets · Inflation �
 7. **Saved tab, compare, export/import, polish, final accuracy check.**
 
 Each stage must work on its own before moving on.
+
+**Batches (decided 18 Oct 2026, to go faster):** stages that don't depend on each other are built at the same time in separate sessions, then merged and tested together.
+- Batch 1: stage 1 (done).
+- Batch 2: stages 2, 4 and 7 in parallel. Stage 2 stops before anything that needs Soham's GitHub account.
+- Batch 3: stages 3, 5 and 6 (they need stage 2's data, and stage 3 builds on stage 4's engine changes).
 
 ---
 
