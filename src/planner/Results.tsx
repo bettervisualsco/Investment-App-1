@@ -31,7 +31,7 @@ export function ResultsHero({
 
   return (
     <section className="results" aria-labelledby="result-title">
-      <p className="hero-lead" id="result-title">
+      <div className="hero-lead" id="result-title">
         {lead}
         {v.real && (
           <>
@@ -41,7 +41,7 @@ export function ResultsHero({
             </span>
           </>
         )}
-      </p>
+      </div>
       <p className="hero-number">{money(v.final, currency)}</p>
       {v.real && (
         <p className="hero-sub">
@@ -153,9 +153,9 @@ function EndSaleNote({ result, currency }: { result: ManualResult; currency: Cur
   const day = dateLong(result.endDay - 1)
   return (
     <div className="end-sale">
-      <p className="end-sale-head">
+      <div className="end-sale-head">
         {s.mode === 'sell' ? 'Selling everything at the end' : 'If you sold everything at the end'} <InfoTip term="atEnd" />
-      </p>
+      </div>
       {s.mode === 'sell' ? (
         <p>
           On {day} your investments are worth {money(v.atEnd(s.marketValue), currency)}. Selling costs {money(v.atEnd(s.costs), currency)} and adds about{' '}
@@ -218,8 +218,8 @@ function Breakdown({ result, currency }: { result: ManualResult; currency: Curre
             </div>
           )}
           <div className="breakdown-total">
-            <dt>Tax paid (after credits)</dt>
-            <dd>{money(t.total, currency)}</dd>
+            <dt>{t.total < 0 ? 'Tax refunded (franking credits)' : 'Tax paid (after credits)'}</dt>
+            <dd>{money(Math.abs(t.total), currency)}</dd>
           </div>
         </dl>
       )}
@@ -234,9 +234,9 @@ function CostPanel({ comparison, currency }: { comparison: CostComparison; curre
   const scale = Math.max(start, ...comparison.steps.map((s) => s.after), 1)
   return (
     <div className="cost-panel" aria-label="What each switch costs">
-      <p className="cost-head">
+      <div className="cost-head">
         The cost of real life <InfoTip term="showCost" />
-      </p>
+      </div>
       <div className="cost-row">
         <span className="cost-label">Everything off</span>
         <span className="cost-bar">

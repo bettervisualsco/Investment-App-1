@@ -136,10 +136,10 @@ export function RealismSettings({
                 {historicalInflation ? historicalInflation.label : 'Needs the price history from the data update (stage 2), so it isn’t ready yet.'}
               </span>
             </div>
-            <p className="block-hint">
+            <div className="block-hint">
               2.5% is the middle of the Reserve Bank’s 2–3% target, not a forecast. Results are shown in today’s dollars <InfoTip term="todaysDollars" />. To raise
               deposits with prices, turn on “Grow deposits with inflation” in a phase.
-            </p>
+            </div>
           </div>
         </details>
       )}
@@ -320,9 +320,9 @@ function TaxEditor({ tax, plan, onChange }: { tax: TaxSettings; plan: Plan; onCh
   const start = parseISO(plan.startDate)
   return (
     <div className="realism-fields">
-      <p className="estimate-note">
+      <div className="estimate-note">
         A simplified estimate using ATO rates checked on {dateLong(toDayNumber(TAX_RATES_CHECKED_ON))}. Not tax advice. <InfoTip term="taxEstimate" />
-      </p>
+      </div>
       <Field label="Work out tax from" info={<InfoTip term="taxBasis" />}>
         <Segmented
           label="Work out tax from"
