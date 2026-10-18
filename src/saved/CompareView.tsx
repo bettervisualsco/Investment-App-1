@@ -148,7 +148,7 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
           <p className="saved-note">“Can’t work out yet” means the plan has something to fix. Open it in the Planner to see what.</p>
         )}
         <p className="fine-print">
-          Each plan uses its own return rates, before fees, tax and inflation. Real returns go up and down, so these are estimates, not promises.
+          Each plan uses its own return rates and its own Fees, Tax and Inflation switches. Real returns go up and down, so these are estimates, not promises.
         </p>
       </section>
     </div>
