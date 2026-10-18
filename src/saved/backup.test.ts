@@ -178,7 +178,8 @@ describe('importing next to plans already on this device', () => {
   })
 
   it('counts a plan as the same even if its keys are in a different order', () => {
-    const reordered = JSON.parse(JSON.stringify({ events: alpha.events, phases: alpha.phases, ...alpha })) as Plan
+    const reordered = Object.fromEntries(Object.entries(alpha).reverse()) as unknown as Plan
+    expect(Object.keys(reordered)[0]).not.toBe(Object.keys(alpha)[0])
     expect(planImport([{ plan: reordered, createdAt: 1, updatedAt: 1 }], here, makeId)[0].status).toBe('same')
   })
 

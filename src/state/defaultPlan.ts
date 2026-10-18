@@ -42,3 +42,16 @@ export function examplePlan(): Plan {
     goal: { amount: 15_000_000, date: toISO({ y: y + 16, m, d: 1 }) },
   }
 }
+
+/** A fresh, nearly empty plan for "New plan" in the Saved tab. */
+export function blankPlan(): Plan {
+  return {
+    id: newId(),
+    name: 'New plan',
+    startDate: todayISO(),
+    startingBalance: 0,
+    currency: 'AUD',
+    phases: [blankPhase('First phase')],
+    events: [],
+  }
+}
