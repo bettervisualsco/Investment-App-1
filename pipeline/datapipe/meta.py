@@ -37,6 +37,7 @@ class Meta:
         self.files: Dict[str, dict] = m.get("files", {})
         self.problems: list = m.get("problems", [])
         self.generated_at: Optional[str] = m.get("generatedAt")
+        self.repo: dict = m.get("repo", {})
 
     # ---- sources -----------------------------------------------------------------
     def _source(self, name: str) -> dict:
@@ -111,6 +112,7 @@ class Meta:
             "sources": self.sources,
             "tasks": self.tasks,
             "problems": self.problems,
+            "repo": self.repo,
         }
 
     def save(self, now: Optional[datetime] = None) -> None:

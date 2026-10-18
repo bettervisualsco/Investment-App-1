@@ -109,9 +109,33 @@ def cmd_update(tasks_arg: str) -> int:
             meta.problem("monthly", e, now)
             print(f"  monthly.json: FAILED {type(e).__name__}: {e} (kept the last good file)")
 
+    _check_repo_activity(meta, now)
     meta.save(now)
     _github_output(deploy=str(deploy or bool(tasks)).lower())
     return 0
+
+
+def _check_repo_activity(meta: Meta, now) -> None:
+    """GitHub switches off scheduled workflows in a public repo after 60 days with no activity.
+    Our own data commits should count, but GitHub doesn't document that, so warn early: if the
+    newest commit is 45+ days old, say so in meta.json (the app shows it in Settings)."""
+    import subprocess
+    from datetime import datetime, timezone
+
+    try:
+        out = subprocess.run(["git", "log", "-1", "--format=%ct"], capture_output=True, text=True, timeout=10, cwd=str(DATA_DIR.parent))
+        last = datetime.fromtimestamp(int(out.stdout.strip()), timezone.utc)
+    except Exception:
+        return
+    days = (now - last).days
+    meta.repo = {"lastCommit": iso(last), "daysSinceCommit": days}
+    if days >= 45:
+        meta.problem(
+            "github",
+            f"No commits for {days} days. GitHub turns off the schedule after 60 quiet days: open the repo's Actions tab "
+            "and check 'Update market data' is enabled (see notes/stage-2.md).",
+            now,
+        )
 
 
 def _github_output(**kv: str) -> None:
