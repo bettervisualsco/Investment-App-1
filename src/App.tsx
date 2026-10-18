@@ -4,6 +4,8 @@ import { InflationPage } from './inflation/InflationPage'
 import { useHistoricalInflation } from './inflation/useHistoricalInflation'
 import { DisclaimerSheet, SettingsPage } from './pages/OtherPages'
 import { MarketsPage } from './markets/MarketsPage'
+import { useDataFile, type EtfsFile } from './data'
+import { applyHistoryWindow } from './predict/fromMarkets'
 import { PlannerPage } from './planner/PlannerPage'
 import { SaveBar } from './saved/SaveBar'
 import { SavedPage } from './saved/SavedPage'
@@ -33,6 +35,7 @@ export default function App() {
   const [theme, setTheme] = useTheme()
   const [showDisclaimer, setShowDisclaimer] = useState(() => !hasSeenDisclaimer())
   const historicalInflation = useHistoricalInflation()
+  const { data: etfs } = useDataFile<EtfsFile>('etfs.json')
 
   useEffect(() => {
     const onHash = () => setTab(tabFromHash())
@@ -75,7 +78,18 @@ export default function App() {
           ) : (
             <div className="loading">Loading your plan…</div>
           ))}
-        {tab === 'markets' && <MarketsPage plan={plan} setPlan={setPlan} />}
+        {tab === 'markets' && (
+          <MarketsPage
+            plan={plan}
+            setPlan={setPlan}
+            onUseHistoryWindow={(req) => {
+              if (!plan) return
+              const { plan: next, message } = applyHistoryWindow(plan, req, etfs)
+              setPlan(next)
+              return message
+            }}
+          />
+        )}
         {tab === 'inflation' && <InflationPage />}
         {tab === 'saved' && <SavedPage plan={plan} setPlan={setPlan} saved={savedPlans} openPlanner={() => go('planner')} />}
         {tab === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} onShowSaved={() => go('saved')} />}

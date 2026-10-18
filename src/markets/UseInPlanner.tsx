@@ -54,7 +54,8 @@ export function UseInPlanner({
   stats: PeriodStats
   currencyNote: string
   missingDistributions: boolean
-  onUseHistoryWindow?: (req: HistoryWindowRequest) => void
+  /** Returns the confirmation message to show (it knows what really changed). */
+  onUseHistoryWindow?: (req: HistoryWindowRequest) => string | void
   inAud: boolean
   onClose: () => void
 }) {
@@ -87,8 +88,8 @@ export function UseInPlanner({
 
   const useWindow = () => {
     if (!phase || !onUseHistoryWindow) return
-    onUseHistoryWindow({ phaseId, etfId, from: stats.from, to: stats.to, fromMonth: stats.from.slice(0, 7), toMonth: stats.to.slice(0, 7), inAud })
-    setDone(`“${phase.name}” will replay ${etfId}’s history from ${dayText(stats.from)} to ${dayText(stats.to)} in Prediction mode.`)
+    const message = onUseHistoryWindow({ phaseId, etfId, from: stats.from, to: stats.to, fromMonth: stats.from.slice(0, 7), toMonth: stats.to.slice(0, 7), inAud })
+    setDone(message || `“${phase.name}” will replay ${etfId}’s history from ${dayText(stats.from)} to ${dayText(stats.to)} in Prediction mode.`)
   }
 
   return (

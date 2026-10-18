@@ -89,7 +89,7 @@ function DataNotices() {
   return null
 }
 
-export function MarketsPage({ plan, setPlan, onUseHistoryWindow }: { plan: Plan | null; setPlan: Dispatch<SetStateAction<Plan | null>>; onUseHistoryWindow?: (req: HistoryWindowRequest) => void }) {
+export function MarketsPage({ plan, setPlan, onUseHistoryWindow }: { plan: Plan | null; setPlan: Dispatch<SetStateAction<Plan | null>>; onUseHistoryWindow?: (req: HistoryWindowRequest) => string | void }) {
   const [view, setView] = useState<View>(viewFromHistory)
   const state = useDataState()
   const pull = usePullToRefresh()

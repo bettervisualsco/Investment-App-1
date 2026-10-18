@@ -68,7 +68,7 @@ export function EtfDetail({
   onBack: () => void
   plan: Plan | null
   setPlan: Dispatch<SetStateAction<Plan | null>>
-  onUseHistoryWindow?: (req: HistoryWindowRequest) => void
+  onUseHistoryWindow?: (req: HistoryWindowRequest) => string | void
 }) {
   const { byId, loading: infoLoading } = useEtfs()
   const item = byId.get(id)
