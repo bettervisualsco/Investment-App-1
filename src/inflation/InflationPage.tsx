@@ -1,3 +1,4 @@
+import { targetWord } from './target'
 import { useMemo } from 'react'
 import { timeAgo, useDataFile, useDataState, type InflationFile, type MonthlyFile } from '../data'
 import { pct } from './chartBits'
@@ -30,7 +31,7 @@ function Latest({ file }: { file: InflationFile }) {
             {auM && auQ ? `. Quarterly CPI: ${pct(auQ.pct / 100)} to ${auQ.label}.` : ''}
           </div>
           <div className="infl-tile-sub">
-            {au.pct > 3 ? 'Above' : au.pct < 2 ? 'Below' : 'Inside'} the RBA’s 2–3% target <Tip term="rbaTarget" />
+            {targetWord(au.pct)} the RBA’s 2–3% target <Tip term="rbaTarget" />
           </div>
         </div>
       )}

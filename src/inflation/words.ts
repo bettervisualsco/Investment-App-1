@@ -8,7 +8,7 @@ export const inflationWords = {
   },
   yearlyInflation: {
     title: 'Yearly inflation',
-    body: 'How much prices rose over the 12 months to that date. This is the figure you hear on the news, like “inflation was 7.8% in the year to December 2022”.',
+    body: 'How much prices rose over the 12 months to that date. This is the figure you hear on the news. A few older figures here can differ by about 0.1 from the ones first announced, because the ABS has since re-based its index (Sep 2025 = 100): for example, the year to December 2022 was announced as 7.8% and works out to 7.9% from today’s index.',
   },
   quarterlyMonthly: {
     title: 'Quarterly or monthly CPI',

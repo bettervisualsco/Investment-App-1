@@ -100,10 +100,20 @@ export async function syncData(opts: SyncOptions = {}): Promise<SyncResult> {
     gone.forEach((p) => delete hashes[p])
   }
 
+  // For files that failed to download, the device still has the old copy, so keep describing that copy
+  // ("as of" date, update time); otherwise labels would claim newer prices than the device holds.
+  // The next check still retries them, because their stored fingerprint doesn't match the website's.
+  const kept: Meta = { ...meta, files: { ...meta.files } }
+  for (const path of failed) {
+    const old = saved?.meta?.files[path]
+    if (old && hashes[path] === old.hash) kept.files[path] = old
+    else delete kept.files[path]
+  }
+
   const checkedAt = Date.now()
-  await db.info.put({ key: 'meta', meta, hashes, checkedAt })
+  await db.info.put({ key: 'meta', meta: kept, hashes, checkedAt })
   changed.sort()
-  return { status: changed.length || gone.length ? 'updated' : 'unchanged', changed, failed: failed.sort(), removed: gone, meta, checkedAt }
+  return { status: changed.length || gone.length ? 'updated' : 'unchanged', changed, failed: failed.sort(), removed: gone, meta: kept, checkedAt }
 }
 
 /** A data file from the device's saved copy (undefined if it hasn't been downloaded yet). */

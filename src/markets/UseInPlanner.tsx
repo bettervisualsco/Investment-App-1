@@ -2,6 +2,7 @@
 // current plan, chosen by the person.
 
 import { useId, useState, type Dispatch, type SetStateAction } from 'react'
+import { DEFAULT_MER } from '../engine/defaults'
 import type { Phase, Plan, Varying } from '../engine/types'
 import { dayText, rateText } from './format'
 import { addBackFee, type PeriodStats } from './maths'
@@ -66,10 +67,16 @@ export function UseInPlanner({
   const [done, setDone] = useState<string | null>(null)
 
   const net = stats.totalYearly
-  const gross = merPct !== null ? addBackFee(net, merPct) : net
+  const phase = phases.find((p) => p.id === phaseId)
+  // The Planner's rates are before the fund's fee (the Fees switch takes it off), so add back the fee that phase
+  // will actually be charged: the ETF's if it's being set too, otherwise the phase's own. Index returns have no fee.
+  const appliedMer = merPct === null ? null : withFee ? merPct : phase?.investment?.kind === 'cash' ? 0 : (phase?.mer ?? DEFAULT_MER)
+  const gross = appliedMer !== null ? addBackFee(net, appliedMer) : net
   // the Planner takes rates as % a year, to 2 decimal places
   const ratePct = Math.round(gross * 10000) / 100
-  const phase = phases.find((p) => p.id === phaseId)
+  // A US-listed ETF shown in US$ gives a US$ rate; everything else here is in A$.
+  const rateCurrency = usListed && !inAud ? 'USD' : 'AUD'
+  const currencyMismatch = !!plan && plan.currency !== rateCurrency
 
   const apply = () => {
     if (!phase) return
@@ -120,9 +127,17 @@ export function UseInPlanner({
             <p>
               {etfName}, {dayText(stats.from)} to {dayText(stats.to)}: <strong>{rateText(net, 2)} a year</strong> total return{currencyNote}.
             </p>
-            {merPct !== null && (
+            {merPct !== null && appliedMer !== null && (
               <p className="block-hint">
-                Prices are already after {etfId}’s {merPct}% fee. The Planner takes the fee off itself when Fees is on, so the rate it gets is {ratePct}% (the fee added back).
+                Prices are already after {etfId}’s {merPct}% fee. The Planner’s rates are before fees (the Fees switch takes the fee off), so it gets {ratePct}%: this
+                period’s rate with {withFee ? `${etfId}’s` : 'this phase’s'} {appliedMer}% fee added back. With Fees off, results come out a little higher than the
+                fund itself returned.
+              </p>
+            )}
+            {currencyMismatch && (
+              <p className="warnings mk-note">
+                This rate is in {rateCurrency === 'USD' ? 'US' : 'Australian'} dollars, but your plan is in {plan!.currency === 'USD' ? 'US' : 'Australian'} dollars.
+                {rateCurrency === 'USD' ? ' Turn on the A$ view first to get the rate in Australian dollars.' : ''}
               </p>
             )}
             {missingDistributions && <p className="warnings mk-note">Part of this period has no distribution records, so the real total return was probably a bit higher.</p>}

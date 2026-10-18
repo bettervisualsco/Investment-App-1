@@ -11,7 +11,7 @@ const marketWords = {
   },
   inAud: {
     title: 'Show in Australian dollars',
-    body: 'US-listed funds are priced in US dollars. This converts every price with the exchange rate on that day, so it shows what an Australian investor actually saw, including currency ups and downs.',
+    body: 'US-listed funds are priced in US dollars. This converts every price with the exchange rate on that day (before May 2006, when daily rates start, the previous month-end rate), so it shows roughly what an Australian investor saw, including currency ups and downs.',
   },
   averageYearly: {
     title: 'Average yearly return',

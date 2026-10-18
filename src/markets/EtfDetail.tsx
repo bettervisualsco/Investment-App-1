@@ -369,6 +369,9 @@ export function EtfDetail({
                   An estimate based on history, not a promise: {predict.p.runs.toLocaleString('en-AU')} replays of real months from {monthText(predict.p.historyFrom)} to {monthText(predict.p.historyTo)}
                   {total ? ', with distributions reinvested' : ', price only (the usual distributions taken out)'}
                   {usd ? (convert ? ', in A$' : ', in US$') : ''}, after {item.id}’s fee. {predict.p.realFrom && predict.p.realFrom > predict.p.historyFrom ? `Before ${monthText(predict.p.realFrom)} it uses the index it follows. ` : ''}
+                  {usd && convert
+                    ? 'In A$ the replay can only start in 1969, when exchange-rate records begin, so it uses fewer (and more recent) years than the US$ view: part of the difference between the two is the years used, not just the currency. '
+                    : ''}
                   The future can be different. <Tip term="proxy" />
                 </p>
               </>

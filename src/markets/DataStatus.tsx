@@ -35,7 +35,7 @@ export function DataStatus() {
   const state = useDataState()
   const now = useMinute()
   const meta = state.meta
-  const quiet = quietRepoWarning(meta)
+  const quiet = quietRepoWarning(meta, now)
   const checking = state.status === 'checking'
 
   return (

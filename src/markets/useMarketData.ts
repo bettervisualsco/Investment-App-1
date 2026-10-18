@@ -6,6 +6,7 @@ import { decodeDaily, readDataFile, useDataFile, useDataState, useFreshness, typ
 import type { Unit } from './format'
 import type { Exchange } from './hours'
 import { fxLookup } from './maths'
+import { dateIn } from '../data/freshness'
 
 export type Item = (EtfInfo & { kind: 'etf' }) | IndexInfo
 
@@ -83,7 +84,9 @@ export function useMarketFreshness(market: MarketKey) {
   const { meta } = useDataState()
   const intraEntry = meta?.files[`intraday/${market}.json`]
   const dailyEntry = meta?.files[market === 'us' ? 'daily/VOO.json' : 'daily/VAS.json']
-  const useIntra = !!intraEntry?.asOf && (!dailyEntry?.asOf || intraEntry.asOf.slice(0, 10) > dailyEntry.asOf)
+  // Compare on the exchange's own calendar date: in Sydney summer time, 10–11am is still the previous day in UTC.
+  const tz = market === 'us' ? 'America/New_York' : 'Australia/Sydney'
+  const useIntra = !!intraEntry?.asOf && (!dailyEntry?.asOf || dateIn(tz, new Date(intraEntry.asOf)) > dailyEntry.asOf)
   return useIntra ? intra : daily
 }
 

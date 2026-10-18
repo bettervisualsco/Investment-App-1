@@ -184,6 +184,14 @@ export function ComparePage({ onBack, onOpen }: { onBack: () => void; onOpen: (i
             <p className="block-hint">
               {common.limitedBy ? `Starts ${dayText(common.start)}, when ${shortName(common.limitedBy)} began. ` : ''}
               {prefs.totalReturn && anyEtf ? 'ETFs include distributions; indexes are price only. ' : 'Price only (no distributions). '}
+              {prefs.totalReturn &&
+                (() => {
+                  // ETFs whose distribution records start after this period begins: their total return is too low there.
+                  const short = chosen.filter((id) => byId.get(id)?.kind === 'etf' && (daily.get(id)?.file.trFrom ?? '') > common.start)
+                  return short.length
+                    ? `No distribution records for ${short.map((id) => `${shortName(id)} before ${dayText(daily.get(id)!.file.trFrom!)}`).join(', ')}, so total return there is the price only (too low). `
+                    : ''
+                })()}
               Average a year is compound <Tip term="averageYearly" />. Past growth is history, not a promise.
             </p>
           </>

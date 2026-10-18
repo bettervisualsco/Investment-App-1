@@ -84,8 +84,9 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
             Compare uses each plan’s typed return rates (Manual mode), even for plans set to Prediction mode. Open a plan to see its worst, likely and best results.
           </p>
         )}
-        {mixedSwitches && (
-          <p className="block-hint">These plans use different Fees, Tax and Inflation switches, so their numbers aren’t like for like. The chart shows amounts before inflation.</p>
+        {mixedSwitches && <p className="block-hint">These plans use different Fees, Tax and Inflation switches, so their numbers aren’t like for like.</p>}
+        {results.some((r) => r?.switches.inflation) && (
+          <p className="block-hint">The chart shows amounts before inflation. For plans with Inflation on, see “In today’s dollars” in the table.</p>
         )}
         {overlapping && <p className="block-hint">Some lines sit exactly on top of each other, because those plans give the same balances.</p>}
         {mixedCurrency && <p className="saved-note">These plans use different currencies (AUD and USD), so their amounts can’t be compared directly.</p>}
@@ -129,7 +130,9 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
                 outcomes={outcomes}
                 plans={plans}
                 value={(r, p) =>
-                  r.goal ? (r.goal.reached ? `Reached (${money(r.goal.amount, p.currency)})` : `Short by ${money(r.goal.amount - r.goal.balanceOnDay, p.currency)}`) : 'No goal'
+                  r.goal
+                    ? `${r.goal.reached ? `Reached ${money(r.goal.amount, p.currency)}` : `Short of ${money(r.goal.amount, p.currency)} by ${money(r.goal.amount - r.goal.balanceOnDay, p.currency)}`} on ${dateLong(r.goal.day)}${r.goal.inTodaysDollars ? ' (today’s dollars)' : ''}`
+                    : 'No goal'
                 }
               />
               <tr>

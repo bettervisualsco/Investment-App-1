@@ -172,9 +172,12 @@ describe('syncing data to the device', () => {
     const r = await syncData({ db, baseUrl: base, fetchFn: site(files, metaFor({ 'a.json': 'h2' })).fetchFn })
     expect(r.failed).toEqual(['a.json'])
     expect(await readDataFile('a.json', db)).toEqual({ n: 1 })
+    // Labels keep describing the copy the device really has, not the newer one that failed to download.
+    expect(r.meta?.files['a.json'].hash).toBe('h1')
     files['a.json'] = { n: 2 }
     const again = await syncData({ db, baseUrl: base, fetchFn: site(files, metaFor({ 'a.json': 'h2' })).fetchFn })
     expect(again.changed).toEqual(['a.json'])
+    expect(again.meta?.files['a.json'].hash).toBe('h2')
   })
 
   it('forgets files the website no longer has', async () => {
