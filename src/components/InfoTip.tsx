@@ -13,13 +13,14 @@ export function InfoButton({ title, body }: { title: string; body: string }) {
           <path d="M8 7.2v4.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
-      <div id={id} popover="auto" className="info-card" role="dialog" aria-label={title}>
-        <h3>{title}</h3>
-        <p>{body}</p>
+      {/* Spans (shown as blocks), so an ⓘ can sit inside a paragraph, label or heading without breaking the page structure. */}
+      <span id={id} popover="auto" className="info-card" role="dialog" aria-label={title}>
+        <span className="info-card-title">{title}</span>
+        <span className="info-card-body">{body}</span>
         <button type="button" className="btn btn-quiet" popoverTarget={id} popoverTargetAction="hide">
           Got it
         </button>
-      </div>
+      </span>
     </>
   )
 }
