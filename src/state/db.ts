@@ -1,4 +1,12 @@
 // On-device storage (IndexedDB, via Dexie). Nothing leaves the device.
+//
+// Tables:
+//   drafts: the plan open in the Planner right now (one row, key "current").
+//           It saves itself as you type.
+//   plans:  plans you chose to save in the Saved tab (added in version 2).
+//
+// Plans are stored whole, exactly as given, so any fields added by later
+// stages are kept even by code that doesn't know about them.
 
 import Dexie, { type Table } from 'dexie'
 import type { Plan } from '../engine/types'
@@ -10,12 +18,27 @@ export interface DraftRecord {
   savedAt: number
 }
 
-class PlannerDB extends Dexie {
-  drafts!: Table<DraftRecord, string>
+export interface SavedPlanRecord {
+  /** Same as plan.id. */
+  id: string
+  plan: Plan
+  /** Milliseconds since 1970 (Date.now()). */
+  createdAt: number
+  updatedAt: number
+}
 
-  constructor() {
-    super('investment-planner')
+export const DB_NAME = 'investment-planner'
+
+export class PlannerDB extends Dexie {
+  drafts!: Table<DraftRecord, string>
+  plans!: Table<SavedPlanRecord, string>
+
+  constructor(name = DB_NAME) {
+    super(name)
     this.version(1).stores({ drafts: 'key' })
+    // Version 2 only adds the plans table. The drafts table (and the current
+    // plan in it) is left exactly as it was.
+    this.version(2).stores({ drafts: 'key', plans: 'id, updatedAt' })
   }
 }
 
