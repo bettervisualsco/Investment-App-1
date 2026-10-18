@@ -1,15 +1,18 @@
 // The Markets tab: dashboard → ETF page → Compare. Prices update by themselves whenever the app
 // opens or comes back to the screen (src/data); pull down (iPhone) or tap Refresh to check now.
 
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { refreshData, useDataState } from '../data'
 import type { Plan } from '../engine/types'
-import { ComparePage } from './ComparePage'
 import { Dashboard } from './Dashboard'
-import { EtfDetail } from './EtfDetail'
 import type { HistoryWindowRequest } from './UseInPlanner'
 import { useMarketFreshness } from './useMarketData'
 import './markets.css'
+
+// The chart pages (and the chart library) load only when first opened, so the app starts faster.
+// They're still saved on the device for offline use.
+const EtfDetail = lazy(() => import('./EtfDetail').then((m) => ({ default: m.EtfDetail })))
+const ComparePage = lazy(() => import('./ComparePage').then((m) => ({ default: m.ComparePage })))
 
 type View = { v: 'list' } | { v: 'detail'; id: string } | { v: 'compare' }
 
@@ -154,8 +157,10 @@ export function MarketsPage({ plan, setPlan, onUseHistoryWindow }: { plan: Plan 
           </p>
         </>
       )}
-      {view.v === 'detail' && <EtfDetail key={view.id} id={view.id} onBack={back} plan={plan} setPlan={setPlan} onUseHistoryWindow={onUseHistoryWindow} />}
-      {view.v === 'compare' && <ComparePage onBack={back} onOpen={(id) => go({ v: 'detail', id })} />}
+      <Suspense fallback={<div className="loading">Loading the chart…</div>}>
+        {view.v === 'detail' && <EtfDetail key={view.id} id={view.id} onBack={back} plan={plan} setPlan={setPlan} onUseHistoryWindow={onUseHistoryWindow} />}
+        {view.v === 'compare' && <ComparePage onBack={back} onOpen={(id) => go({ v: 'detail', id })} />}
+      </Suspense>
     </div>
   )
 }

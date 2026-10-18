@@ -293,7 +293,12 @@ export function MarketChart(props: MarketChartProps) {
     if (e.pointerType !== 'mouse' && !selectMode) return
     if (e.pointerType === 'mouse' && e.button !== 0) return
     drag.current = { x0: e.clientX, active: false, from: timeAt(e.clientX) }
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    try {
+      // keep getting this finger's moves even if it slides off the chart
+      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    } catch {
+      // not supported here; the drag still works while over the chart
+    }
   }
   const onMove = (e: RPointerEvent) => {
     const d = drag.current

@@ -251,7 +251,10 @@ export function EtfDetail({
         <div className="mk-head-price" aria-live="polite">
           <strong>{Number.isFinite(headValue) ? priceText(headValue, unit) : '–'}</strong>
           {Number.isFinite(headChange.pct) && <ChangePill abs={headChange.abs} pct={headChange.pct} unit={unit} />}
-          <span className="mk-head-when">{headWhen}</span>
+          <span className="mk-head-when">
+            {headWhen}
+            {total && !isDay ? ', with distributions' : ''}
+          </span>
         </div>
         <p className="mk-fresh">
           {freshness.label}
