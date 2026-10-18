@@ -16,11 +16,11 @@
     "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
   },
   "yield": {
-    "value": 1.0,
+    "value": 1.25,
     "unit": "% a year",
-    "note": "12-month trailing yield as at 15 Oct 2026",
+    "note": "BlackRock's '12m Trailing Yield' at 30 Sep 2026 (IVV fact sheet, September 2026): distributions paid over the past 12 months as a % of the unit price. Those 12 months happened to include five quarterly distributions (ex-dates 3 Oct 2025 to 29 Sep 2026); the latest four come to about 1.0% of the price, which is closer to a normal year.",
     "checkedOn": "2026-10-18",
-    "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+    "source": "https://www.blackrock.com/au/literature/fact-sheet/ivv-ishares-s-p-500-etf-fund-fact-sheet-en-au.pdf"
   },
   "franking": {
     "value": 0,
@@ -34,6 +34,12 @@
     "value": "ASX",
     "checkedOn": "2026-10-18",
     "source": "https://www.blackrock.com/au/products/275304/ishares-s-and-p-500-etf"
+  },
+  "listed": {
+    "value": "2007-10-10",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-18",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/IVV/header"
   },
   "currency": {
     "value": "AUD",

@@ -74,6 +74,10 @@ export interface DailyFile {
   /** ETFs only: adjusted close is a real total return only from this date (see trNote). */
   trFrom?: string
   trNote?: string
+  /** Where the rows come from (e.g. the RBA's official rates for AUD/USD). */
+  source?: string
+  /** Rows from this date on are an approximate stand-in until the official source publishes them. */
+  approxFrom?: string
   /** Fixes made to Yahoo's data, in words. */
   repairs?: string[]
 }
@@ -208,6 +212,10 @@ export interface EtfInfo {
   market: MarketKey
   currency: 'AUD' | 'USD'
   name: string
+  /** The issuer's full name, with when and where it was checked (and any rename note). */
+  nameInfo?: Fact<string>
+  /** Date the ETF listed on its exchange; price rows before it are dropped. */
+  listed?: Fact<string>
   index?: Fact<string>
   /** Management fee, % a year (0.07 = 0.07%). */
   mer?: Fact<number>

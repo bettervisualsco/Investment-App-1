@@ -3,7 +3,8 @@
 // data/inflation.json (ABS for Australia, BLS/FRED for the US).
 //
 // Months are "month numbers" (see src/data/decode.ts): "2026-08" -> year * 12 + month - 1, so
-// they can be subtracted. A quarter is placed at its last month ("2022-Q4" -> Dec 2022).
+// they can be subtracted. On the history chart a quarter is placed at its last month ("2022-Q4" ->
+// Dec 2022), the way the ABS labels it; the monthly chain (monthlyChain) places it mid-quarter instead.
 
 import { monthFromNumber, monthNumber } from '../data/decode'
 import type { InflationFile, LevelSeries } from '../data/types'
@@ -120,7 +121,7 @@ export interface MonthlyChain {
   /** Index level at the END of each month (levels[i] goes with changes[i]); level before the first change is `base`. */
   levels: number[]
   base: number
-  /** First month taken from a true monthly CPI (Australia: the ABS complete Monthly CPI). Earlier Australian months are a quarter's rise spread evenly. */
+  /** First month taken from a true monthly CPI (Australia: the ABS complete Monthly CPI, April 2024). Earlier Australian months grow evenly between the quarterly figures, each placed at its quarter's middle month. */
   monthlyFrom: number
   /** Months with no published figure, filled by spreading the change evenly. */
   filled: string[]
@@ -144,9 +145,13 @@ function monthlyChanges(points: LevelPoint[]): { changes: Map<number, number>; f
 
 /**
  * One continuous monthly inflation series for a country.
- * Australia: before the complete Monthly CPI (April 2024), only quarterly figures exist, so each
- * quarter's rise is spread evenly over its three months (compounded); from May 2024 the monthly CPI
- * is used. This matches how the data pipeline builds `au_cpi` in data/monthly.json.
+ * Australia: before the complete Monthly CPI (April 2024), only quarterly figures exist. A quarterly
+ * index is the AVERAGE of its three months, so it is placed at the quarter's middle month (Feb, May,
+ * Aug, Nov), and each month between two middle months grows by the same amount (the geometric third
+ * of the step). From April 2024 the monthly CPI is used; April's change is level-based (April's index
+ * ÷ the chain's level for March − 1; both ABS series are on the Sep 2025 = 100 base), so no part of
+ * the rise is lost at the switch. Exactly how the data pipeline builds `au_cpi` in data/monthly.json
+ * (pipeline/datapipe/monthly.py au_cpi_monthly; a test checks they match).
  * US: the monthly CPI, with any missing month (October 2025 was never published) filled evenly.
  */
 export function monthlyChain(file: InflationFile, country: Country): MonthlyChain {
@@ -154,14 +159,29 @@ export function monthlyChain(file: InflationFile, country: Country): MonthlyChai
   let monthlyFrom: number
   let filledMonths: number[] = []
   if (country === 'au') {
-    const q = quarterlyLevels(file.series.au_cpi_q).points
-    for (let i = 1; i < q.length; i++) {
-      const per = Math.pow(q[i].level / q[i - 1].level, 1 / 3) - 1
-      for (let k = 2; k >= 0; k--) all.set(q[i].m - k, per)
+    const q = file.series.au_cpi_q
+    // each quarterly index at its middle month: "2024-Q1" -> Feb 2024
+    const mid = q.t.map((t, i) => {
+      const [y, n] = t.split('-Q').map(Number)
+      return { m: y * 12 + (n - 1) * 3 + 1, level: q.v[i] }
+    })
+    const level = new Map<number, number>([[mid[0].m, mid[0].level]]) // chain level on the ABS base
+    const perMonth = new Map<number, number>()
+    for (let i = 1; i < mid.length; i++) {
+      const gap = mid[i].m - mid[i - 1].m
+      const step = Math.pow(mid[i].level / mid[i - 1].level, 1 / gap)
+      for (let k = 1; k <= gap; k++) {
+        level.set(mid[i - 1].m + k, mid[i - 1].level * Math.pow(step, k))
+        perMonth.set(mid[i - 1].m + k, step - 1)
+      }
     }
-    const monthly = monthlyChanges(monthlyLevels(file.series.au_cpi_m).points)
-    monthlyFrom = Math.min(...monthly.changes.keys())
-    for (const m of [...all.keys()]) if (m >= monthlyFrom) all.delete(m)
+    const mPts = monthlyLevels(file.series.au_cpi_m).points
+    monthlyFrom = mPts[0].m
+    const before = level.get(monthlyFrom - 1)
+    if (before === undefined) throw new Error(`monthlyChain: no quarterly CPI level for ${monthFromNumber(monthlyFrom - 1)}`)
+    for (const [m, v] of perMonth) if (m < monthlyFrom) all.set(m, v)
+    all.set(monthlyFrom, mPts[0].level / before - 1)
+    const monthly = monthlyChanges(mPts)
     for (const [m, v] of monthly.changes) all.set(m, v)
     filledMonths = monthly.filled
   } else {

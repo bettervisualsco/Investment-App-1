@@ -35,6 +35,12 @@
     "checkedOn": "2026-10-18",
     "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_Index_ETF_8205_FS_VAS.pdf"
   },
+  "listed": {
+    "value": "2009-05-08",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-18",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VAS/header"
+  },
   "currency": {
     "value": "AUD",
     "checkedOn": "2026-10-18",

@@ -121,15 +121,37 @@ describe('quarterly vs monthly CPI', () => {
     }
   })
 
-  it('spreads each quarter evenly over its months until the monthly CPI starts (May 2024 is its first change)', () => {
-    expect(chain.monthlyFrom).toBe(monthNumber('2024-05'))
-    const i = (ym: string) => monthNumber(ym) - chain.start
-    // Dec qtr 2022: the three months are equal and multiply up to the quarter's rise
-    const [oct, nov, dec] = [i('2022-10'), i('2022-11'), i('2022-12')].map((k) => chain.changes[k])
-    expect(oct).toBeCloseTo(nov, 14)
-    expect(nov).toBeCloseTo(dec, 14)
-    const q = new Map(file.series.au_cpi_q.t.map((t, k) => [t, file.series.au_cpi_q.v[k]]))
-    expect((1 + oct) * (1 + nov) * (1 + dec)).toBeCloseTo(q.get('2022-Q4')! / q.get('2022-Q3')!, 12)
+  const q = new Map(file.series.au_cpi_q.t.map((t, k) => [t, file.series.au_cpi_q.v[k]]))
+  const mo = new Map(file.series.au_cpi_m.t.map((t, k) => [t, file.series.au_cpi_m.v[k]]))
+  const i = (ym: string) => monthNumber(ym) - chain.start
+  /** Chain growth from the END of month `a` to the end of month `b`. */
+  const growth = (a: string, b: string) => chain.changes.slice(i(a) + 1, i(b) + 1).reduce((g, c) => g * (1 + c), 1)
+
+  it('places each quarter mid-quarter (it is the average of its 3 months), with the months between growing evenly', () => {
+    // Dec qtr 2022 sits at Nov 2022 and Mar qtr 2023 at Feb 2023: Dec, Jan and Feb share that step
+    const [dec, jan, feb] = ['2022-12', '2023-01', '2023-02'].map((ym) => chain.changes[i(ym)])
+    expect(dec).toBeCloseTo(jan, 14)
+    expect(jan).toBeCloseTo(feb, 14)
+    expect((1 + dec) * (1 + jan) * (1 + feb)).toBeCloseTo(q.get('2023-Q1')! / q.get('2022-Q4')!, 12)
+    expect(growth('2022-11', '2023-02')).toBeCloseTo(q.get('2023-Q1')! / q.get('2022-Q4')!, 12)
+    // the first change is Sep 1948 (Sep qtr 1948 sits at Aug 1948)
+    expect(chain.start).toBe(monthNumber('1948-09'))
+  })
+
+  it('switches to the monthly CPI in April 2024 without losing any of the rise (level-based first month)', () => {
+    expect(chain.monthlyFrom).toBe(monthNumber('2024-04'))
+    // Mar qtr 2024 average (at Feb) -> Apr 2024: the chain shows the full published rise (about 1.04%),
+    // not a third of the quarter's rise as when quarters sat at their last month.
+    expect(growth('2024-02', '2024-04')).toBeCloseTo(mo.get('2024-04')! / q.get('2024-Q1')!, 12)
+    expect(growth('2024-02', '2024-04') - 1).toBeGreaterThan(0.01)
+    // after that, plain monthly changes
+    expect(chain.changes[i('2024-05')]).toBeCloseTo(mo.get('2024-05')! / mo.get('2024-04')! - 1, 14)
+  })
+
+  it('the whole chain matches the published index: Dec qtr 1992 (41.71) -> latest month (+148.1% to Aug 2026)', () => {
+    const last = file.series.au_cpi_m.t.at(-1)!
+    expect(chainEnd(chain)).toBe(monthNumber(last))
+    expect(growth('1992-11', last)).toBeCloseTo(mo.get(last)! / q.get('1992-Q4')!, 10)
   })
 
   it('matches the monthly inflation the data pipeline gives Prediction mode (data/monthly.json), month by month', () => {
@@ -186,7 +208,7 @@ describe('averages over a window', () => {
     expect(windowMonths({ key: 'last20' }, chain)).toEqual({ from: end - 239, to: end })
     expect(windowMonths({ key: 'custom', from: 2000, to: 2009 }, chain)).toEqual({ from: 2000 * 12, to: 2009 * 12 + 11 })
     expect(windowMonths({ key: 'custom', from: 2026, to: 2026 }, chain).to - windowMonths({ key: 'custom', from: 2026, to: 2026 }, chain).from + 1).toBe(24)
-    expect(windowMonths({ key: 'full' }, chain).from).toBe(monthNumber('1948-10'))
+    expect(windowMonths({ key: 'full' }, chain).from).toBe(monthNumber('1948-09'))
   })
 })
 

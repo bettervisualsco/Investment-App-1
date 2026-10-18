@@ -34,6 +34,12 @@
     "checkedOn": "2026-10-18",
     "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Fixed_Interest_Index_ETF_8207_FS_VAF.pdf"
   },
+  "listed": {
+    "value": "2012-10-31",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-18",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VAF/header"
+  },
   "currency": {
     "value": "AUD",
     "checkedOn": "2026-10-18",

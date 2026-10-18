@@ -35,6 +35,12 @@
     "checkedOn": "2026-10-18",
     "source": "https://www.betashares.com.au/fund/diversified-all-growth-etf/"
   },
+  "listed": {
+    "value": "2019-12-05",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-18",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/DHHF/header"
+  },
   "currency": {
     "value": "AUD",
     "checkedOn": "2026-10-18",

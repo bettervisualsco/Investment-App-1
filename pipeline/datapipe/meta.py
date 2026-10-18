@@ -73,12 +73,23 @@ class Meta:
             t["lastError"] = None
         else:
             t["lastError"] = _short(error)
+        if "note" not in extra:
+            t.pop("note", None)  # a note belongs to one run (e.g. "public holiday?"); don't let it linger
         t.update(extra)
 
     # ---- problems log ----------------------------------------------------------------
     def problem(self, where: str, error: Any, now: Optional[datetime] = None) -> None:
         self.problems.insert(0, {"at": iso(now or now_utc()), "where": where, "message": _short(error)})
         del self.problems[MAX_PROBLEMS:]
+
+    def problem_once(self, where: str, error: Any, now: Optional[datetime] = None) -> bool:
+        """Log a problem unless the same message is already in the list (for checks that would
+        otherwise repeat the same finding on every run). Returns True if it was added."""
+        msg = _short(error)
+        if any(p.get("where") == where and p.get("message") == msg for p in self.problems):
+            return False
+        self.problem(where, msg, now)
+        return True
 
     # ---- files -------------------------------------------------------------------
     def refresh_files(self, now: Optional[datetime] = None) -> None:

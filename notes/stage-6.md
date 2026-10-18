@@ -18,7 +18,7 @@ Built 18 Oct 2026 on branch `claude/stage-6-inflation-075b20`. Not merged yet.
   - **Which years to learn from**: since 1993 (default), last 20 years, since 1990, since 1950, full history, or your own years. Remembered on the device.
 - **Buying power calculator**: amount + year A + year B (with Swap), for Australia or the US. Past years and "now" are exact from the CPI; future years (up to 50 years ahead) give a likely value and a range from the same simulated futures as the fan chart.
 - **ETF returns after inflation**: every ETF's yearly return, inflation and return after inflation for 1Y, 3Y, 5Y, 10Y, 20Y, "Since start" (the ETF's own history) or "Longest" (with index history before the ETF). US ETFs can be shown in A$ after Australian inflation (default) or in US$ after US inflation. Rows that include index history from before the ETF existed are marked *.
-- **Planner "Use historical average" button now works**: it gives "2.72%" with the label "Australia, 1993–2026 average (ABS CPI). You can change the years on the Inflation tab."
+- **Planner "Use historical average" button now works**: it gives "2.73%" with the label "Australia, 1993–2026 average (ABS CPI). You can change the years on the Inflation tab."
 - **Updates by itself**: everything reads `inflation.json` and `monthly.json` through the `src/data` hooks, so when new CPI figures arrive the charts, predictions, calculator, table and the Planner button all recalculate.
 - Phone and Mac layouts, light and dark mode (checked in the preview at 375 px and 1280 px wide).
 
@@ -31,7 +31,7 @@ Built 18 Oct 2026 on branch `claude/stage-6-inflation-075b20`. Not merged yet.
 6. In **Inflation ahead**, try **30Y**, then **Average from now**. Change **History** to **Full history** and watch the estimate jump from about 2.7% to about 4.8% a year (the 1970s are back in).
 7. In **Buying power**, try $100 in 1990 → Now (about $259), then pick a future year like **2036 (estimate)**.
 8. In **ETF returns after inflation**, try **Since start** and switch **US ETFs in A$ / in US$**.
-9. Go to **Planner**, turn on **Inflation**, scroll to **Fees, tax and inflation → Inflation** and tap **Use historical average (2.72%)**.
+9. Go to **Planner**, turn on **Inflation**, scroll to **Fees, tax and inflation → Inflation** and tap **Use historical average (2.73%)**.
 
 ## Tests (40 new, all in `src/inflation/*.test.ts`)
 - Compound average against hand-worked examples (100 → 121 in 2 years = 10%; +10% then −10% = −0.50% a year, not 0%; 100 → 150 in 10 years = 4.138%, not 5%), and highlighting in either drag direction.
@@ -42,7 +42,7 @@ Built 18 Oct 2026 on branch `claude/stage-6-inflation-075b20`. Not merged yet.
   - US 9.1% to June 2022 and 6.5% to Dec 2022.
 - **Quarterly vs monthly**:
   - The quarterly index is the average of its three months.
-  - Quarters are spread evenly over their months until the monthly CPI starts (May 2024 is the first monthly change).
+  - *(Changed in the final accuracy check.)* Each quarterly index is placed at the quarter's middle month and the months in between grow evenly; from April 2024 the monthly CPI is used, joined by level so no price rise is lost at the switch.
   - Our monthly series matches the pipeline's `au_cpi`/`us_cpi` in `monthly.json` month by month (over 900 Australian and 1,800 US months).
   - The missing US month (Oct 2025) is filled evenly and flagged.
 - **Buying power both ways**:
@@ -67,12 +67,12 @@ Built 18 Oct 2026 on branch `claude/stage-6-inflation-075b20`. Not merged yet.
 
 ## Decisions (and why)
 - **Default history window: since 1993.**
-  - That's when the RBA began targeting 2–3% inflation. Since then Australia's inflation has averaged 2.72% a year.
+  - That's when the RBA began targeting 2–3% inflation. Since then Australia's inflation has averaged 2.73% a year.
   - The US has had similar low inflation since then too (the Fed's formal 2% target dates from 2012).
   - Full history includes the 1950s Korean-War wool boom (25% in 1951) and the 1970s (10–17% a year), under a different system. It pushes the estimate to about 4.8% a year, which seems too pessimistic as a default.
   - People can pick Full history, since 1950/1990, the last 20 years, or their own years. It's one shared setting for the Inflation tab and the Planner button, remembered on the device (`localStorage`, key `inflation-window-v1`, with try/catch).
 - **The Planner button** uses Australia, the same window, compounded from the monthly series (Jan 1993 → latest month, Aug 2026). The label names the years and the source. Using the quarterly index instead (Dec qtr 1992 → Jun qtr 2026) gives 2.71%; there's a test that the two agree within 0.05.
-- **One monthly series per country** (`monthlyChain` in `cpi.ts`) for predictions, real returns and the Planner average. It's built from `inflation.json`'s index levels, the same way the pipeline builds `monthly.json`: each quarter's rise is spread evenly over its 3 months until April 2024, then the monthly CPI. The history chart and the highlight use the published index levels directly, so they match ABS/BLS figures.
+- **One monthly series per country** (`monthlyChain` in `cpi.ts`) for predictions, real returns and the Planner average. It's built from `inflation.json`'s index levels, the same way the pipeline builds `monthly.json`: each quarterly index sits at its middle month with even monthly growth in between, then the monthly CPI from April 2024, joined by level (changed in the final accuracy check: the old method lost about 0.7% of price rises at the switch). The history chart and the highlight use the published index levels directly, so they match ABS/BLS figures.
 - **Fan chart points are one per year.** Australia's new monthly CPI jumps around month to month (seasonal, not seasonally adjusted). Monthly points in the first year mixed those real lumpy months with smooth simulated ones and zig-zagged for no real reason. The engine still works month by month.
 - **The prediction starts from today's real yearly figure:** the first simulated year's 12-month figure includes the real recent months. Otherwise it's a plain replay of history and doesn't know today's interest rates or events. The page says so.
 - **Worst = high inflation, best = low** (from the point of view of what your money buys).

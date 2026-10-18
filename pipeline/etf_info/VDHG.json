@@ -35,6 +35,12 @@
     "checkedOn": "2026-10-18",
     "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_High_Growth_Index_ETF_8221_FS_VDHG.pdf"
   },
+  "listed": {
+    "value": "2017-11-22",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-18",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VDHG/header"
+  },
   "currency": {
     "value": "AUD",
     "checkedOn": "2026-10-18",

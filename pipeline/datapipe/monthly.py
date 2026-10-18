@@ -92,6 +92,27 @@ def bond_returns(yields: List[Tuple[str, float]], years: float) -> Series:
     return out
 
 
+def fill_spread_gaps(short: List[Tuple[str, float]], long: List[Tuple[str, float]], max_gap: int = 12) -> Tuple[List[Tuple[str, float]], List[str]]:
+    """Fill holes (up to max_gap months) inside a bond yield series from a longer-maturity yield
+    that has those months: yield = long yield + the spread between the two, interpolated in a
+    straight line between the last month before the hole and the first month after it.
+    Returns (filled series, the months that were estimated)."""
+    s, lg = dict(short), dict(long)
+    out = dict(s)
+    filled: List[str] = []
+    months = sorted(s)
+    for a, b in zip(months, months[1:]):
+        gap = month_num(b) - month_num(a)
+        missing = [month_str(month_num(a) + k) for k in range(1, gap)]
+        if not missing or len(missing) > max_gap or a not in lg or b not in lg or any(m not in lg for m in missing):
+            continue
+        sa, sb = s[a] - lg[a], s[b] - lg[b]
+        for k, m in enumerate(missing, 1):
+            out[m] = lg[m] + sa + (sb - sa) * k / gap
+            filled.append(m)
+    return sorted(out.items()), filled
+
+
 def pct_points(points) -> Series:
     return {m: v / 100 for m, v in points}
 
@@ -175,21 +196,38 @@ def _daily(tid: str) -> Optional[dict]:
 
 
 def au_cpi_monthly(inflation: dict) -> Tuple[Series, str]:
-    """Australian monthly inflation. Before the complete Monthly CPI (April 2024) only quarterly
-    figures exist; each quarter's rise is spread evenly over its three months (compounded)."""
+    """Australian monthly inflation, as one chain of month-on-month changes.
+
+    Before the complete Monthly CPI (April 2024) only quarterly figures exist. A quarterly index is
+    the AVERAGE of its three months, so it describes prices in the middle of the quarter: each
+    quarter's index is placed at its middle month (Feb, May, Aug, Nov), and each month between two
+    middle months grows by the same amount (the geometric third of that step).
+
+    From the first month of the monthly CPI on, the monthly index's own changes are used. That
+    first month's change is level-based: monthly index / the chain's level for the month before - 1.
+    Both ABS series are on the same base (Sep 2025 = 100), so the chain then lands exactly on the
+    published monthly index (no level is lost at the switch). Returns (changes, first monthly month)."""
     q = _levels(inflation, "au_cpi_q")
-    out: Series = {}
-    for (q0, a), (q1, b) in zip(q, q[1:]):
-        y, n = q1.split("-Q")
-        per_month = (b / a) ** (1 / 3) - 1
-        first = (int(n) - 1) * 3 + 1
-        for k in range(3):
-            out[f"{y}-{first + k:02d}"] = per_month
-    monthly = changes_from_levels(_levels(inflation, "au_cpi_m"))
-    monthly_from = min(monthly)
-    out = {m: v for m, v in out.items() if m < monthly_from}
-    out.update(monthly)
-    return dict(sorted(out.items())), monthly_from
+    mid: List[Tuple[int, float]] = []
+    for t, v in q:
+        y, n = t.split("-Q")
+        mid.append((int(y) * 12 + (int(n) - 1) * 3 + 1, v))  # month number of the quarter's middle month
+    level: Dict[int, float] = {mid[0][0]: mid[0][1]}  # chain level for each month, on the ABS base
+    per_month: Dict[int, float] = {}
+    for (m0, a), (m1, b) in zip(mid, mid[1:]):
+        gap = m1 - m0
+        step = (b / a) ** (1 / gap)
+        for k in range(1, gap + 1):
+            level[m0 + k] = a * step**k
+            per_month[m0 + k] = step - 1
+    monthly_levels = _levels(inflation, "au_cpi_m")
+    first = month_num(monthly_levels[0][0])
+    if first - 1 not in level:
+        raise ValueError(f"au_cpi: no quarterly level for {month_str(first - 1)}, the month before the monthly CPI starts")
+    out: Series = {month_str(m): v for m, v in per_month.items() if m < first}
+    out[month_str(first)] = monthly_levels[0][1] / level[first - 1] - 1
+    out.update(changes_from_levels(monthly_levels))
+    return dict(sorted(out.items())), month_str(first)
 
 
 # ---- the build ---------------------------------------------------------------------------
@@ -258,10 +296,16 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
     # Bonds: 10-year US Treasury. Australian government bonds: 85% 5-year + 15% 10-year, which gives
     # about the same interest-rate sensitivity (duration ~4.8 years) as the AusBond Composite index
     # VAF tracks. Before 1972 only the 10-year yield exists.
+    # The RBA has no 5-year yield from 20 May to 23 Sep 2013 (no month-end values May-Aug 2013):
+    # those months are estimated from the 10-year yield plus the 5y-10y spread (interpolated).
     us_bonds = bond_returns(_levels(rates, "us_bond_10y"), 10)
-    au10 = bond_returns(_levels(rates, "au_bond_10y"), 10)
-    au5 = bond_returns(_levels(rates, "au_bond_5y"), 5)
+    au10_yields = _levels(rates, "au_bond_10y")
+    au5_yields, au5_estimated = fill_spread_gaps(_levels(rates, "au_bond_5y"), au10_yields)
+    au10 = bond_returns(au10_yields, 10)
+    au5 = bond_returns(au5_yields, 5)
     au_bonds = {m: (AU_BOND_W5 * au5[m] + (1 - AU_BOND_W5) * v) if m in au5 else v for m, v in au10.items()}
+    # a month's bond return uses the yields at the end of that month and of the month before
+    au_bonds_estimated = sorted({add_months(m, k) for m in au5_estimated for k in (0, 1)} & set(au_bonds))
 
     cash_au = {m: v / 100 / 12 for m, v in _levels(rates, "cash_monthly")}
     cash_au = complete_months(cash_au, this_month)
@@ -279,7 +323,7 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
         "us_shares": (us_shares, {"label": "US shares (total return)", "kind": "return", "currency": "USD",
             "segments": [["1871-02", "1926-06", "Shiller: S&P Composite, monthly average prices + dividends"],
                          ["1926-07", fr_us_end, "Kenneth French Data Library: all US stocks (CRSP), dividends included"],
-                         [add_months(fr_us_end, 1), None, "VTI (Vanguard Total Stock Market ETF) adjusted close, Yahoo"]]}),
+                         [add_months(fr_us_end, 1), None, "VTI (Vanguard Morningstar Total Stock Market ETF, called Vanguard Total Stock Market ETF before 29 Jul 2026) adjusted close, Yahoo"]]}),
         "global_shares": (global_shares, {"label": "Developed-world shares (total return)", "kind": "return", "currency": "USD",
             "segments": [["1871-02", "1974-12", "STAND-IN: US shares only (no free world data this early)"],
                          ["1975-01", "1990-06", "Rough mix: 50% US shares + 50% French all-country ex-US index"],
@@ -290,8 +334,11 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
                          ["1985-11", None, "Nasdaq-100 price index + assumed 0.7% a year dividends"]],
             "gap": "Price index only; dividends are an assumption (QQQ yields about 0.5-0.7% a year)."}),
         "au_bonds": (au_bonds, {"label": "Australian government bonds", "kind": "return", "currency": "AUD",
-            "segments": [["1969-08", None, "Calculated from RBA government bond yields: 85% 5-year + 15% 10-year (10-year only before 1972). Monthly-average yields before 1995, end-of-month after."]],
-            "gap": "Government bonds only; VAF also holds semi-government and corporate bonds, which pay a bit more."}),
+            "segments": [["1969-08", None, "Calculated from RBA government bond yields: 85% 5-year + 15% 10-year (10-year only before 1972). End-of-month yields: the RBA's last-business-day figures before 1995, the last daily value from 1995."]],
+            "interpolated": au_bonds_estimated,
+            "gap": "Government bonds only; VAF also holds semi-government and corporate bonds, which pay a bit more."
+                   + (" The RBA has no 5-year yield for the end of " + ", ".join(au5_estimated) + " (no figures 20 May to 23 Sep 2013): those 5-year yields are estimated as the 10-year yield plus the 5-year/10-year gap, drawn in a straight line between the months either side, so the returns for "
+                      + ", ".join(au_bonds_estimated) + " are partly estimated." if au5_estimated else "")}),
         "us_bonds": (us_bonds, {"label": "US 10-year Treasury bonds", "kind": "return", "currency": "USD",
             "segments": [["1871-02", "1953-03", "Calculated from Shiller's long-term interest rate (monthly average)"],
                          ["1953-04", "1961-12", "Calculated from FRED GS10 (monthly average)"],
@@ -301,8 +348,8 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
         "cash_us": (cash_us, {"label": "US 1-month Treasury bills", "kind": "return", "currency": "USD",
             "segments": [["1926-07", None, "Kenneth French Data Library (Ibbotson, then ICE BofA)"]]}),
         "au_cpi": (au_cpi, {"label": "Australian inflation (CPI)", "kind": "inflation", "currency": "AUD",
-            "segments": [["1948-10", add_months(au_monthly_from, -1), "ABS quarterly CPI, each quarter spread evenly over its 3 months"],
-                         [au_monthly_from, None, "ABS complete Monthly CPI"]],
+            "segments": [[first_month(au_cpi), add_months(au_monthly_from, -1), "ABS quarterly CPI: each quarter's index (the average of its 3 months) placed at its middle month, with the months in between growing evenly"],
+                         [au_monthly_from, None, "ABS complete Monthly CPI (the first month is measured from the quarterly chain's level for the month before)"]],
             "gap": "No CPI before 1948 in the ABS series."}),
         "us_cpi": (us_cpi, {"label": "US inflation (CPI-U)", "kind": "inflation", "currency": "USD",
             "segments": [["1871-02", "1912-12", "Shiller (Warren-Pearson price index)"], ["1913-01", None, "BLS CPI-U via FRED"]],
@@ -310,9 +357,17 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
             "gap": ("Missing months filled by spreading the change evenly: " + ", ".join(us_cpi_filled) + " (no CPI was published, e.g. the Oct 2025 US government shutdown).") if us_cpi_filled else None}),
         "audusd": (fx, {"label": "AUD/USD (change in US$ per A$1)", "kind": "fx", "currency": "USD",
             "segments": [["1969-08", None, "RBA tables F11, end of month"]],
-            "gap": "Starts July 1969. Before December 1971 the A$ was fixed to the US$, so early months barely move."}),
+            "gap": "Starts July 1969. The A$ was pegged to the British pound until December 1971, then to the US$ until September 1974, then to a basket of currencies until it was floated in December 1983, so most months before the float barely move."}),
     }
     assets = {k: v[0] for k, v in asset_series.items()}
+
+    # Months where an asset series is itself made from an ETF's prices (once the index data runs
+    # out). Comparing an ETF with such months would partly compare it with itself (or a near twin),
+    # so the proxy check below leaves them out.
+    from_etf: Dict[str, set] = {k: set() for k in asset_series}
+    from_etf["us_shares"] = {m for m in us_shares if m > fr_us_end}
+    from_etf["au_shares"] = {m for m in au_shares if m > last_month(aus)}
+    from_etf["global_shares"] = {m for m in global_shares if m > last_month(developed) or (m <= "1990-06" and m in from_etf["us_shares"])}
 
     out_series = {}
     for key, (s, info) in asset_series.items():
@@ -351,7 +406,7 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
             "realFrom": real_from,
             "fee": None if mer is None else round(mer, 6),
             "proxy": [{"series": c.series, "weight": c.weight, "hedged": c.hedged} for c in t.proxy],
-            "proxyCheck": proxy_check(real, proxy) if real and proxy else None,
+            "proxyCheck": proxy_check(real, {m: v for m, v in proxy.items() if not any(m in from_etf[c.series] for c in t.proxy)}) if real and proxy else None,
             "values": vals,
         }
         if mer is None:

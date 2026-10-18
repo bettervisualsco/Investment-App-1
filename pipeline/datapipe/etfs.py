@@ -8,7 +8,7 @@ from typing import List
 from .config import Ticker
 from .safety import ValidationError, save_validated
 
-INFO_FIELDS = ["index", "mer", "yield", "franking", "exchange", "inception", "distributions", "allocation", "duration"]
+INFO_FIELDS = ["index", "mer", "yield", "franking", "exchange", "listed", "inception", "distributions", "allocation", "duration"]
 
 
 def _check(new: dict, old) -> None:
@@ -22,6 +22,8 @@ def build(tickers: List[Ticker]) -> dict:
     for t in tickers:
         if t.kind == "etf":
             entry = {"id": t.id, "symbol": t.yahoo, "market": t.market, "currency": t.currency, "name": t.name}
+            if isinstance(t.info.get("name"), dict):
+                entry["nameInfo"] = t.info["name"]  # the name as a checked fact (note, date, source)
             for k in INFO_FIELDS:
                 if k in t.info:
                     entry[k] = t.info[k]

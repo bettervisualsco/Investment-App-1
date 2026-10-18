@@ -109,7 +109,7 @@ prices after each close, and inflation/cash rate once a day. Scheduled runs can 
   the newest (1.7.0). Pinned in `pipeline/requirements.txt`.
 - **Proxies**: see DATA_SOURCES.md section 3. Australian bonds use 85% 5-year + 15% 10-year
   government yields to match VAF's 4.8-year duration.
-- **Month-end bond yields**: the RBA's and FRED's monthly tables are monthly averages; we use the last
+- **Month-end bond yields** *(corrected in the final accuracy check: the RBA's pre-1995 figures are already last-business-day values; its monthly averages start in 1995)*: where the RBA's and FRED's monthly tables are monthly averages, we use the last
   daily value instead where daily data exists (Australia from 1995, US from 1962).
 - **Frozen snapshots**: old spreadsheets that never change (Shiller to 1953, RBA history) are kept as
   small CSVs in `pipeline/static/`, so the daily job never depends on them.
@@ -148,3 +148,10 @@ prices after each close, and inflation/cash rate once a day. Scheduled runs can 
 - 3.2: record the 1975 start for Australian shares and 1969 for AUD/USD in free data, and that
   global shares before 1990 are approximate (DATA_SOURCES.md).
 - 3.3 (60-day rule): answer recorded above; no keep-alive tricks (GitHub disabled the main one).
+
+## Changes from the final accuracy check (19 Oct 2026)
+- IVV's closes from 8 Dec 2022 to 3 Jan 2023 were frozen at 39.35 in Yahoo's data; they're corrected from independent closes in `pipeline/static/corrections.json`, re-applied after every download. A check now flags any 5+ day run of identical closes while the market moves (two 2020 DHHF runs are flagged for a person to check).
+- Daily AUD/USD now comes from the RBA's official daily rates (Yahoo only for days the RBA hasn't published yet). Weekend FX rows are dropped.
+- Price rows before each ETF's ASX listing date (Yahoo placeholders) are dropped.
+- The 2013 gap in the 5-year bond yield is filled from the 10-year yield plus the spread around it, and marked as interpolated.
+- The "quiet repository" warning is logged once per quiet spell, and `meta.repo.lastCommit` lets the app work out the age itself.

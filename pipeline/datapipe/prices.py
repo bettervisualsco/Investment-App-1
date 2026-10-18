@@ -10,9 +10,146 @@ from .meta import Meta
 from .safety import ValidationError, daily_dates, save_validated, validate_daily, validate_intraday
 from .schedule import MARKETS, Market
 from .sources import yahoo
-from .util import DATA_DIR, iso, load_json, round_price
+from .static_build import read_static
+from .util import DATA_DIR, STATIC_DIR, iso, load_json, round_price
 
 # ---- daily -------------------------------------------------------------------------
+
+CORRECTIONS_FILE = STATIC_DIR / "corrections.json"
+RBA_FX_DAILY_STATIC = "rba_audusd_daily_2003_2022.csv"
+FLAT_RUN_DAYS = 5  # this many identical closes in a row, while the market moved, looks like missing data
+MARKET_INDEX = {"asx": ("ASX200", "ASX 200"), "us": ("SP500", "S&P 500")}
+
+
+def _drop_rows(h: yahoo.DailyHistory, keep) -> List[str]:
+    """Remove rows whose date fails keep(date); returns the dropped dates."""
+    dropped = [d for d in h.dates if not keep(d)]
+    if dropped:
+        rows = [(d, c, a) for d, c, a in zip(h.dates, h.close, h.adj) if keep(d)]
+        h.dates, h.close, h.adj = [r[0] for r in rows], [r[1] for r in rows], [r[2] for r in rows]
+    return dropped
+
+
+def drop_weekends(h: yahoo.DailyHistory) -> List[str]:
+    """Exchange rates trade around the clock, and Yahoo sometimes adds a Saturday/Sunday row from
+    its live quote. Daily history is one row per weekday, so weekend rows are dropped."""
+    return _drop_rows(h, lambda d: date.fromisoformat(d).weekday() < 5)
+
+
+def trim_before_listing(t: Ticker, h: yahoo.DailyHistory) -> List[str]:
+    """Yahoo has a few placeholder rows (often a flat 50.00) before some ASX ETFs actually listed.
+    Rows before the listing date recorded in pipeline/etf_info (fact "listed") are dropped."""
+    listed = (t.info.get("listed") or {}).get("value")
+    if not listed:
+        return []
+    dropped = _drop_rows(h, lambda d: d >= listed)
+    if not dropped:
+        return []
+    h.dividends = [(d, v) for d, v in h.dividends if d >= listed]
+    h.splits = [(d, v) for d, v in h.splits if d >= listed]
+    return [f"dropped {len(dropped)} row(s) from {dropped[0]} to {dropped[-1]}, before the ETF listed on {listed} (Yahoo placeholder prices)"]
+
+
+def load_corrections() -> dict:
+    return load_json(CORRECTIONS_FILE, {}) or {}
+
+
+def apply_corrections(t: Ticker, h: yahoo.DailyHistory, corrections: List[dict]) -> Tuple[List[str], List[str]]:
+    """Re-apply checked fixes from pipeline/static/corrections.json after every download, so a new
+    Yahoo download can't undo them. Each entry gives the right close, the wrong value it replaces,
+    and its source. The adjusted close on that day is scaled by the same ratio as the close.
+    A correction is only applied while Yahoo still shows the wrong value it was written for;
+    otherwise (Yahoo changed the history, e.g. after a split) it is skipped and reported.
+    Returns (notes for the file's "repairs", problems for meta.json)."""
+    notes: List[str] = []
+    problems: List[str] = []
+    where = {d: i for i, d in enumerate(h.dates)}
+    fixed: List[str] = []
+    for c in corrections:
+        if c.get("id") != t.id:
+            continue
+        i = where.get(c["date"])
+        if i is None:
+            problems.append(f"{t.id}: correction for {c['date']} not applied (that day isn't in Yahoo's data); please check pipeline/static/corrections.json")
+            continue
+        y = h.close[i]
+        if abs(y / c["close"] - 1) < 0.0005:
+            continue  # Yahoo already has the right close
+        if abs(y / c["replaces"] - 1) > 0.005:
+            problems.append(
+                f"{t.id}: correction for {c['date']} not applied: Yahoo's close is now {y:g}, not the {c['replaces']:g} it was written for; "
+                "please check pipeline/static/corrections.json"
+            )
+            continue
+        ratio = c["close"] / y
+        h.close[i] = c["close"]
+        h.adj[i] = h.adj[i] * ratio
+        fixed.append(c["date"])
+    if fixed:
+        notes.append(f"{len(fixed)} close(s) from {fixed[0]} to {fixed[-1]} corrected from an independent source (pipeline/static/corrections.json)")
+    return notes, problems
+
+
+def flat_runs(close: List[float], min_days: int = FLAT_RUN_DAYS) -> List[Tuple[int, int]]:
+    """(first, last) row indexes of every run of at least min_days identical closes."""
+    out: List[Tuple[int, int]] = []
+    i = 0
+    while i < len(close):
+        j = i
+        while j + 1 < len(close) and close[j + 1] == close[i]:
+            j += 1
+        if j - i + 1 >= min_days:
+            out.append((i, j))
+        i = j + 1
+    return out
+
+
+def check_flat_runs(t: Ticker, h: yahoo.DailyHistory, index_close: Dict[str, float], index_name: str, checked: List[dict]) -> List[str]:
+    """An ETF's close stuck at one value for FLAT_RUN_DAYS+ trading days while its market's index
+    moved usually means Yahoo missed real trades (IVV in Dec 2022). Returns messages for meta.json.
+    Runs a person has already checked are listed under "checkedFlatRuns" in corrections.json."""
+    ok = {(c.get("id"), c.get("from")) for c in checked}
+    out: List[str] = []
+    for i, j in flat_runs(h.close):
+        if (t.id, h.dates[i]) in ok:
+            continue
+        iv = [index_close[d] for d in h.dates[i : j + 1] if d in index_close]
+        if len(iv) < 2:
+            continue
+        moved = max(iv) / min(iv) - 1
+        if moved > 0.005:
+            out.append(
+                f"{t.id}: close stuck at {h.close[i]:g} for {j - i + 1} trading days ({h.dates[i]} to {h.dates[j]}) while the {index_name} "
+                f"moved {moved:.1%}. Yahoo may have missed trades; please check (fixes go in pipeline/static/corrections.json)"
+            )
+    return out
+
+
+def rba_fx_history(t: Ticker, meta: Meta, now: datetime) -> Tuple[yahoo.DailyHistory, Optional[str]]:
+    """Daily AUD/USD from the RBA (official 4pm Sydney rate; WM/Reuters since 2008): a frozen copy
+    for 2003-2022 (pipeline/static) plus the RBA's current table F11.1. Yahoo is used only for the
+    newest weekdays the RBA hasn't published yet; those rows are approximate (Yahoo's own end-of-day
+    quote, not the 4pm rate). Returns (history, first Yahoo-filled date or None)."""
+    from .sources import official
+
+    pts: Dict[str, float] = {r["date"]: float(r["audusd"]) for r in read_static(RBA_FX_DAILY_STATIC) if r["audusd"]}
+    current = official.rba_table("f11.1").get("FXRUSD") or []
+    if len(current) < 100:
+        raise ValidationError(f"RBA F11.1: only {len(current)} AUD/USD rows")
+    pts.update(dict(current))
+    last_rba = max(pts)
+    extra: List[Tuple[str, float]] = []
+    try:
+        yh, main_error = yahoo.daily(t.yahoo)
+        if main_error:
+            meta.problem("yahoo", f"{t.yahoo}: yfinance failed ({main_error}); used the backup route", now)
+        drop_weekends(yh)
+        extra = [(d, c) for d, c in zip(yh.dates, yh.close) if d > last_rba]
+    except Exception as e:  # the RBA history is still good without Yahoo's newest day
+        meta.problem("yahoo", f"{t.yahoo}: {type(e).__name__}: {e} (AUD/USD kept to the RBA's latest day)", now)
+    rows = sorted(pts.items()) + extra
+    h = yahoo.DailyHistory(t.yahoo, dates=[d for d, _ in rows], close=[v for _, v in rows], adj=[v for _, v in rows], route="rba")
+    return h, (extra[0][0] if extra else None)
 
 
 def repair_history(h: yahoo.DailyHistory) -> List[str]:
@@ -47,7 +184,7 @@ def repair_history(h: yahoo.DailyHistory) -> List[str]:
     return notes
 
 
-def daily_file(t: Ticker, h: yahoo.DailyHistory) -> dict:
+def daily_file(t: Ticker, h: yahoo.DailyHistory, approx_from: Optional[str] = None) -> dict:
     """Compact format: first date + gaps in days, then the prices. See docs/DATA_FORMAT.md."""
     days = [date.fromisoformat(d) for d in h.dates]
     gaps = [0] + [(b - a).days for a, b in zip(days, days[1:])]
@@ -63,6 +200,10 @@ def daily_file(t: Ticker, h: yahoo.DailyHistory) -> dict:
         "d": gaps,
         "c": [round_price(x) for x in h.close],
     }
+    if t.kind == "fx":
+        f["source"] = "RBA daily exchange rates (tables F11.1; 4pm Sydney, WM/Reuters), with Yahoo only for days the RBA hasn't published yet"
+        if approx_from:
+            f["approxFrom"] = approx_from
     # Indexes and exchange rates have no distributions, so their adjusted close equals the close.
     if t.kind == "etf":
         # Yahoo has no distribution records for ASX ETFs before about 2013. Where the records start
@@ -78,38 +219,59 @@ def daily_file(t: Ticker, h: yahoo.DailyHistory) -> dict:
 
 
 def update_daily(tickers: List[Ticker], meta: Meta, now: datetime) -> Tuple[bool, Optional[str]]:
-    """Fetch full daily history for each ticker; returns (any file changed, latest date seen)."""
+    """Fetch full daily history for each ticker. Returns (any file changed, latest complete date):
+    the OLDEST latest close among the ETFs (so one early index close can't mark the day as done
+    while ETFs are still missing it). A failed ETF counts with its saved file's last date."""
     changed = False
-    latest: Optional[str] = None
+    etf_last: List[str] = []
+    index_last: List[str] = []
     failures = 0
     used_backup = []
+    fixes = load_corrections()
     for t in tickers:
         rel = f"daily/{t.id}.json"
         try:
-            h, main_error = yahoo.daily(t.yahoo)
-            if main_error:
-                used_backup.append(t.id)
-                meta.problem("yahoo", f"{t.yahoo}: yfinance failed ({main_error}); used the backup route")
+            approx_from = None
+            repairs: List[str] = []
+            if t.kind == "fx":
+                h, approx_from = rba_fx_history(t, meta, now)
+            else:
+                h, main_error = yahoo.daily(t.yahoo)
+                if main_error:
+                    used_backup.append(t.id)
+                    meta.problem("yahoo", f"{t.yahoo}: yfinance failed ({main_error}); used the backup route")
             if not h.dates:
                 raise ValidationError(f"{t.yahoo}: no data returned")
-            repairs: List[str] = []
             if t.kind == "etf":
-                repairs = repair_history(h)
+                repairs = trim_before_listing(t, h) + repair_history(h)
+                notes, problems = apply_corrections(t, h, fixes.get("closes", []))
+                repairs += notes
+                for msg in problems:
+                    meta.problem_once("corrections", msg, now)
                 # Anything still jumping this much is suspicious; flag it so a person can check.
                 for a, b, d in zip(h.close, h.close[1:], h.dates[1:]):
                     if b / a - 1 < -0.4 or b / a - 1 > 0.6:
                         if not any(s[0] == d for s in h.splits):
                             meta.problem("yahoo", f"{t.id}: price moved {b / a - 1:+.0%} on {d}; please check", now)
-            f = daily_file(t, h)
+                idx_id, idx_name = MARKET_INDEX.get(t.market, (None, ""))
+                idx = load_json(DATA_DIR / f"daily/{idx_id}.json") if idx_id else None
+                if idx:
+                    for msg in check_flat_runs(t, h, dict(zip(daily_dates(idx), idx["c"])), idx_name, fixes.get("checkedFlatRuns", [])):
+                        meta.problem_once("yahoo", msg, now)
+            f = daily_file(t, h, approx_from)
             if repairs:
                 f["repairs"] = repairs
             if save_validated(rel, f, validate_daily) == "written":
                 changed = True
-            if t.kind in ("etf", "index"):
-                latest = max(latest or h.dates[-1], h.dates[-1])
+            if t.kind == "etf":
+                etf_last.append(h.dates[-1])
+            elif t.kind == "index":
+                index_last.append(h.dates[-1])
         except Exception as e:
             failures += 1
             meta.problem("yahoo", f"{t.id}: {type(e).__name__}: {e} (kept the last good file)", now)
+            if t.kind == "etf":
+                etf_last.append((load_json(DATA_DIR / rel) or {}).get("last") or "")
     if failures == len(tickers):
         meta.source_failed("yahoo", f"all {failures} daily downloads failed", now)
     else:
@@ -117,7 +279,16 @@ def update_daily(tickers: List[Ticker], meta: Meta, now: datetime) -> Tuple[bool
         if used_backup:
             note = (note + "; " if note else "") + "backup route used for " + ", ".join(used_backup)
         meta.source_ok("yahoo", now, note)
+    latest = latest_complete(etf_last, index_last)
     return changed, latest
+
+
+def latest_complete(etf_last: List[str], index_last: List[str]) -> Optional[str]:
+    """The date every ETF has a close for (the oldest of their latest dates). Indexes only count
+    when there are no ETFs at all."""
+    if etf_last:
+        return min(etf_last) or None
+    return max(index_last) if index_last else None
 
 
 # ---- intraday ----------------------------------------------------------------------

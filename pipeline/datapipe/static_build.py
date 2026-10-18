@@ -18,6 +18,9 @@ SHILLER_URL = "http://www.econ.yale.edu/~shiller/data/ie_data.xls"
 RBA_FX_HIST = "https://www.rba.gov.au/statistics/tables/xls-hist/f11hist-1969-2009.xls"
 RBA_BONDS_HIST = "https://www.rba.gov.au/statistics/tables/xls-hist/f02histhist.xls"
 RBA_BONDS_DAILY_HIST = "https://www.rba.gov.au/statistics/tables/xls-hist/f02dhist.xls"
+# Daily exchange rates (historical F11.1). 2023 onwards comes live from the current table's CSV.
+RBA_FX_DAILY_HIST = ["2003-2006", "2007-2009", "2010-2013", "2014-2017", "2018-2022"]
+RBA_FX_DAILY_URL = "https://www.rba.gov.au/statistics/tables/xls-hist/{years}.xls"
 
 
 def _write(name: str, header, rows) -> None:
@@ -72,8 +75,9 @@ def rba() -> None:
     _write("rba_audusd_monthly_1969_2009.csv", ["date"] + fx[0], fx[1:])
     bonds = _rba_xls(RBA_BONDS_HIST, {"FCMYGBAG5": "y05", "FCMYGBAG10": "y10"}, 11)
     _write("rba_bond_yields_monthly_1969_2013.csv", ["date"] + bonds[0], bonds[1:])
-    # The monthly table above holds monthly AVERAGES. From 1995 the RBA has daily yields, so we
-    # keep the last daily value in each month (a true end-of-month yield, better for returns).
+    # The monthly table above holds last-business-day (end-of-month) yields before 1995, but
+    # monthly AVERAGES from 1995. From 1995 the RBA has daily yields, so we keep the last daily
+    # value in each month instead (a true end-of-month yield, better for returns).
     daily = _rba_xls(RBA_BONDS_DAILY_HIST, {"FCMYGBAG5D": "y05", "FCMYGBAG10D": "y10"}, 11)
     last = {}
     for row in daily[1:]:
@@ -86,9 +90,19 @@ def rba() -> None:
     _write("rba_bond_yields_monthend_1995_2013.csv", ["date"] + daily[0], [last[m] for m in sorted(last)])
 
 
+def rba_fx_daily() -> None:
+    """Daily AUD/USD (A$1 in US$, 4pm Sydney; WM/Reuters since 2008), 2003-2022."""
+    rows = []
+    for years in RBA_FX_DAILY_HIST:
+        rows += _rba_xls(RBA_FX_DAILY_URL.format(years=years), {"FXRUSD": "audusd"}, 11)[1:]
+    rows = sorted({r[0]: r for r in rows if isinstance(r[1], float)}.values())  # skips "CLOSED" (holidays) and blanks
+    _write("rba_audusd_daily_2003_2022.csv", ["date", "audusd"], rows)
+
+
 def main() -> None:
     shiller()
     rba()
+    rba_fx_daily()
 
 
 def read_static(name: str) -> list:

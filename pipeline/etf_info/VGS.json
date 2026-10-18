@@ -1,8 +1,9 @@
 {
   "name": {
-    "value": "Vanguard MSCI Index International Shares ETF",
+    "value": "Vanguard MSCI International Shares Index ETF",
     "checkedOn": "2026-10-18",
-    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf",
+    "note": "Name used on Vanguard's fact sheet dated 30 Sep 2026. Earlier name: Vanguard MSCI Index International Shares ETF (the ASX company list still showed that on 18 Oct 2026)."
   },
   "index": {
     "value": "MSCI World ex-Australia Index (net dividends reinvested) in AUD, unhedged",
@@ -33,6 +34,12 @@
     "value": "ASX",
     "checkedOn": "2026-10-18",
     "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_ETF_8212_FS_VGS.pdf"
+  },
+  "listed": {
+    "value": "2014-11-20",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-18",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VGS/header"
   },
   "currency": {
     "value": "AUD",

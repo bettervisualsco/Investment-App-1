@@ -46,7 +46,15 @@ that has data in time has an `asOf` field: the latest date/time/month it covers.
   hash differs from the copy it already has. `updatedAt` is when the content last changed.
 - `sources[*].status` is `"error"` when the most recent attempt failed. The old data is still being
   served; `lastSuccess` says how old it is. Source names: `yahoo`, `abs`, `fred`, `rba`, `french`.
-- Tasks: `daily_asx`, `daily_us`, `intraday_asx`, `intraday_us`, `macro`, `proxies`.
+- Tasks: `daily_asx`, `daily_us`, `intraday_asx`, `intraday_us`, `macro`, `proxies`. A task's
+  `note` (e.g. "no close for … (public holiday?)") belongs to its latest run only and is removed by
+  the next run that has none. A daily task is done for a date (`forDate`) only when **every** ETF in
+  that market has its close (the oldest of the ETFs' latest dates), not when the first index has one.
+- `repo.lastCommit`: UTC time of the newest git commit (`YYYY-MM-DDTHH:MM:SSZ`), written every run;
+  the app works out the age from it. `daysSinceCommit` is the age when the pipeline last ran. After 45
+  quiet days a `"github"` problem is logged once per quiet spell (not on every run).
+- Checks that would find the same thing every run (e.g. an ETF close stuck for days) log each
+  message once.
 
 ## daily/&lt;ID&gt;.json
 
@@ -61,12 +69,17 @@ that has data in time has an `asOf` field: the latest date/time/month it covers.
   "splits": [["2022-12-05", 0.0667]],     // ETFs only (Yahoo's ratio)
   "trFrom": "2013-01-02",         // ETFs only: total return is reliable from this date
   "trNote": "...",                // why, if trFrom is later than first
-  "repairs": ["..."]              // fixes made to Yahoo's data, if any
+  "repairs": ["..."],             // fixes made to Yahoo's data, if any (bad days, unrecorded splits,
+                                  // placeholder rows before listing, corrections from pipeline/static/corrections.json)
+  "source": "...",                // AUDUSD only: where the rates come from
+  "approxFrom": "2026-10-19"      // AUDUSD only, optional: rows from here are Yahoo's approximate rate (RBA not published yet)
 }
 ```
 
 Rebuild dates with `decodeDaily()` from `src/data`. Indexes and AUDUSD have no `a` (adjusted
-equals close). Prices keep about 6-7 significant figures.
+equals close). Prices keep about 6-7 significant figures. ASX ETF files start on the ASX listing
+day. `AUDUSD.json` is the RBA's daily rate (US$ per A$1, 4pm Sydney, weekdays only, from 2003), with
+Yahoo filling only the newest weekdays the RBA hasn't published yet (marked by `approxFrom`).
 
 ## intraday/&lt;market&gt;.json
 
@@ -97,7 +110,7 @@ hours to show "Closed"). These files are only on the website, not in git.
       "start": "1975-01",
       "values": [19170, 520, ...],          // change during each month × scale; null = no data
       "segments": [ { "from": "1975-01", "to": "2025-12", "source": "..." }, ... ],
-      "gap": "optional note", "interpolated": ["2025-10"]   // optional
+      "gap": "optional note", "interpolated": ["2025-10"]   // optional: months that are filled in or partly estimated
     }
   },
   "etfs": {
@@ -106,7 +119,7 @@ hours to show "Closed"). These files are only on the website, not in git.
       "realFrom": "2013-01",                // real ETF total returns from here; proxy (minus fee) before
       "fee": 0.0007,                        // yearly fee taken off proxy months
       "proxy": [ { "series": "au_shares", "weight": 1, "hedged": false } ],
-      "proxyCheck": { "months": 165, "from": "...", "to": "...", "correlation": 0.995, "realYearly": 0.089, "proxyYearly": 0.091, "trackingError": 0.013 },
+      "proxyCheck": { "months": 156, "from": "...", "to": "...", "correlation": 0.995, "realYearly": 0.092, "proxyYearly": 0.094, "trackingError": 0.013 },
       "values": [ ... ]
     }
   }
@@ -124,6 +137,15 @@ hours to show "Closed"). These files are only on the website, not in git.
   US-dollar series in A$: `(1 + r_usd) / (1 + audusd) − 1`.
 - Series: `au_shares`, `us_shares`, `global_shares`, `us_tech`, `au_bonds`, `us_bonds`, `cash_au`,
   `cash_us`, `au_cpi`, `us_cpi`, `audusd`. See DATA_SOURCES.md for sources, gaps and stand-ins.
+  `interpolated` lists filled months (`us_cpi`: Oct 2025) or partly estimated ones (`au_bonds`:
+  May-Sep 2013, when the RBA had no 5-year yield).
+- `au_cpi`: before April 2024 each ABS quarterly index (the average of its 3 months) is placed at the
+  quarter's middle month and the months in between grow evenly; from April 2024 the monthly CPI, its
+  first month measured from the chain's level for the month before. The chain lands exactly on the
+  published index levels. `src/inflation/cpi.ts` `monthlyChain` gives the same numbers (tested).
+- `proxyCheck` (how well the proxy tracked the real ETF) only uses months where the proxy came from
+  independent index data, not months where the proxy series is itself made from an ETF (e.g.
+  `au_shares` from VAS after Dec 2025).
 
 ## inflation.json, rates.json, fx.json
 
@@ -131,11 +153,16 @@ hours to show "Closed"). These files are only on the website, not in git.
 { "asOf": "2026-09", "series": { "au_cpi_q": { "t": ["1948-Q3", ...], "v": [2.59, ...] } }, "info": { "au_cpi_q": "what it is, in words" } }
 ```
 
+- `asOf` is the newest month any series covers; a quarter counts as its last month ("2026-Q2" =
+  Jun 2026), so a monthly series to Sep 2026 gives "2026-09".
+
 - `inflation.json`: `au_cpi_q` (ABS quarterly index), `au_cpi_m` (ABS monthly, Apr 2024 on),
   `us_cpi_m` (US CPI-U monthly, 1871 on). Index levels; inflation = ratio of levels − 1. Australia's
   base is Sep 2025 = 100, the US 1982-84 = 100. Gaps stay gaps here (e.g. US Oct 2025).
 - `rates.json`: `cash_target` (RBA decisions, `t` = effective date), `cash_monthly` (% p.a., monthly
-  average), `au_bond_5y`, `au_bond_10y`, `us_bond_10y` (% p.a.; see `info` for average vs end of month).
+  average), `au_bond_5y`, `au_bond_10y`, `us_bond_10y` (% p.a.; see `info` for average vs end of month:
+  Australian yields are end of month throughout, US yields are monthly averages before 1962).
+  `au_bond_5y` has a published gap (no values May-Aug 2013); it stays a gap here.
 - `fx.json`: `audusd_monthly` (US$ per A$1, last business day of each month, from Jul 1969).
 
 ## etfs.json
@@ -147,7 +174,9 @@ hours to show "Closed"). These files are only on the website, not in git.
     "id": "VAS", "symbol": "VAS.AX", "market": "asx", "currency": "AUD", "name": "...",
     "mer": { "value": 0.07, "unit": "% p.a.", "note": "...", "checkedOn": "2026-10-18", "source": "https://..." },
     "index": {...}, "yield": {...}, "franking": {...}, "exchange": {...}, "inception": {...},
+    "listed": {...},                    // ASX listing date (ASX ETFs), a "fact" like mer
     "distributions": {...}, "allocation": {...}, "duration": {...},     // each a "fact" like mer
+    "nameInfo": { "value": "...", "note": "renamed from ...", "checkedOn": "...", "source": "..." },  // the name as a fact
     "proxy": [ ... ]
   } ],
   "indexes": [ { "id": "ASX200", "symbol": "^AXJO", "name": "S&P/ASX 200", "kind": "index", "market": "asx", "currency": "AUD" } ]

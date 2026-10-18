@@ -1,0 +1,156 @@
+{
+  "_about": [
+    "Checked fixes to Yahoo's daily closes. The pipeline re-applies them after every download (datapipe/prices.py apply_corrections),",
+    "so a new Yahoo download can't undo them. 'close' is the right close (split-adjusted, like Yahoo's), 'replaces' is the wrong",
+    "value Yahoo shows; a fix is only applied while Yahoo still shows that value, otherwise it is skipped and reported in meta.json.",
+    "The adjusted close on that day is scaled by the same ratio as the close.",
+    "checkedFlatRuns: runs of identical closes a person has checked and found genuine, so the stuck-price check stops reporting them."
+  ],
+  "closes": [
+    {
+      "id": "IVV",
+      "date": "2022-12-08",
+      "close": 39.1,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-09",
+      "close": 39.09,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-12",
+      "close": 38.8,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-13",
+      "close": 39.42,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-14",
+      "close": 39.41,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-15",
+      "close": 39.15,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-16",
+      "close": 38.83,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-19",
+      "close": 38.4,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-20",
+      "close": 38.09,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-21",
+      "close": 38.36,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-22",
+      "close": 38.38,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-23",
+      "close": 38.22,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-28",
+      "close": 37.86,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-29",
+      "close": 37.4,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2022-12-30",
+      "close": 37.83,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IVV",
+      "date": "2023-01-03",
+      "close": 37.54,
+      "replaces": 39.35,
+      "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
+      "checkedOn": "2026-10-18",
+      "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    }
+  ],
+  "checkedFlatRuns": []
+}

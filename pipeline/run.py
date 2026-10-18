@@ -115,6 +115,10 @@ def cmd_update(tasks_arg: str) -> int:
     return 0
 
 
+QUIET_WARNING_DAYS = 45
+QUIET_WARNING_PREFIX = "No commits for "
+
+
 def _check_repo_activity(meta: Meta, now) -> None:
     """GitHub switches off scheduled workflows in a public repo after 60 days with no activity.
     Our own data commits should count, but GitHub doesn't document that, so warn early: if the
@@ -127,15 +131,28 @@ def _check_repo_activity(meta: Meta, now) -> None:
         last = datetime.fromtimestamp(int(out.stdout.strip()), timezone.utc)
     except Exception:
         return
+    record_repo_activity(meta, now, last)
+
+
+def record_repo_activity(meta: Meta, now, last) -> None:
+    """Write meta.repo = {"lastCommit": "<UTC ISO time of the newest commit>", "daysSinceCommit": n}
+    (the app works out the age itself from lastCommit), and log the 45-day warning ONCE per quiet
+    spell: not again while the newest "github" problem is already this warning, logged after the
+    last commit. (The job runs ~60 times a day; repeating it would push everything else out of
+    the 40-entry problems list.)"""
     days = (now - last).days
     meta.repo = {"lastCommit": iso(last), "daysSinceCommit": days}
-    if days >= 45:
-        meta.problem(
-            "github",
-            f"No commits for {days} days. GitHub turns off the schedule after 60 quiet days: open the repo's Actions tab "
-            "and check 'Update market data' is enabled (see notes/stage-2.md).",
-            now,
-        )
+    if days < QUIET_WARNING_DAYS:
+        return
+    newest = next((p for p in meta.problems if p.get("where") == "github"), None)
+    if newest and str(newest.get("message", "")).startswith(QUIET_WARNING_PREFIX) and (parse_iso(newest.get("at")) or last) >= last:
+        return
+    meta.problem(
+        "github",
+        f"{QUIET_WARNING_PREFIX}{days} days (since {last.date().isoformat()}). GitHub turns off the schedule after 60 quiet days: "
+        "open the repo's Actions tab and check 'Update market data' is enabled (see notes/stage-2.md).",
+        now,
+    )
 
 
 def _github_output(**kv: str) -> None:

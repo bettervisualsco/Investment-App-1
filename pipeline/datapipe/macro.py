@@ -27,6 +27,21 @@ def _month_end_to_month(points) -> List[Tuple[str, float]]:
     return sorted(out.items())
 
 
+def period_end_month(t: str) -> str:
+    """The last month a period covers, so mixed periods compare correctly:
+    "2026-Q2" -> "2026-06", "2026-09" -> "2026-09", "2026-09-30" -> "2026-09"."""
+    if "-Q" in t:
+        y, q = t.split("-Q")
+        return f"{y}-{int(q) * 3:02d}"
+    return t[:7]
+
+
+def latest_period(periods: List[str]) -> str:
+    """The newest of several periods written in different ways (quarters, months), as YYYY-MM.
+    (A plain max() would pick "2026-Q2" over "2026-09", because "Q" sorts after the digits.)"""
+    return max(period_end_month(t) for t in periods)
+
+
 def build_inflation(meta: Meta, now: datetime) -> bool:
     changed = False
     au = us = None
@@ -53,7 +68,7 @@ def build_inflation(meta: Meta, now: datetime) -> bool:
         series["us_cpi_m"] = _series(shiller + us, 3)
     last = [s["t"][-1] for s in series.values()]
     f = {
-        "asOf": max(last),
+        "asOf": latest_period(last),
         "series": series,
         "info": {
             "au_cpi_q": "Australia, All groups CPI, index, quarterly, weighted average of the eight capital cities (ABS). Base: Sep 2025 = 100.",
@@ -100,8 +115,10 @@ def build_rates_and_fx(meta: Meta, now: datetime) -> bool:
     bills = [p for p in _month_end_to_month(f11["FIRMMBAB90"]) if p[0] < interbank[0][0]]
     cash_monthly = bills + interbank + target
 
-    # Bond yields at the END of each month (what returns need). Daily data exists from 1995;
-    # before that the RBA only has monthly averages.
+    # Bond yields at the END of each month (what returns need). Daily data exists from 1995 (we take
+    # the last daily value in each month); before 1995 the RBA's historical table F2 gives
+    # last-business-day (end-of-month) values. (From 1995 that table holds monthly averages, so
+    # it is only used before 1995.)
     avg = read_static("rba_bond_yields_monthly_1969_2013.csv")
     me = [r for r in read_static("rba_bond_yields_monthend_1995_2013.csv") if int(r["date"][8:]) >= 24]
 
@@ -129,8 +146,8 @@ def build_rates_and_fx(meta: Meta, now: datetime) -> bool:
         "info": {
             "cash_target": "RBA cash rate target (%), one point per decision, dated when it took effect. Before 1990 there was no target.",
             "cash_monthly": "Monthly average (%): 3-month bank bills Jul 1969-Apr 1976, interbank overnight cash rate May 1976-Jul 1990, cash rate target from Aug 1990 (RBA table F1.1).",
-            "au_bond_5y": "Australian Government 5-year bond yield (%), RBA tables F2, from Jan 1972: monthly average before 1995, end of month from 1995 (last daily value). Gap Jun-Aug 2013.",
-            "au_bond_10y": "Australian Government 10-year bond yield (%), RBA tables F2, from Jul 1969: monthly average before 1995, end of month from 1995 (last daily value).",
+            "au_bond_5y": "Australian Government 5-year bond yield (%), RBA tables F2, from Jan 1972, end of month: the RBA's last-business-day figures before 1995, the last daily value from 1995. Gap: the RBA has no 5-year yield from 20 May to 23 Sep 2013, so there are no end-of-month values for May-Aug 2013 (monthly.json estimates them from the 10-year yield).",
+            "au_bond_10y": "Australian Government 10-year bond yield (%), RBA tables F2, from Jul 1969, end of month: the RBA's last-business-day figures before 1995, the last daily value from 1995.",
             "us_bond_10y": "US 10-year Treasury yield (%): Shiller 1871-Mar 1953 and FRED GS10 1953-1961 (monthly averages), then end of month from FRED DGS10 (daily) from 1962.",
         },
     }
@@ -142,7 +159,7 @@ def build_rates_and_fx(meta: Meta, now: datetime) -> bool:
     fxf = {
         "asOf": fx_points[-1][0],
         "series": {"audusd_monthly": _series(fx_points, 4)},
-        "info": {"audusd_monthly": "US dollars per Australian dollar on the last business day of each month, 4pm Sydney (RBA tables F11). Starts July 1969; before December 1971 the dollar was fixed to the US dollar."},
+        "info": {"audusd_monthly": "US dollars per Australian dollar on the last business day of each month, 4pm Sydney (RBA tables F11). Starts July 1969. The A$ was pegged to the British pound until December 1971, then to the US dollar until September 1974, then to a basket of currencies until it was floated in December 1983."},
     }
     if save_validated("fx.json", fxf, validate_levels(100, 0.2, 2.0)) == "written":
         changed = True

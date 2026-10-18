@@ -36,6 +36,12 @@
     "checkedOn": "2026-10-18",
     "source": "https://www.betashares.com.au/fund/nasdaq-100-etf/"
   },
+  "listed": {
+    "value": "2015-05-26",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-18",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/NDQ/header"
+  },
   "currency": {
     "value": "AUD",
     "checkedOn": "2026-10-18",

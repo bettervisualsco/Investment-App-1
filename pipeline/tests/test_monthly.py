@@ -56,19 +56,57 @@ def test_encode_marks_gaps():
     assert start == "2000-01" and vals == [1234, None, -50000]
 
 
-def test_quarterly_cpi_is_spread_over_three_months():
+def test_quarterly_cpi_sits_mid_quarter_and_months_between_grow_evenly():
+    # Quarterly index = average of its 3 months, so it is placed at the quarter's middle month.
     inflation = {
         "series": {
-            "au_cpi_q": {"t": ["2000-Q1", "2000-Q2"], "v": [100.0, 103.0]},
-            "au_cpi_m": {"t": ["2024-04", "2024-05"], "v": [150.0, 151.5]},
+            "au_cpi_q": {"t": ["2000-Q1", "2000-Q2", "2000-Q3"], "v": [100.0, 103.0, 103.0]},
+            "au_cpi_m": {"t": ["2000-08", "2000-09"], "v": [104.0, 105.04]},
         }
     }
     s, monthly_from = mo.au_cpi_monthly(inflation)
-    assert monthly_from == "2024-05"
-    q2 = [s["2000-04"], s["2000-05"], s["2000-06"]]
-    assert q2[0] == q2[1] == q2[2]
-    assert math.prod(1 + x for x in q2) == pytest.approx(1.03)
-    assert s["2024-05"] == pytest.approx(0.01)
+    assert monthly_from == "2000-08"
+    assert min(s) == "2000-03"  # first change: Feb (Q1's middle month) -> Mar
+    step = [s["2000-03"], s["2000-04"], s["2000-05"]]  # Feb -> May, Q1 -> Q2
+    assert step[0] == step[1] == step[2]
+    assert math.prod(1 + x for x in step) == pytest.approx(1.03)
+    assert s["2000-06"] == pytest.approx(0.0) and s["2000-07"] == pytest.approx(0.0)  # May -> Aug is flat (103 -> 103)
+    # The first monthly month is measured from the chain's own level for the month before (Jul = 103),
+    # not from the last monthly change: 104 / 103 - 1.
+    assert s["2000-08"] == pytest.approx(104.0 / 103.0 - 1)
+    assert s["2000-09"] == pytest.approx(0.01)
+    # So the chain lands exactly on the published monthly index: Feb (Q1 = 100) -> Sep = 105.04.
+    assert math.prod(1 + v for m, v in s.items() if m <= "2000-09") == pytest.approx(1.0504)
+
+
+def test_monthly_cpi_switch_keeps_the_whole_quarterly_rise():
+    # The audit case: the old method put Q1 2024 at March, so April only got a third of the rise.
+    # Here the chain from the Q1 average (at Feb) to April equals the published ratio.
+    inflation = {
+        "series": {
+            "au_cpi_q": {"t": ["2023-Q4", "2024-Q1", "2024-Q2"], "v": [97.0, 98.0, 99.0]},
+            "au_cpi_m": {"t": ["2024-04", "2024-05"], "v": [99.02, 99.2]},
+        }
+    }
+    s, monthly_from = mo.au_cpi_monthly(inflation)
+    assert monthly_from == "2024-04"
+    assert (1 + s["2024-03"]) * (1 + s["2024-04"]) == pytest.approx(99.02 / 98.0)
+    assert "2024-06" not in s  # nothing after the monthly series ends
+
+
+def test_fill_spread_gaps_uses_the_longer_yield_plus_an_interpolated_spread():
+    short = [("2013-04", 2.0), ("2013-08", 3.0)]
+    long = [("2013-04", 2.5), ("2013-05", 2.6), ("2013-06", 2.7), ("2013-07", 2.8), ("2013-08", 3.3)]
+    filled, est = mo.fill_spread_gaps(short, long)
+    assert est == ["2013-05", "2013-06", "2013-07"]
+    # spread goes -0.5 -> -0.3 over 4 months: -0.45, -0.40, -0.35
+    got = dict(filled)
+    assert got["2013-05"] == pytest.approx(2.6 - 0.45)
+    assert got["2013-06"] == pytest.approx(2.7 - 0.40)
+    assert got["2013-07"] == pytest.approx(2.8 - 0.35)
+    assert got["2013-04"] == 2.0 and got["2013-08"] == 3.0
+    # no long yield for the hole -> left alone
+    assert mo.fill_spread_gaps(short, [("2013-04", 2.5), ("2013-08", 3.3)]) == (short, [])
 
 
 def test_proxy_check_on_identical_series():
