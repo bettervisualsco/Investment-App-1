@@ -47,8 +47,6 @@
   color: var(--ink-3);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 /* Buttons the shared stylesheet doesn't have */

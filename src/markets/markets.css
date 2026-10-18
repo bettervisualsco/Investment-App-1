@@ -292,9 +292,7 @@
   margin: 6px 0 4px;
   color: var(--ink-3);
   font-size: 13px;
-  font-weight: 650;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 
 .mk-list {
