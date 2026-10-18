@@ -219,8 +219,9 @@ describe('replaying history', () => {
     const seconds = (performance.now() - started) / 1000
     console.info(`2,000 runs of a 40-year plan, every switch on: ${seconds.toFixed(2)} s`)
     expect(r.runs).toBe(2000)
-    expect(seconds).toBeLessThan(15)
-  }, 30_000)
+    // About 2.3 s on Soham's Mac when it's idle; the limit is loose so a busy computer doesn't fail the test.
+    expect(seconds).toBeLessThan(30)
+  }, 60_000)
 })
 
 describe('custom assets', () => {
