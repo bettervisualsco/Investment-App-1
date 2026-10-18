@@ -1,0 +1,443 @@
+/* ---------------------------------------------------------------
+   Inflation tab
+   Series colours: Australia orange-red, US blue. Checked with the
+   colour-blind palette validator (protan/deutan/tritan separation,
+   lightness band, 3:1 contrast) on the light (#ffffff) and dark
+   (#18211e) surfaces. The prediction fan uses the Australian hue;
+   the target band is a neutral tint, not a status colour.
+---------------------------------------------------------------- */
+:root {
+  --series-au: #c4512b;
+  --series-us: #2a68a6;
+  --series-infl: var(--series-au);
+  --target-band: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --series-au: #d9714c;
+    --series-us: #5a97d6;
+    --target-band: color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+}
+
+:root[data-theme='dark'] {
+  --series-au: #d9714c;
+  --series-us: #5a97d6;
+  --target-band: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.inflation {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.infl-head {
+  display: grid;
+  gap: 8px;
+}
+
+.infl-head h1 {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 7vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.infl-head .lead {
+  font-size: 17px;
+  max-width: 62ch;
+}
+
+.infl-fresh {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.infl-block {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.infl-block > .block-head {
+  margin-bottom: 0;
+}
+
+.infl-block .sub-head {
+  margin: 6px 0 0;
+}
+
+.infl-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.infl-controls .segmented {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.infl-controls .segmented button {
+  padding: 0 10px;
+}
+
+.infl-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+/* Latest figures */
+.infl-latest {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.infl-latest-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 2px;
+}
+
+.infl-latest-value {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 11vw, 52px);
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-variation-settings: 'wdth' 85;
+}
+
+.infl-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.infl-tile-sub {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+/* Legends and keys */
+.infl-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.infl-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infl-swatch {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.infl-swatch.is-band {
+  height: 12px;
+  border-radius: 3px;
+  background: var(--target-band);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.infl-swatch.is-actual {
+  background: var(--ink-2);
+}
+
+.infl-swatch.is-mid {
+  background: var(--series-infl);
+}
+
+.infl-swatch.is-range {
+  height: 12px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--series-infl) 22%, transparent);
+  border-top: 1.5px dashed var(--series-infl);
+  border-bottom: 1.5px dashed var(--series-infl);
+}
+
+.infl-swatch.is-goal {
+  height: 0;
+  border-top: 2px dotted var(--ink-3);
+}
+
+.key.infl-key-actual {
+  height: 4px;
+  background: var(--ink-2);
+}
+
+.key.infl-key-mid {
+  height: 4px;
+  background: var(--series-infl);
+}
+
+.infl-tip-sub {
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+/* Charts */
+.infl-figure {
+  margin: 0 -8px;
+}
+
+.infl-drag {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+}
+
+.infl-drag-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: -4px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+/* Highlighted window */
+.infl-window {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.infl-window-pick,
+.infl-power-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 12px;
+}
+
+.infl-window-pick label,
+.infl-power-fields label {
+  display: grid;
+  gap: 4px;
+  min-width: 130px;
+  flex: 1 1 130px;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.infl-result {
+  display: grid;
+  gap: 2px;
+}
+
+.infl-result p,
+.infl-power-answer p,
+.infl-summary {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.infl-result-big {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.infl-result-big > span:not(.infl-swatch) {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+
+.infl-result-big .infl-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.infl-window-note {
+  margin-top: -4px;
+}
+
+/* Prediction tiles */
+.infl-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.infl-tile {
+  padding: 10px 12px;
+  background: var(--surface);
+  min-width: 0;
+}
+
+.infl-tile-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.infl-tile .infl-tile-label {
+  font-size: 13px;
+}
+
+/* Buying power */
+.infl-power-fields .input-money {
+  width: 100%;
+}
+
+.infl-swap {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
+.infl-power-answer {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Returns after inflation */
+.infl-real-table td,
+.infl-real-table th {
+  vertical-align: top;
+}
+
+.infl-real-table td:last-child {
+  min-width: 110px;
+}
+
+.infl-etf {
+  display: block;
+  font-weight: 650;
+}
+
+.infl-etf-sub {
+  display: block;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.infl-real-cell {
+  position: relative;
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.infl-bar {
+  height: 6px;
+  max-width: 48px;
+  border-radius: 3px;
+  background: var(--accent);
+  opacity: 0.55;
+}
+
+.infl-bar.is-neg {
+  background: var(--ink-3);
+}
+
+.infl-missing {
+  color: var(--ink-3);
+  text-align: left !important;
+  font-weight: 400 !important;
+}
+
+.infl-table-block > summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 15px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.infl-table-block[open] > summary {
+  margin-bottom: 8px;
+}
+
+.infl-table-block .table-scroll {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.infl-year-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+
+.infl-sources {
+  max-width: 80ch;
+}
+
+/* Mac: buying power and real returns side by side */
+@media (min-width: 1100px) {
+  .infl-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  .infl-figure .chart-box {
+    height: 340px;
+  }
+}
+
+@media (max-width: 1099px) {
+  .infl-pair {
+    display: grid;
+    gap: 16px;
+  }
+}

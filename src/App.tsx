@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { InflationIcon, MarketsIcon, PlannerIcon, SavedIcon, SettingsIcon } from './components/Icons'
+import { InflationPage } from './inflation/InflationPage'
+import { useHistoricalInflation } from './inflation/useHistoricalInflation'
 import { ComingSoon, DisclaimerSheet, SettingsPage } from './pages/OtherPages'
 import { PlannerPage } from './planner/PlannerPage'
 import { SaveBar } from './saved/SaveBar'
@@ -29,6 +31,7 @@ export default function App() {
   const savedPlans = useSavedPlans()
   const [theme, setTheme] = useTheme()
   const [showDisclaimer, setShowDisclaimer] = useState(() => !hasSeenDisclaimer())
+  const historicalInflation = useHistoricalInflation()
 
   useEffect(() => {
     const onHash = () => setTab(tabFromHash())
@@ -66,13 +69,13 @@ export default function App() {
             <>
               {savedPlans && <SaveBar plan={plan} saved={savedPlans} onShowSaved={() => go('saved')} />}
               {/* A new key when a different plan is opened, so the Planner starts fresh for it. */}
-              <PlannerPage key={plan.id} plan={plan} setPlan={setPlan} />
+              <PlannerPage key={plan.id} plan={plan} setPlan={setPlan} historicalInflation={historicalInflation} />
             </>
           ) : (
             <div className="loading">Loading your plan…</div>
           ))}
         {tab === 'markets' && <ComingSoon title="Markets" stage={5} what="Live-ish ETF prices, detailed charts and prediction lines." />}
-        {tab === 'inflation' && <ComingSoon title="Inflation" stage={6} what="Australian and US inflation history, predictions and a purchasing power calculator." />}
+        {tab === 'inflation' && <InflationPage />}
         {tab === 'saved' && <SavedPage plan={plan} setPlan={setPlan} saved={savedPlans} openPlanner={() => go('planner')} />}
         {tab === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} onShowSaved={() => go('saved')} />}
       </main>

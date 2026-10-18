@@ -67,7 +67,7 @@ export function historicalAverage(chain: MonthlyChain, choice: WindowChoice): { 
   const avg = chainAverage(chain, from, to)
   return {
     rate: avg.yearly * 100,
-    label: `${COUNTRY_NAME[chain.country]}, ${Math.floor(from / 12)}–${Math.floor(to / 12)} average (${CPI_SOURCE[chain.country]}, compounded). Change the years on the Inflation tab.`,
+    label: `${COUNTRY_NAME[chain.country]}, ${Math.floor(from / 12)}–${Math.floor(to / 12)} average (${CPI_SOURCE[chain.country]}). You can change the years on the Inflation tab.`,
   }
 }
 
