@@ -1,4 +1,5 @@
 import { Segmented } from '../components/inputs'
+import { DataStatus } from '../markets/DataStatus'
 import { TAX_RATES_CHECKED_ON, TAX_SOURCES } from '../engine/taxTables'
 import { toDayNumber } from '../engine/dates'
 import { dateLong } from '../lib/format'
@@ -36,6 +37,7 @@ export function SettingsPage({ theme, setTheme, onShowSaved }: { theme: ThemeCho
           ]}
         />
       </section>
+      <DataStatus />
       <section className="block">
         <div className="block-head">
           <h2>Your plans</h2>
