@@ -2,6 +2,9 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { InflationIcon, MarketsIcon, PlannerIcon, SavedIcon, SettingsIcon } from './components/Icons'
 import { ComingSoon, DisclaimerSheet, SettingsPage } from './pages/OtherPages'
 import { PlannerPage } from './planner/PlannerPage'
+import { SaveBar } from './saved/SaveBar'
+import { SavedPage } from './saved/SavedPage'
+import { useSavedPlans } from './state/plans'
 import { usePlan } from './state/usePlan'
 import { hasSeenDisclaimer, markDisclaimerSeen, useTheme } from './state/theme'
 
@@ -23,6 +26,7 @@ function tabFromHash(): Tab {
 export default function App() {
   const [tab, setTab] = useState<Tab>(tabFromHash)
   const [plan, setPlan] = usePlan()
+  const savedPlans = useSavedPlans()
   const [theme, setTheme] = useTheme()
   const [showDisclaimer, setShowDisclaimer] = useState(() => !hasSeenDisclaimer())
 
@@ -57,11 +61,20 @@ export default function App() {
       </nav>
 
       <main className="main">
-        {tab === 'planner' && (plan ? <PlannerPage plan={plan} setPlan={setPlan} /> : <div className="loading">Loading your plan…</div>)}
+        {tab === 'planner' &&
+          (plan ? (
+            <>
+              {savedPlans && <SaveBar plan={plan} saved={savedPlans} onShowSaved={() => go('saved')} />}
+              {/* A new key when a different plan is opened, so the Planner starts fresh for it. */}
+              <PlannerPage key={plan.id} plan={plan} setPlan={setPlan} />
+            </>
+          ) : (
+            <div className="loading">Loading your plan…</div>
+          ))}
         {tab === 'markets' && <ComingSoon title="Markets" stage={5} what="Live-ish ETF prices, detailed charts and prediction lines." />}
         {tab === 'inflation' && <ComingSoon title="Inflation" stage={6} what="Australian and US inflation history, predictions and a purchasing power calculator." />}
-        {tab === 'saved' && <ComingSoon title="Saved plans" stage={7} what="Save, compare and back up your plans. For now, your current plan saves itself on this device." />}
-        {tab === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} />}
+        {tab === 'saved' && <SavedPage plan={plan} setPlan={setPlan} saved={savedPlans} openPlanner={() => go('planner')} />}
+        {tab === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} onShowSaved={() => go('saved')} />}
       </main>
 
       {showDisclaimer && (

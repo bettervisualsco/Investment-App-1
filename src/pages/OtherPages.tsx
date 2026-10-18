@@ -13,7 +13,7 @@ export function ComingSoon({ title, stage, what }: { title: string; stage: numbe
   )
 }
 
-export function SettingsPage({ theme, setTheme }: { theme: ThemeChoice; setTheme: (t: ThemeChoice) => void }) {
+export function SettingsPage({ theme, setTheme, onShowSaved }: { theme: ThemeChoice; setTheme: (t: ThemeChoice) => void; onShowSaved: () => void }) {
   return (
     <div className="page-simple">
       <h1>Settings</h1>
@@ -34,10 +34,18 @@ export function SettingsPage({ theme, setTheme }: { theme: ThemeChoice; setTheme
       </section>
       <section className="block">
         <div className="block-head">
+          <h2>Your plans</h2>
+        </div>
+        <p>Your plans are saved on this device only, never online. To move them to your other device, or keep a safe copy, make a backup file in the Saved tab.</p>
+        <button type="button" className="btn btn-quiet settings-link" onClick={onShowSaved}>
+          Go to Saved plans
+        </button>
+      </section>
+      <section className="block">
+        <div className="block-head">
           <h2>About</h2>
         </div>
         <p>{DISCLAIMER}</p>
-        <p className="block-hint">Your plans are saved on this device only.</p>
       </section>
     </div>
   )
