@@ -120,6 +120,17 @@ export function extraTax(ctx: TaxYearContext, assessable: number): number {
   return incomeTax(year, ctx.otherIncome + assessable, { medicare: ctx.medicare, index }) - incomeTax(year, ctx.otherIncome, { medicare: ctx.medicare, index })
 }
 
+/**
+ * "Basic" income tax caused by `assessable` cents: the brackets (or your rate, or the under-18 rates), before any
+ * offsets and without the Medicare levy. The minimum tax on capital gains is compared against this.
+ */
+export function basicExtraTax(ctx: TaxYearContext, assessable: number): number {
+  if (assessable <= 0) return 0
+  if (ctx.minorRates) return minorEligibleTax(ctx.year, assessable)
+  if (ctx.basis === 'rate') return (assessable * ctx.marginalRate) / 100
+  return bracketTax(ctx.year, ctx.otherIncome + assessable, ctx.index) - bracketTax(ctx.year, ctx.otherIncome, ctx.index)
+}
+
 /** Everything the investment earned in one financial year that tax is worked out on. */
 export interface YearIncome {
   /** Distributions paid to you (cash amount), cents. */
@@ -170,10 +181,11 @@ export function yearTax(ctx: TaxYearContext, income: YearIncome): YearTax {
   const cg = netCapitalGain(income.discountableGains, income.otherGains, income.losses, income.indexedGains)
   const assessable = income.distributions + income.frankingCredits + income.foreignTax + income.interest + cg.net
   let before = extraTax(ctx, assessable)
-  // Minimum tax: the tax caused by the indexed gains must be at least the minimum rate of them.
+  // Minimum tax (Division 119, from 1 July 2027): the basic tax on the indexed gains, counted as your last
+  // dollars of income and before offsets, must be at least 30% of them. Any shortfall is added.
   let topUp = 0
   if (ctx.cgtMinimumPct > 0 && cg.indexedNet > 0) {
-    const onIndexed = before - extraTax(ctx, assessable - cg.indexedNet)
+    const onIndexed = basicExtraTax(ctx, assessable) - basicExtraTax(ctx, assessable - cg.indexedNet)
     topUp = Math.max(0, (cg.indexedNet * ctx.cgtMinimumPct) / 100 - onIndexed)
     before += topUp
   }

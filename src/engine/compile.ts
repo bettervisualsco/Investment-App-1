@@ -48,6 +48,8 @@ export interface CompiledPlan {
   fys: FyInfo[]
   /** Regular deposit landing on each day, cents (before any growth with inflation). */
   deposit: Float64Array
+  /** 1 on the days a regular deposit is due (even if the amount is $0). */
+  depositDay: Uint8Array
   /** One-off events by day. */
   events: Map<number, CompiledEvent[]>
   /** Days when waiting cash is invested (Fees on). */
@@ -133,12 +135,16 @@ export function compilePlan(plan: Plan): CompiledPlan {
 
   // Regular deposits.
   const deposit = new Float64Array(n)
+  const depositDay = new Uint8Array(n)
   const depositCount: number[] = []
   plan.phases.forEach((phase, i) => {
     const { start, end } = ranges[i]
     const days = paymentDays(start, end, phase.depositFrequency)
     const amounts = depositAmounts(phase.deposit, start, end, days)
-    days.forEach((d, j) => (deposit[d - startDay] += amounts[j]))
+    days.forEach((d, j) => {
+      deposit[d - startDay] += amounts[j]
+      depositDay[d - startDay] = 1
+    })
     depositCount.push(days.length)
   })
 
@@ -185,6 +191,7 @@ export function compilePlan(plan: Plan): CompiledPlan {
     fyOf,
     fys,
     deposit,
+    depositDay,
     events,
     buyDay,
     payoutDay,

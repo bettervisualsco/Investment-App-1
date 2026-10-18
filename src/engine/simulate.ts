@@ -229,12 +229,8 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   const balances = new Float64Array(Math.ceil(n / sampleEvery) + 2)
   let sampleCount = 0
   const series: SeriesPoint[] = []
-  const goalT = plan.goal ? c.startDay : null
-  const goalDayRaw = plan.goal ? (() => {
-    const [y, m, d] = plan.goal.date.split('-').map(Number)
-    return Math.round(Date.UTC(y, m - 1, d) / 86_400_000)
-  })() : null
-  const goalCheckT = goalT === null || goalDayRaw === null ? -1 : Math.min(Math.max(goalDayRaw, c.startDay), c.endDay - 1) - c.startDay
+  const goalDayRaw = plan.goal ? toDayNumber(plan.goal.date) : null
+  const goalCheckT = goalDayRaw === null ? -1 : Math.min(Math.max(goalDayRaw, c.startDay), c.endDay - 1) - c.startDay
   let goalBalance = 0
   let firstReachedT = -1
 
@@ -503,17 +499,14 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
 
     // 1. Money in and out at the start of the day.
     let incoming = 0
-    const base = c.deposit[t]
-    if (base > 0 || c.depositCount[p] > 0) {
-      let amount = base
-      if (base > 0 && inflOn && rp.growWithInflation) amount = Math.round((base * cpi) / phaseStartCpi[p])
-      if (base > 0 || isPaymentDay(c, t)) {
-        const s = phases[p]
-        s.depositTotal += amount
-        if (s.firstDeposit === null) s.firstDeposit = amount
-        s.lastDeposit = amount
-      }
-      incoming += amount
+    if (c.depositDay[t]) {
+      const base = c.deposit[t]
+      const amount = inflOn && rp.growWithInflation ? Math.round((base * cpi) / phaseStartCpi[p]) : base
+      const s = phases[p]
+      s.depositTotal += amount
+      if (s.firstDeposit === null) s.firstDeposit = amount
+      s.lastDeposit = amount
+      incoming = amount
     }
     const events = c.events.get(t)
     if (events) for (const e of events) if (e.amount >= 0) incoming += e.amount
@@ -662,8 +655,4 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     goal,
     warnings,
   }
-}
-
-function isPaymentDay(c: CompiledPlan, t: number): boolean {
-  return c.deposit[t] > 0
 }

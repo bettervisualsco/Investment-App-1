@@ -2,7 +2,7 @@
 
 import { isValidISO, toDayNumber } from './dates'
 import { phaseRanges } from './schedule'
-import type { Plan, Varying } from './types'
+import type { Brokerage, Plan, Varying } from './types'
 
 export const MAX_PLAN_YEARS = 100
 
@@ -52,6 +52,36 @@ export function validatePlan(plan: Plan): PlanProblem[] {
     }
   }
 
+  // Stage 4 settings (all optional).
+  const pct = (n: number | undefined, lo = 0, hi = 100) => n === undefined || (Number.isFinite(n) && n >= lo && n <= hi)
+  for (const phase of plan.phases) {
+    const label = phase.name || 'A phase'
+    if (!pct(phase.mer, 0, 10)) add(phase.id, `${label}: the management fee should be between 0% and 10% a year.`)
+    if (!pct(phase.marginalRate)) add(phase.id, `${label}: the tax rate should be between 0% and 100%.`)
+    if (phase.otherIncome !== undefined && !(Number.isFinite(phase.otherIncome) && phase.otherIncome >= 0)) add(phase.id, `${label}: other income can’t be negative.`)
+    const d = phase.distribution
+    if (d && !(pct(d.yield, 0, 50) && pct(d.frankedPct) && pct(d.foreignPct) && pct(d.foreignTaxPct, 0, 99))) {
+      add(phase.id, `${label}: distribution percentages need to be between 0 and 100 (yield up to 50%).`)
+    }
+  }
+  const r = plan.realism
+  if (r?.feeSettings) {
+    const f = r.feeSettings
+    if (f.brokerage && !brokerageOk(f.brokerage)) add('plan', 'Fees: brokerage amounts can’t be negative.')
+    if (!pct(f.fxFeePct, 0, 20) || !pct(f.spreadPct, 0, 20)) add('plan', 'Fees: currency and spread fees should be between 0% and 20%.')
+    if (!pct(f.cashRate, -10, 100)) add('plan', 'Fees: the cash rate needs a sensible number.')
+    if (f.platformFee !== undefined && !(Number.isFinite(f.platformFee) && f.platformFee >= 0)) add('plan', 'Fees: the platform fee can’t be negative.')
+  }
+  if (r?.taxSettings?.owner === 'minor' && r.taxSettings.turns18On !== undefined && !isValidISO(r.taxSettings.turns18On)) {
+    add('plan', 'Tax: pick the date they turn 18.')
+  }
+  if (r?.inflationSettings) {
+    const nums = numbersIn(r.inflationSettings.rate)
+    if (nums.some((x) => !Number.isFinite(x))) add('plan', 'Inflation: the rate needs a number.')
+    else if (r.inflationSettings.rate.kind !== 'steps' && nums.some((x) => x <= -99)) add('plan', 'Inflation: use a rate above −99%.')
+    if (!durationsOk(r.inflationSettings.rate)) add('plan', 'Inflation: change timings must be whole numbers.')
+  }
+
   for (const event of plan.events) {
     if (!isValidISO(event.date)) add(event.id, `${event.name || 'An event'}: pick a date.`)
     if (!Number.isFinite(event.amount)) add(event.id, `${event.name || 'An event'}: amount needs a number.`)
@@ -69,4 +99,11 @@ export function validatePlan(plan: Plan): PlanProblem[] {
   }
 
   return problems
+}
+
+function brokerageOk(b: Brokerage): boolean {
+  const ok = (n: number) => Number.isFinite(n) && n >= 0
+  if (b.kind === 'flat') return ok(b.fee)
+  if (b.kind === 'percent') return ok(b.pct) && ok(b.min)
+  return b.tiers.length > 0 && b.tiers.every((t) => ok(t.fee) && ok(t.pct) && (t.upTo === null || ok(t.upTo)))
 }
