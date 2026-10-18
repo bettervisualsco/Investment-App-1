@@ -148,7 +148,7 @@ Bottom tab bar on iPhone and sidebar on Mac: **Planner · Markets · Inflation �
 - **Future brackets:** choose "brackets stay the same" (bracket creep) or "brackets rise with inflation".
 - **Income over time:** each phase can set the person's other taxable income (job etc.), which works out the marginal tax rate. Quick option: just pick a tax bracket / marginal rate per phase. Brackets can change from phase to phase.
 - **Distributions:** each ETF has a distribution yield and franking %. Distributions are taxed every financial year at the marginal rate, and franking credits are applied. Optional: foreign tax offset for US ETFs. Choose to reinvest distributions (after tax) or take them as cash.
-- **Capital gains tax:** track each purchase separately (cost base per lot). Apply the 50% CGT discount for holdings kept more than 12 months. At the end, choose:
+- **Capital gains tax:** track each purchase separately (cost base per lot). Apply the 50% CGT discount for holdings kept at least 12 months. *(Updated 18 Oct 2026: a 2026 law replaces the discount for gains from 1 July 2027 with cost base indexation plus a minimum 30% tax; the app models both, with a switch to keep the old discount. See notes/stage-4.md.)* At the end, choose:
   - "Sell everything at the end": show the after-tax amount
   - "Don't sell": show the value plus the tax that would be owed if sold
 - **Owner of the investment:** adult / under 18. Under-18s pay special higher tax on investment income above a small threshold. Implement this from current ATO rules and verify.
