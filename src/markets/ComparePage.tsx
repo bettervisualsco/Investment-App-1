@@ -8,7 +8,7 @@ import { timeISO } from './chartTime'
 import { MarketChart, type ChartLine } from './MarketChart'
 import { averageYearly, daysBetween, indexOnOrBefore, RANGES, rangeStartDate, type RangeKey } from './maths'
 import { usePrefs } from './prefs'
-import { useDailyMany, useEtfs, useFx, useMarketFreshness } from './useMarketData'
+import { shortName, useDailyMany, useEtfs, useFx, useMarketFreshness } from './useMarketData'
 import { Tip, Toggle } from './words'
 
 export const MAX_COMPARE = 5
@@ -91,7 +91,7 @@ export function ComparePage({ onBack, onOpen }: { onBack: () => void; onOpen: (i
     })
   }, [prepared, common, colors])
 
-  const lines: ChartLine[] = useMemo(() => result.map((r) => ({ id: r.id, points: r.points, color: r.color, kind: 'line', style: r.style, width: 2, title: r.id })), [result])
+  const lines: ChartLine[] = useMemo(() => result.map((r) => ({ id: r.id, points: r.points, color: r.color, kind: 'line', style: r.style, width: 2, title: shortName(r.id) })), [result])
   const visible = useMemo(() => (common ? { from: common.start as Time, to: common.last as Time } : null), [common])
 
   const toggle = (id: string) =>
@@ -124,7 +124,7 @@ export function ComparePage({ onBack, onOpen }: { onBack: () => void; onOpen: (i
             const on = chosen.includes(a.id)
             return (
               <button key={a.id} type="button" className={`mk-chip${on ? ' is-on' : ''}`} aria-pressed={on} disabled={!on && chosen.length >= MAX_COMPARE} title={a.name} onClick={() => toggle(a.id)}>
-                {a.id}
+                {shortName(a.id)}
               </button>
             )
           })}
@@ -152,7 +152,7 @@ export function ComparePage({ onBack, onOpen }: { onBack: () => void; onOpen: (i
             formatValue={(v) => pctText(v, 1)}
             colors={colors}
             height={chartHeight}
-            label={`Growth of ${result.map((r) => r.id).join(', ')}`}
+            label={`Growth of ${result.map((r) => shortName(r.id)).join(', ')}`}
             onCrosshair={(t, values) => setHover(t ? { time: t, values } : null)}
           />
         )}
@@ -173,7 +173,7 @@ export function ComparePage({ onBack, onOpen }: { onBack: () => void; onOpen: (i
                     <line x1="1" x2="27" y1="5" y2="5" stroke={r.color} strokeWidth="2.5" strokeDasharray={r.dash} strokeLinecap="round" />
                   </svg>
                   <button type="button" className="mk-legend-name" onClick={() => onOpen(r.id)}>
-                    <strong>{r.id}</strong>
+                    <strong>{shortName(r.id)}</strong>
                     <span>{r.name}</span>
                   </button>
                   <strong className="mk-legend-value">{pctText(hover ? hover.values[r.id] ?? NaN : r.growth, 1)}</strong>
@@ -182,13 +182,20 @@ export function ComparePage({ onBack, onOpen }: { onBack: () => void; onOpen: (i
               ))}
             </ul>
             <p className="block-hint">
-              {common.limitedBy ? `Starts ${dayText(common.start)}, when ${common.limitedBy} began. ` : ''}
+              {common.limitedBy ? `Starts ${dayText(common.start)}, when ${shortName(common.limitedBy)} began. ` : ''}
               {prefs.totalReturn && anyEtf ? 'ETFs include distributions; indexes are price only. ' : 'Price only (no distributions). '}
               Average a year is compound <Tip term="averageYearly" />. Past growth is history, not a promise.
             </p>
           </>
         )}
       </section>
+      <p className="mk-attrib">
+        Charts by{' '}
+        <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">
+          TradingView Lightweight Charts™
+        </a>
+        . Copyright (c) 2025 TradingView, Inc. Prices from Yahoo Finance, delayed about 15–20 minutes.
+      </p>
     </div>
   )
 }

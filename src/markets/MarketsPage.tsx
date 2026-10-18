@@ -114,8 +114,15 @@ export function MarketsPage({ plan, setPlan, onUseHistoryWindow }: { plan: Plan 
 
   return (
     <div className="markets">
-      <div className={`mk-pull${pull > 0 || checking ? ' is-on' : ''}`} style={{ height: pull > 0 ? pull : checking ? 36 : 0 }} aria-hidden={!(pull > 0 || checking)}>
-        <span className={checking ? 'mk-spin' : undefined}>{checking ? '↻' : '↓'}</span> {pullLabel}
+      <div className={`mk-pull${pull > 0 || checking ? ' is-on' : ''}`} style={{ height: pull > 0 ? pull : checking ? 36 : 0 }} role="status">
+        {(pull > 0 || checking) && (
+          <>
+            <span className={checking ? 'mk-spin' : undefined} aria-hidden="true">
+              {checking ? '↻' : '↓'}
+            </span>{' '}
+            {pullLabel}
+          </>
+        )}
       </div>
       <DataNotices />
 

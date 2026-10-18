@@ -83,12 +83,12 @@ export function orderedIds(all: string[], order: string[]): string[] {
   return [...known, ...all.filter((id) => !known.includes(id))]
 }
 
-/** Move one id up (−1) or down (+1) in the person's order. */
-export function moveId(all: string[], order: string[], id: string, by: -1 | 1): string[] {
+/** Swap two ids in the person's order (e.g. an ETF and the one shown just above it). */
+export function swapIds(all: string[], order: string[], a: string, b: string): string[] {
   const list = orderedIds(all, order)
-  const i = list.indexOf(id)
-  const j = i + by
-  if (i < 0 || j < 0 || j >= list.length) return list
+  const i = list.indexOf(a)
+  const j = list.indexOf(b)
+  if (i < 0 || j < 0) return list
   ;[list[i], list[j]] = [list[j], list[i]]
   return list
 }

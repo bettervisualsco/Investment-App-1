@@ -40,9 +40,9 @@ export function Sparkline({ values, dir, width = 84, height = 30 }: { values: nu
   const pts = values.map((v, i) => `${((i / (values.length - 1)) * (width - 2) + 1).toFixed(1)},${(height - 2 - ((v - min) / span) * (height - 4)).toFixed(1)}`)
   const base = height - 2 - ((values[0] - min) / span) * (height - 4)
   return (
-    <svg className={`mk-spark is-${dir}`} width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-      <line x1="1" x2={width - 1} y1={base} y2={base} className="mk-spark-base" />
-      <polyline points={pts.join(' ')} fill="none" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+    <svg className={`mk-spark is-${dir}`} width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" aria-hidden="true">
+      <line x1="1" x2={width - 1} y1={base} y2={base} className="mk-spark-base" vectorEffect="non-scaling-stroke" />
+      <polyline points={pts.join(' ')} fill="none" vectorEffect="non-scaling-stroke" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   )
 }

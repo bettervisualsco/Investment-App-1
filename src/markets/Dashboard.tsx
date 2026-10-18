@@ -8,7 +8,7 @@ import { ChangePill, MarketBadge, Sparkline } from './bits'
 import { asOfText } from '../data'
 import { direction, priceText } from './format'
 import { rangeStartIndex } from './maths'
-import { moveId, orderedIds, usePrefs, type SortKey } from './prefs'
+import { orderedIds, swapIds, usePrefs, type SortKey } from './prefs'
 import { latestQuote, type LatestQuote } from './quotes'
 import { exchangeOf, unitOf, useDailyMany, useEtfs, useIntraday, useMinute, type Item } from './useMarketData'
 import { Tip } from './words'
@@ -72,7 +72,7 @@ export function Dashboard({ onOpen, onCompare }: { onOpen: (id: string) => void;
   const favs = sorted.filter((r) => prefs.favourites.includes(r.item.id))
   const rest = sorted.filter((r) => !prefs.favourites.includes(r.item.id))
   const toggleFav = (id: string) => setPrefs((p) => ({ favourites: p.favourites.includes(id) ? p.favourites.filter((f) => f !== id) : [...p.favourites, id] }))
-  const move = (id: string, by: -1 | 1) => setPrefs((p) => ({ order: moveId(etfIds, p.order, id, by), sort: 'mine' }))
+  const move = (id: string, neighbour: string) => setPrefs((p) => ({ order: swapIds(etfIds, p.order, id, neighbour), sort: 'mine' }))
 
   if (loading && etfs.length === 0) return <div className="loading">Loading prices…</div>
   if (etfs.length === 0)
@@ -105,10 +105,10 @@ export function Dashboard({ onOpen, onCompare }: { onOpen: (id: string) => void;
         </button>
         {editing && prefs.sort === 'mine' && (
           <span className="mk-move">
-            <button type="button" className="mk-move-btn" aria-label={`Move ${r.item.id} up`} disabled={i === 0} onClick={() => move(r.item.id, -1)}>
+            <button type="button" className="mk-move-btn" aria-label={`Move ${r.item.id} up`} disabled={i === 0} onClick={() => move(r.item.id, list[i - 1].item.id)}>
               ↑
             </button>
-            <button type="button" className="mk-move-btn" aria-label={`Move ${r.item.id} down`} disabled={i === list.length - 1} onClick={() => move(r.item.id, 1)}>
+            <button type="button" className="mk-move-btn" aria-label={`Move ${r.item.id} down`} disabled={i === list.length - 1} onClick={() => move(r.item.id, list[i + 1].item.id)}>
               ↓
             </button>
           </span>

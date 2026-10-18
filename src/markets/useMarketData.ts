@@ -55,6 +55,13 @@ export function unitOf(item: Item | undefined, inAud = false): Unit {
   return inAud ? 'AUD' : item.currency
 }
 
+const indexShort: Record<string, string> = { ASX200: 'ASX 200', ALLORDS: 'All Ords', SP500: 'S&P 500', NDX: 'Nasdaq 100', AUDUSD: 'AUD/USD' }
+
+/** A short label: the ETF's code, or an index's everyday name ("S&P 500"). */
+export function shortName(id: string): string {
+  return indexShort[id] ?? id
+}
+
 export function exchangeOf(market: MarketKey): Exchange {
   return market === 'us' ? 'nyse' : 'asx'
 }

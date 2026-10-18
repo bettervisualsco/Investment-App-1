@@ -92,6 +92,8 @@ export function MarketChart(props: MarketChartProps) {
   const hlRef = useRef(new HighlightPrimitive())
   const hlHost = useRef<ISeriesApi<SeriesType> | null>(null)
   const anim = useRef<number | null>(null)
+  // the first range is set straight away; later changes glide
+  const animated = useRef(false)
   // latest callbacks, so the chart's own listeners never go stale
   const cb = useRef(props)
   const firstTimeKind = useRef(timeKind)
@@ -108,8 +110,9 @@ export function MarketChart(props: MarketChartProps) {
       layout: { background: { type: ColorType.Solid, color: 'transparent' }, attributionLogo: true, fontSize: 12, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif' },
       handleScroll: false,
       handleScale: false,
-      rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.14, bottom: 0.08 } },
-      timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, rightOffset: 0, lockVisibleTimeRangeOnResize: true, timeVisible: firstTimeKind.current === 'intraday', secondsVisible: false, tickMarkFormatter: tick },
+      // the bottom margin keeps the line clear of the TradingView logo in the corner
+      rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.14, bottom: 0.16 } },
+      timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true, rightOffset: 0, shiftVisibleRangeOnNewBar: false, lockVisibleTimeRangeOnResize: true, timeVisible: firstTimeKind.current === 'intraday', secondsVisible: false, tickMarkFormatter: tick },
       crosshair: { mode: CrosshairMode.Magnet },
       grid: { vertLines: { visible: false } },
       localization: { locale: 'en-AU', timeFormatter: crosshairTime, priceFormatter: (v: number) => cb.current.formatValue(v) },
@@ -242,32 +245,37 @@ export function MarketChart(props: MarketChartProps) {
     hlRef.current.set(highlight ?? null, withAlpha(colors.accent, 0.13), withAlpha(colors.accent, 0.7))
   }, [highlight, lines, colors])
 
-  // What's shown: glide smoothly from the old range to the new one.
+  // What's shown: glide smoothly from the old range to the new one. Waits a frame so the chart has
+  // taken in any new data first.
   useEffect(() => {
     const chart = chartRef.current
     if (!chart || !visible) return
     const ts = chart.timeScale()
-    const a = ts.timeToIndex(visible.from, true)
-    const b = ts.timeToIndex(visible.to, true)
-    if (a === null || b === null) {
-      ts.fitContent()
-      return
-    }
-    const target = { from: Number(a), to: Number(b) }
-    const start = ts.getVisibleLogicalRange()
-    if (anim.current) cancelAnimationFrame(anim.current)
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!start || reduce || !Number.isFinite(start.from)) {
-      ts.setVisibleLogicalRange(target)
-      return
-    }
-    const t0 = performance.now()
-    const step = (now: number) => {
-      const k = ease(Math.min(1, (now - t0) / 320))
-      ts.setVisibleLogicalRange({ from: start.from + (target.from - start.from) * k, to: start.to + (target.to - start.to) * k })
-      anim.current = k < 1 ? requestAnimationFrame(step) : null
-    }
-    anim.current = requestAnimationFrame(step)
+    const frame = requestAnimationFrame(() => {
+      const a = ts.timeToIndex(visible.from, true)
+      const b = ts.timeToIndex(visible.to, true)
+      if (a === null || b === null) {
+        ts.fitContent()
+        return
+      }
+      const target = { from: Number(a), to: Number(b) }
+      const start = ts.getVisibleLogicalRange()
+      if (anim.current) cancelAnimationFrame(anim.current)
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (!start || reduce || !Number.isFinite(start.from) || !animated.current) {
+        animated.current = true
+        ts.setVisibleLogicalRange(target)
+        return
+      }
+      const t0 = performance.now()
+      const step = (now: number) => {
+        const k = ease(Math.min(1, (now - t0) / 320))
+        ts.setVisibleLogicalRange({ from: start.from + (target.from - start.from) * k, to: start.to + (target.to - start.to) * k })
+        anim.current = k < 1 ? requestAnimationFrame(step) : null
+      }
+      anim.current = requestAnimationFrame(step)
+    })
+    return () => cancelAnimationFrame(frame)
   }, [visible, lines, whitespace])
 
   // Dragging out a period (mouse always; touch only in pick-a-period mode).

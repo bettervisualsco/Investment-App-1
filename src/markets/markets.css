@@ -46,13 +46,20 @@
 
 .markets {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   max-width: 980px;
 }
 
 .mk-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
+  min-width: 0;
+}
+
+.markets > section,
+.mk-page > section {
   min-width: 0;
 }
 
@@ -198,6 +205,7 @@
   list-style: none;
   overflow-x: auto;
   scroll-snap-type: x proximity;
+  scroll-padding-inline: 16px;
   scrollbar-width: none;
 }
 
@@ -211,17 +219,17 @@
 
 @media (min-width: 900px) {
   .mk-index-grid {
-    grid-auto-flow: row;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    margin: 0;
-    padding: 2px 0 4px;
-    overflow: visible;
+    margin: 0 -8px;
+    padding: 2px 8px 10px;
+    scroll-padding-inline: 8px;
   }
 }
 
 .mk-index {
   display: grid;
+  align-content: start;
   gap: 4px;
+  min-width: 0;
   width: 100%;
   height: 100%;
   padding: 14px;
@@ -240,6 +248,15 @@
   color: var(--ink-2);
   font-size: 13px;
   font-weight: 600;
+}
+
+.mk-index .mk-change {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+.mk-index .mk-spark {
+  width: 100%;
 }
 
 .mk-index-value {
@@ -365,9 +382,13 @@
   font-size: 11px;
 }
 
-@media (max-width: 380px) {
+@media (max-width: 400px) {
   .mk-row-main .mk-spark {
-    display: none;
+    width: 48px;
+  }
+
+  .mk-row-price {
+    min-width: 84px;
   }
 }
 
@@ -519,7 +540,8 @@
 
 .mk-ranges {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(30px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 2px;
   padding: 3px;
   border-radius: 11px;
@@ -527,20 +549,22 @@
 }
 
 .mk-ranges button {
+  min-width: 0;
   min-height: 34px;
-  padding: 0 2px;
+  padding: 0;
   border: 0;
   border-radius: 8px;
   background: none;
   color: var(--ink-2);
   font-size: 13px;
   font-weight: 600;
+  letter-spacing: -0.02em;
   transition: background 160ms ease, color 160ms ease;
 }
 
 .mk-ranges button.is-on {
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--accent);
+  color: var(--accent-ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
@@ -1017,4 +1041,8 @@
 .mk-status-list .mk-status-error {
   color: var(--bad) !important;
   overflow-wrap: anywhere;
+}
+
+.mk-status-foot {
+  margin-top: 12px;
 }

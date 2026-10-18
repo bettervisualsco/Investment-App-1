@@ -17,7 +17,7 @@ import { HORIZONS, predictLines, yearlyFromMultiplier, type Horizon } from './pr
 import { usePrefs } from './prefs'
 import { intradayPoints, latestQuote } from './quotes'
 import { UseInPlanner, type HistoryWindowRequest } from './UseInPlanner'
-import { exchangeOf, unitOf, useDaily, useEtfs, useFx, useIntraday, useMarketFreshness, useMinute } from './useMarketData'
+import { exchangeOf, shortName, unitOf, useDaily, useEtfs, useFx, useIntraday, useMarketFreshness, useMinute } from './useMarketData'
 import { Tip, Toggle } from './words'
 
 const wide = () => typeof window !== 'undefined' && window.matchMedia('(min-width: 900px)').matches
@@ -34,6 +34,17 @@ const rangeWords: Record<RangeKey, string> = {
   '5Y': 'past 5 years',
   '10Y': 'past 10 years',
   Max: 'since the start',
+}
+
+const clockFmt = new Intl.DateTimeFormat('en-AU', { hour: 'numeric', minute: '2-digit', hour12: true })
+/** "12:05pm" (device time) from unix seconds. */
+const clockAt = (t: number) => clockFmt.format(new Date(t * 1000)).replace(/\s?(am|pm)/i, (m) => m.trim().toLowerCase())
+
+/** With prediction lines on, show at least as much history as the prediction looks ahead, so neither part is squashed. */
+function historyFor(horizon: Horizon, current: RangeKey): RangeKey {
+  const order: RangeKey[] = ['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y', '5Y', '10Y', 'Max']
+  const wanted: RangeKey = horizon === 1 ? '1Y' : horizon === 5 ? '5Y' : horizon === 10 ? '10Y' : 'Max'
+  return order.indexOf(current) >= order.indexOf(wanted) ? current : wanted
 }
 
 /** Weekdays after `from` up to `to`: blank points that keep the future part of the chart to scale. */
@@ -216,7 +227,7 @@ export function EtfDetail({
     const iso = timeISO(hover.time)
     const base = isDay ? intra?.prev ?? startValue : startValue
     headChange = change(hover.value, base)
-    headWhen = iso ? (lastDate && iso > lastDate ? `estimate for ${dayText(iso)}` : dayText(iso)) : 'at that time'
+    headWhen = iso ? (lastDate && iso > lastDate ? `estimate for ${dayText(iso)}` : dayText(iso)) : `at ${clockAt(hover.time as number)}`
   }
 
   const horizonLabel = (h: Horizon) => `${h} year${h === 1 ? '' : 's'}`
@@ -233,7 +244,7 @@ export function EtfDetail({
 
       <header className="mk-head">
         <div className="mk-head-title">
-          <h1>{item.id}</h1>
+          <h1>{shortName(item.id)}</h1>
           <MarketBadge exchange={item.kind === 'fx' ? 'fx' : exchangeOf(item.market)} now={now} />
         </div>
         <p className="mk-head-name">{item.name}</p>
@@ -319,7 +330,7 @@ export function EtfDetail({
         <div className="mk-toggles">
           {etf && <Toggle label="Total return (with distributions)" checked={prefs.totalReturn} onChange={(on) => setPrefs({ totalReturn: on })} info="totalReturn" />}
           {usd && <Toggle label="Show in Australian dollars" checked={prefs.inAud} onChange={(on) => setPrefs({ inAud: on })} info="inAud" />}
-          {etf && monthly?.etfs[id] && <Toggle label="Prediction lines" checked={prefs.predictions} onChange={(on) => setPrefs({ predictions: on })} info="prediction" disabled={isDay} />}
+          {etf && monthly?.etfs[id] && <Toggle label="Prediction lines" checked={prefs.predictions} onChange={(on) => setPrefs(on ? { predictions: true, range: historyFor(prefs.horizon, range) } : { predictions: false })} info="prediction" disabled={isDay} />}
         </div>
         {total && trFrom && series && series.dates[startIdx] < trFrom && !isDay && (
           <p className="block-hint">Before {dayText(trFrom)} there are no distribution records, so total return there is the price only.</p>
@@ -330,7 +341,7 @@ export function EtfDetail({
           <div className="mk-predict">
             <div className="mk-predict-head">
               <span>Predict ahead</span>
-              <Segmented<string> label="How far ahead" value={String(prefs.horizon)} onChange={(v) => setPrefs({ horizon: Number(v) as Horizon })} options={HORIZONS.map((h) => ({ value: String(h), label: horizonLabel(h) }))} />
+              <Segmented<string> label="How far ahead" value={String(prefs.horizon)} onChange={(v) => setPrefs({ horizon: Number(v) as Horizon, range: historyFor(Number(v) as Horizon, range) })} options={HORIZONS.map((h) => ({ value: String(h), label: horizonLabel(h) }))} />
             </div>
             {predict ? (
               <>

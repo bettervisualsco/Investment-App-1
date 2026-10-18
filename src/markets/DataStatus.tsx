@@ -127,7 +127,7 @@ export function DataStatus() {
               ))}
             </ul>
           )}
-          <p className="block-hint">Prices come from Yahoo Finance (delayed about 15–20 minutes); inflation from the ABS and FRED; the cash rate and exchange rates from the RBA. Times are in your own time zone.</p>
+          <p className="block-hint mk-status-foot">Prices come from Yahoo Finance (delayed about 15–20 minutes); inflation from the ABS and FRED; the cash rate and exchange rates from the RBA. Times are in your own time zone.</p>
         </>
       ) : (
         <p className="block-hint">No data on this device yet.</p>

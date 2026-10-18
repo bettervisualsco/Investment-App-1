@@ -19,6 +19,7 @@ import {
   toAud,
   volatility,
 } from './maths'
+import { orderedIds, swapIds } from './prefs'
 import { latestQuote, intradayPoints } from './quotes'
 
 describe('price changes', () => {
@@ -234,5 +235,13 @@ describe('Use in Planner', () => {
     expect(gross - 0.08).toBeGreaterThan(0.0007)
     expect(gross - 0.08).toBeLessThan(0.0008)
     expect(addBackFee(0.08, 0)).toBeCloseTo(0.08, 12)
+  })
+})
+
+describe('watchlist order', () => {
+  it('keeps the saved order, adds new ETFs at the end, and swaps neighbours', () => {
+    const all = ['VAS', 'VGS', 'IVV', 'VOO']
+    expect(orderedIds(all, ['VOO', 'VAS', 'GONE'])).toEqual(['VOO', 'VAS', 'VGS', 'IVV'])
+    expect(swapIds(all, ['VOO', 'VAS'], 'VGS', 'IVV')).toEqual(['VOO', 'VAS', 'IVV', 'VGS'])
   })
 })
