@@ -1,0 +1,165 @@
+import { useMemo } from 'react'
+import { Area, ComposedChart, ReferenceArea, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts'
+import { toDayNumber } from '../engine/dates'
+import type { ManualResult } from '../engine/manual'
+import type { Currency, Phase } from '../engine/types'
+import { dateLong, money, moneyCompact, yearOf } from '../lib/format'
+
+const Y_AXIS_WIDTH = 60
+const RIGHT_GAP = 14
+
+interface Row {
+  day: number
+  /** The part of the balance that is your own money. */
+  mine: number
+  /** The part that is growth (never below 0 for drawing). */
+  growth: number
+  balance: number
+  net: number
+}
+
+function yearTicks(start: number, end: number): number[] {
+  const first = yearOf(start) + 1
+  const last = yearOf(end)
+  const span = Math.max(1, last - first)
+  const step = [1, 2, 5, 10, 20, 25, 50].find((s) => span / s <= 6) ?? 50
+  const ticks: number[] = []
+  for (let y = Math.ceil(first / step) * step; y <= last; y += step) {
+    const day = toDayNumber({ y, m: 1, d: 1 })
+    if (day > start && day < end) ticks.push(day)
+  }
+  return ticks
+}
+
+/** Round-number money ticks ($0, $50K, $100K…) covering 0 to max. */
+function moneyTicks(max: number): number[] {
+  if (max <= 0) return [0, 10_000]
+  const rough = max / 4
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)))
+  const step = ([1, 2, 2.5, 5, 10].find((m) => m * mag >= rough) ?? 10) * mag
+  const ticks: number[] = []
+  for (let t = 0; t < max + step; t += step) ticks.push(t)
+  return ticks
+}
+
+function ChartTooltip({ active, payload, currency }: TooltipContentProps<number, string> & { currency: Currency }) {
+  if (!active || !payload?.length) return null
+  const row = payload[0].payload as Row
+  const growth = row.balance - row.net
+  return (
+    <div className="chart-tip">
+      <div className="chart-tip-date">{dateLong(row.day)}</div>
+      <div className="chart-tip-total">{money(row.balance, currency)}</div>
+      <div className="chart-tip-row">
+        <span className="key key-mine" aria-hidden="true" />
+        Your money <strong>{money(row.net, currency)}</strong>
+      </div>
+      <div className="chart-tip-row">
+        <span className="key key-growth" aria-hidden="true" />
+        Growth <strong>{money(growth, currency)}</strong>
+      </div>
+    </div>
+  )
+}
+
+/** Stacked chart of your money vs growth, with the life-timeline ribbon underneath. */
+export function GrowthChart({
+  result,
+  phases,
+  currency,
+  onPickPhase,
+}: {
+  result: ManualResult
+  phases: Phase[]
+  currency: Currency
+  onPickPhase: (id: string) => void
+}) {
+  const rows: Row[] = useMemo(
+    () =>
+      result.series.map((p) => {
+        const mine = Math.min(Math.max(p.netContributed, 0), p.balance)
+        return { day: p.day, mine, growth: Math.max(p.balance - mine, 0), balance: p.balance, net: p.netContributed }
+      }),
+    [result],
+  )
+  const ticks = useMemo(() => yearTicks(result.startDay, result.endDay), [result])
+  const total = result.endDay - result.startDay
+  const goal = result.goal
+  const yTicks = useMemo(() => {
+    const top = Math.max(...rows.map((r) => r.balance), goal && !goal.outsidePlan ? goal.amount : 0)
+    return moneyTicks(top)
+  }, [rows, goal])
+
+  return (
+    <figure className="growth-figure">
+      <div className="chart-box">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={rows} margin={{ top: 12, right: RIGHT_GAP, bottom: 0, left: 0 }}>
+            {result.phases.map((p, i) =>
+              i % 2 === 1 ? <ReferenceArea key={p.phaseId} x1={p.start} x2={p.end} fill="var(--band)" fillOpacity={1} strokeOpacity={0} ifOverflow="hidden" /> : null,
+            )}
+            <XAxis
+              dataKey="day"
+              type="number"
+              domain={[result.startDay, result.endDay]}
+              ticks={ticks}
+              tickFormatter={(d: number) => String(yearOf(d))}
+              tick={{ fill: 'var(--ink-3)', fontSize: 12 }}
+              tickLine={false}
+              axisLine={{ stroke: 'var(--line)' }}
+              allowDataOverflow
+            />
+            <YAxis
+              width={Y_AXIS_WIDTH}
+              tickFormatter={(c: number) => moneyCompact(c, currency)}
+              tick={{ fill: 'var(--ink-3)', fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+              ticks={yTicks}
+              domain={[0, yTicks[yTicks.length - 1]]}
+            />
+            <Tooltip
+              content={(props) => <ChartTooltip {...(props as TooltipContentProps<number, string>)} currency={currency} />}
+              cursor={{ stroke: 'var(--ink-3)', strokeWidth: 1 }}
+              isAnimationActive={false}
+            />
+            <Area type="monotone" dataKey="mine" stackId="1" stroke="var(--series-mine)" strokeWidth={2} fill="var(--series-mine)" fillOpacity={0.22} isAnimationActive={false} />
+            <Area type="monotone" dataKey="growth" stackId="1" stroke="var(--series-growth)" strokeWidth={2} fill="var(--series-growth)" fillOpacity={0.26} isAnimationActive={false} />
+            {goal && !goal.outsidePlan && (
+              <ReferenceDot x={goal.day + 1} y={goal.amount} r={5}
+                fill="var(--surface)"
+                stroke="var(--ink)"
+                strokeWidth={2}
+                label={{ value: 'Goal', position: 'left', fill: 'var(--ink-2)', fontSize: 12, fontWeight: 600 }}
+              />
+            )}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="ribbon" style={{ paddingLeft: Y_AXIS_WIDTH, paddingRight: RIGHT_GAP }} aria-label="Phases on the timeline">
+        {result.phases.map((p, i) => {
+          const phase = phases.find((x) => x.id === p.phaseId)
+          const share = (p.end - p.start) / total
+          const name = phase?.name || `Phase ${i + 1}`
+          return (
+            <button
+              key={p.phaseId}
+              type="button"
+              className={`ribbon-seg${i % 2 === 1 ? ' is-alt' : ''}`}
+              style={{ flexGrow: share, flexBasis: 0 }}
+              title={`${name}: ${dateLong(p.start)} to ${dateLong(p.end - 1)}`}
+              onClick={() => onPickPhase(p.phaseId)}
+            >
+              {share > 0.07 && <span className="ribbon-name">{name}</span>}
+            </button>
+          )
+        })}
+      </div>
+      <figcaption className="visually-hidden">
+        Chart of your balance over time, split into your own money and growth, from {dateLong(result.startDay)} to {dateLong(result.endDay - 1)}. The year-by-year table
+        below has the same numbers.
+      </figcaption>
+    </figure>
+  )
+}
