@@ -3,6 +3,7 @@ import { TAX_RATES_CHECKED_ON, TAX_SOURCES } from '../engine/taxTables'
 import { toDayNumber } from '../engine/dates'
 import { dateLong } from '../lib/format'
 import type { ThemeChoice } from '../state/theme'
+import { PredictionSettings } from '../predict/PredictionSettings'
 
 export const DISCLAIMER = 'General information only, not financial advice. Predictions are estimates based on past data, and the future can be different.'
 
@@ -44,6 +45,7 @@ export function SettingsPage({ theme, setTheme, onShowSaved }: { theme: ThemeCho
           Go to Saved plans
         </button>
       </section>
+      <PredictionSettings />
       <section className="block">
         <div className="block-head">
           <h2>Tax rates</h2>

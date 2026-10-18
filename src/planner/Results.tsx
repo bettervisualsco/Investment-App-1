@@ -1,6 +1,6 @@
 import { InfoTip } from '../components/InfoTip'
 import { DownloadIcon } from '../components/Icons'
-import { financialYearLabel, type CostComparison, type ManualResult } from '../engine/manual'
+import { financialYearLabel, type CostComparison, type CostStep, type ManualResult } from '../engine/manual'
 import type { Currency, Phase, Realism } from '../engine/types'
 import { downloadText } from '../lib/csv'
 import { dateLong, dateMonthYear, money, yearOf } from '../lib/format'
@@ -69,7 +69,7 @@ export function ResultsHero({
 
       {result.goal && <GoalVerdict goal={result.goal} currency={currency} />}
 
-      {realism.showCost && comparison && comparison.steps.length > 0 && <CostPanel comparison={comparison} currency={currency} />}
+      {realism.showCost && comparison && comparison.steps.length > 0 && <CostPanel start={comparison.allOff.finalBalance} steps={comparison.steps} currency={currency} />}
 
       <dl className="totals realism-totals">
         <div>
@@ -147,7 +147,7 @@ function listWords(words: string[]): string {
   return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
 }
 
-function EndSaleNote({ result, currency }: { result: ManualResult; currency: Currency }) {
+export function EndSaleNote({ result, currency }: { result: ManualResult; currency: Currency }) {
   const s = result.endSale!
   const v = viewOf(result)
   const day = dateLong(result.endDay - 1)
@@ -171,7 +171,7 @@ function EndSaleNote({ result, currency }: { result: ManualResult; currency: Cur
   )
 }
 
-function Breakdown({ result, currency }: { result: ManualResult; currency: Currency }) {
+export function Breakdown({ result, currency }: { result: ManualResult; currency: Currency }) {
   const f = result.fees
   const t = result.tax
   const sw = result.switches
@@ -227,11 +227,11 @@ function Breakdown({ result, currency }: { result: ManualResult; currency: Curre
   )
 }
 
-function CostPanel({ comparison, currency }: { comparison: CostComparison; currency: Currency }) {
-  const start = comparison.allOff.finalBalance
+/** "Show the cost": the result with every switch off, then what each switch takes. `start` is the all-off amount. */
+export function CostPanel({ start, steps, currency, note }: { start: number; steps: CostStep[]; currency: Currency; note?: string }) {
   const names = { fees: 'Fees', tax: 'Tax', inflation: 'Inflation' } as const
-  const end = comparison.steps[comparison.steps.length - 1].after
-  const scale = Math.max(start, ...comparison.steps.map((s) => s.after), 1)
+  const end = steps[steps.length - 1].after
+  const scale = Math.max(start, ...steps.map((s) => s.after), 1)
   return (
     <div className="cost-panel" aria-label="What each switch costs">
       <div className="cost-head">
@@ -244,7 +244,7 @@ function CostPanel({ comparison, currency }: { comparison: CostComparison; curre
         </span>
         <span className="cost-value">{money(start, currency)}</span>
       </div>
-      {comparison.steps.map((s) => (
+      {steps.map((s) => (
         <div className="cost-row" key={s.switch}>
           <span className="cost-label">
             {names[s.switch]} {s.cost >= 0 ? 'take' : 'add'}
@@ -263,8 +263,8 @@ function CostPanel({ comparison, currency }: { comparison: CostComparison; curre
         <span className="cost-value">{money(end, currency)}</span>
       </div>
       <p className="block-hint">
-        Turned on one at a time: fees, then tax, then inflation{comparison.steps.some((s) => s.switch === 'inflation') ? ' (that last one is the loss of buying power, in today’s dollars)' : ''}. The dashed line
-        on the chart is everything off.
+        Turned on one at a time: fees, then tax, then inflation{steps.some((s) => s.switch === 'inflation') ? ' (that last one is the loss of buying power, in today’s dollars)' : ''}. The dashed line
+        on the chart is everything off.{note ? ` ${note}` : ''}
       </p>
     </div>
   )
@@ -285,7 +285,7 @@ function GoalVerdict({ goal, currency }: { goal: NonNullable<ManualResult['goal'
   )
 }
 
-export function YearTable({ result, currency, planName }: { result: ManualResult; currency: Currency; planName: string }) {
+export function YearTable({ result, currency, planName, note }: { result: ManualResult; currency: Currency; planName: string; note?: string }) {
   const sw = result.switches
   const real = sw.inflation
   const showPaidOut = sw.tax && result.totalPaidOut > 0
@@ -299,6 +299,7 @@ export function YearTable({ result, currency, planName }: { result: ManualResult
           {result.years.length} financial years{real ? ', today’s dollars' : ''}
         </span>
       </summary>
+      {note && <p className="block-hint">{note}</p>}
       <div className="table-scroll">
         <table className="year-table">
           <thead>

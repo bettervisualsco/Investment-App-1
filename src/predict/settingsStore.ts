@@ -97,3 +97,12 @@ export function resolvePrediction(s: PredictionSettings | undefined, d: Predicti
 export function withPrediction(plan: Plan, patch: Partial<PredictionSettings>): Plan {
   return { ...plan, prediction: { mode: 'manual', ...plan.prediction, ...patch } }
 }
+
+/** A new random seed for "Re-roll". */
+export function newSeed(): number {
+  try {
+    return crypto.getRandomValues(new Uint32Array(1))[0]
+  } catch {
+    return Math.floor(Math.random() * 4294967296)
+  }
+}

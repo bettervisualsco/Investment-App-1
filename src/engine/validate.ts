@@ -115,14 +115,16 @@ function brokerageOk(b: Brokerage): boolean {
 
 /** What's wrong with a phase's investment choice, in words, or null if it's fine. */
 export function investmentProblem(inv: Investment | undefined): string | null {
-  if (!inv) return null
+  if (inv === undefined) return null
+  if (typeof inv !== 'object' || inv === null) return 'choose what it’s invested in.'
   const num = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n)
   switch (inv.kind) {
     case 'etf':
-      return inv.etf ? null : 'pick an ETF.'
+      return typeof inv.etf === 'string' && inv.etf ? null : 'pick an ETF.'
     case 'cash':
       return num(inv.rate) && inv.rate >= 0 && inv.rate <= 50 ? null : 'the savings rate should be between 0% and 50% a year.'
     case 'mix': {
+      if (!Array.isArray(inv.parts) || inv.parts.some((p) => typeof p !== 'object' || p === null)) return 'the mix needs fixing: choose its ETFs again.'
       if (inv.parts.length === 0) return 'add at least one ETF to the mix.'
       if (inv.parts.some((p) => !p.etf || !num(p.weight) || p.weight < 0)) return 'each part of the mix needs an ETF and a share of 0% or more.'
       if (new Set(inv.parts.map((p) => p.etf)).size !== inv.parts.length) return 'each ETF can only be in the mix once.'
@@ -132,7 +134,8 @@ export function investmentProblem(inv: Investment | undefined): string | null {
     case 'custom':
       if (!num(inv.mean) || inv.mean <= -50 || inv.mean > 50) return 'the average return should be between −50% and 50% a year.'
       if (!num(inv.volatility) || inv.volatility < 0 || inv.volatility > 100) return 'the volatility should be between 0% and 100%.'
-      if (inv.crashes) {
+      if (inv.crashes !== undefined) {
+        if (typeof inv.crashes !== 'object' || inv.crashes === null) return 'the crash settings need fixing.'
         const { everyYears, drop } = inv.crashes
         if (!num(everyYears) || everyYears < 1 || everyYears > 1000) return 'crashes need to be at most once a year (1 year or more between them).'
         if (!num(drop) || drop <= 0 || drop >= 100) return 'a crash drop should be between 0% and 100%.'

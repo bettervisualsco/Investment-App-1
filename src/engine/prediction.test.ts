@@ -159,6 +159,13 @@ describe('replaying history', () => {
     const crash = flatHistory(60, { [etfKey('AAA')]: -20 }, 0)
     const single = plan({ phases: [phase()] })
     expect(runPrediction(preparePrediction(single, crash, opts({ runs: 50 }))).belowPutIn.share).toBe(1)
+    // A withdrawal bigger than the balance in every simulation is counted once per simulation, grouped by kind.
+    const car = { ...single, events: [{ id: 'car', name: 'Car', date: '2030-01-01', amount: -100_000_000 }] }
+    const w = runPrediction(preparePrediction(car, crash, opts({ runs: 50 })))
+    expect(w.runsWithWarnings).toBe(50)
+    expect(w.runWarnings).toHaveLength(1)
+    expect(w.runWarnings[0].count).toBe(50)
+    expect(w.runWarnings[0].example).toMatch(/“Car” on 2030-01-01 wanted/)
     const boom = flatHistory(60, { [etfKey('AAA')]: 20 }, 0)
     expect(runPrediction(preparePrediction(single, boom, opts({ runs: 50 }))).belowPutIn.count).toBe(0)
   })

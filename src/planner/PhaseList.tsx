@@ -20,6 +20,8 @@ import type { Currency, Phase, Realism } from '../engine/types'
 import { dateLong, moneyExact } from '../lib/format'
 import { newId } from '../lib/id'
 import { blankPhase } from '../state/defaultPlan'
+import { HelpTip } from '../predict/HelpTip'
+import { InvestmentPicker } from './InvestmentPicker'
 import { PhaseRealism } from './PhaseRealism'
 import { DurationInput, VaryingEditor } from './VaryingEditor'
 import { frequencyOptions, phaseSentence } from './words'
@@ -31,12 +33,13 @@ interface Props {
   currency: Currency
   realism: Realism
   taxBasis: 'income' | 'rate'
+  mode: 'manual' | 'prediction'
   openId: string | null
   setOpenId: (id: string | null) => void
   onChange: (phases: Phase[]) => void
 }
 
-export function PhaseList({ phases, summaries, problems, currency, realism, taxBasis, openId, setOpenId, onChange }: Props) {
+export function PhaseList({ phases, summaries, problems, currency, realism, taxBasis, mode, openId, setOpenId, onChange }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
@@ -71,6 +74,7 @@ export function PhaseList({ phases, summaries, problems, currency, realism, taxB
                 currency={currency}
                 realism={realism}
                 taxBasis={taxBasis}
+                mode={mode}
                 open={openId === phase.id}
                 onToggle={() => setOpenId(openId === phase.id ? null : phase.id)}
                 onChange={(next) => update(phase.id, next)}
@@ -116,6 +120,7 @@ function PhaseCard({
   currency,
   realism,
   taxBasis,
+  mode,
   open,
   onToggle,
   onChange,
@@ -129,6 +134,7 @@ function PhaseCard({
   currency: Currency
   realism: Realism
   taxBasis: 'income' | 'rate'
+  mode: 'manual' | 'prediction'
   open: boolean
   onToggle: () => void
   onChange: (p: Phase) => void
@@ -151,7 +157,7 @@ function PhaseCard({
           </span>
           <span className="phase-title">
             <span className="phase-name">{phase.name || 'Untitled phase'}</span>
-            <span className="phase-sentence">{phaseSentence(phase, currency)}</span>
+            <span className="phase-sentence">{phaseSentence(phase, currency, mode)}</span>
             {summary && (
               <span className="phase-dates">
                 {dateLong(summary.start)} to {dateLong(summary.end - 1)}
@@ -193,11 +199,23 @@ function PhaseCard({
             </p>
           )}
 
-          <h3 className="sub-head">
-            Growth <InfoTip term="returnRate" />
-          </h3>
-          <VaryingEditor name="Return rate" isMoney={false} currency={currency} value={phase.returnRate} onChange={(returnRate) => onChange({ ...phase, returnRate })} />
-          {(realism.fees || realism.tax) && <p className="block-hint">This is the return before fees and tax: the switches take those off.</p>}
+          <InvestmentPicker phase={phase} currency={currency} onChange={onChange} />
+
+          {phase.investment?.kind !== 'cash' &&
+            (mode === 'prediction' ? (
+              <div className="block-hint growth-note">
+                Prediction mode replays real history for {phase.investment ? 'this investment' : 'the investment you choose'} instead of a typed return rate{' '}
+                <HelpTip term="predictionMode" />. Switch to Manual to change the return rate.
+              </div>
+            ) : (
+              <>
+                <h3 className="sub-head">
+                  Growth <InfoTip term="returnRate" />
+                </h3>
+                <VaryingEditor name="Return rate" isMoney={false} currency={currency} value={phase.returnRate} onChange={(returnRate) => onChange({ ...phase, returnRate })} />
+                {(realism.fees || realism.tax) && <p className="block-hint">This is the return before fees and tax: the switches take those off.</p>}
+              </>
+            ))}
 
           <PhaseRealism phase={phase} realism={realism} taxBasis={taxBasis} currency={currency} onChange={onChange} />
 

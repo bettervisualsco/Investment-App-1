@@ -93,6 +93,8 @@ export interface PredictionResult {
   paths: Float64Array[]
   /** How many simulations had a warning of their own (e.g. a withdrawal bigger than the balance). */
   runsWithWarnings: number
+  /** Those warnings grouped by kind: how many simulations had each, and one example. Most common first. */
+  runWarnings: { count: number; example: string }[]
   warnings: string[]
 }
 
@@ -312,6 +314,7 @@ export function runPrediction(prep: PreparedPrediction): PredictionResult {
   const paths: Float64Array[] = []
   let goalInfo: PredictionResult['goal'] = null
   let runsWithWarnings = 0
+  const kinds = new Map<string, { count: number; example: string }>()
   let path: BuiltPath | undefined
 
   const step = Math.max(1, Math.floor(runs / 50))
@@ -328,7 +331,16 @@ export function runPrediction(prep: PreparedPrediction): PredictionResult {
       reached[r] = sim.goal.reached ? 1 : 0
       goalInfo ??= { amount: sim.goal.amount, day: sim.goal.day, outsidePlan: sim.goal.outsidePlan, inTodaysDollars: sim.goal.inTodaysDollars, count: 0, share: 0 }
     }
-    if (sim.warnings.length > c.warnings.length + path.warnings.length) runsWithWarnings++
+    const own = sim.warnings.slice(c.warnings.length + path.warnings.length)
+    if (own.length > 0) {
+      runsWithWarnings++
+      // Group by wording, ignoring the amounts and dates that differ between simulations.
+      for (const kind of new Set(own.map((w) => w.replace(/\$[\d,.]+/g, '$').replace(/\d+/g, '#')))) {
+        const k = kinds.get(kind)
+        if (k) k.count++
+        else kinds.set(kind, { count: 1, example: own.find((w) => w.replace(/\$[\d,.]+/g, '$').replace(/\d+/g, '#') === kind)! })
+      }
+    }
     if (onProgress && ((r + 1) % step === 0 || r === runs - 1)) onProgress(r + 1, runs)
   }
 
@@ -365,6 +377,7 @@ export function runPrediction(prep: PreparedPrediction): PredictionResult {
     median: { run: medianRun, detail, drawdown },
     paths,
     runsWithWarnings,
+    runWarnings: [...kinds.values()].sort((a, b) => b.count - a.count),
     warnings: [...prep.warnings],
   }
 }

@@ -6,12 +6,18 @@ import { resolveRealism } from '../engine/defaults'
 import { runCostComparison, runManual } from '../engine/manual'
 import type { Plan } from '../engine/types'
 import { validatePlan } from '../engine/validate'
+import { HelpTip } from '../predict/HelpTip'
+import { withPrediction } from '../predict/settingsStore'
+import { usePrediction } from '../predict/usePrediction'
 import { EventsSection, GoalSection } from './EventsAndGoal'
 import type { HistoricalInflation } from './inflationHook'
 import { PhaseList } from './PhaseList'
+import { PredictionResults } from './PredictionResults'
+import { PredictionSettingsBlock } from './PredictionSettingsBlock'
 import { RealismSettings, RealismSwitches } from './RealismPanel'
 import { realismOf } from './realismView'
 import { ResultsHero, YearTable } from './Results'
+import './prediction.css'
 
 export function PlannerPage({
   plan,
@@ -27,6 +33,9 @@ export function PlannerPage({
   const deferredPlan = useDeferredValue(plan)
   const realism = realismOf(plan)
   const taxBasis = resolveRealism(plan).taxSettings.basis
+  const mode = plan.prediction?.mode ?? 'manual'
+  const predicting = mode === 'prediction'
+  const prediction = usePrediction(deferredPlan, predicting)
 
   const problems = useMemo(() => validatePlan(deferredPlan), [deferredPlan])
   const { result, comparison } = useMemo(() => {
@@ -54,14 +63,14 @@ export function PlannerPage({
         <div className="mode-row">
           <Segmented
             label="Mode"
-            value="manual"
-            onChange={() => {}}
+            value={mode}
+            onChange={(m) => setPlan(withPrediction(plan, { mode: m }))}
             options={[
               { value: 'manual', label: 'Manual' },
-              { value: 'prediction', label: 'Prediction (soon)', disabled: true },
+              { value: 'prediction', label: 'Prediction' },
             ]}
           />
-          <InfoTip term="manualMode" />
+          {predicting ? <HelpTip term="predictionMode" /> : <InfoTip term="manualMode" />}
         </div>
         <input className="plan-name" aria-label="Plan name" value={plan.name} onChange={(e) => setPlan({ ...plan, name: e.target.value })} />
         <div className="basics">
@@ -100,7 +109,19 @@ export function PlannerPage({
       </header>
 
       <div className="planner-results">
-        {result ? (
+        {predicting ? (
+          <>
+            <PredictionResults state={prediction} plan={plan} setPlan={setPlan} onPickPhase={pickPhase} />
+            {prediction.result && (
+              <YearTable
+                result={prediction.result.median.detail}
+                currency={plan.currency}
+                planName={plan.name}
+                note="For the likely simulation: one replay of history (the one with the middle final amount), so real years will be different."
+              />
+            )}
+          </>
+        ) : result ? (
           <>
             <ResultsHero result={result} comparison={comparison} phases={plan.phases} currency={plan.currency} realism={realism} onPickPhase={pickPhase} />
             <YearTable result={result} currency={plan.currency} planName={plan.name} />
@@ -118,14 +139,18 @@ export function PlannerPage({
       </div>
 
       <div className="planner-editor">
+        {predicting && (
+          <PredictionSettingsBlock plan={plan} setPlan={setPlan} settings={prediction.settings} history={prediction.history} historyProblem={prediction.historyProblem} />
+        )}
         <RealismSettings plan={plan} setPlan={setPlan} historicalInflation={historicalInflation} />
         <PhaseList
           phases={plan.phases}
           summaries={result?.phases ?? null}
-          problems={problems}
+          problems={predicting ? prediction.problems : problems}
           currency={plan.currency}
           realism={realism}
           taxBasis={taxBasis}
+          mode={mode}
           openId={openPhase}
           setOpenId={setOpenPhase}
           onChange={(phases) => setPlan({ ...plan, phases })}

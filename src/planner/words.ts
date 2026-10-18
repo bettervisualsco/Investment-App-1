@@ -1,6 +1,6 @@
 // Plain-English descriptions of plan settings.
 
-import type { Currency, Duration, DurationUnit, Frequency, Phase, Varying } from '../engine/types'
+import type { Currency, Duration, DurationUnit, Frequency, Investment, Phase, Varying } from '../engine/types'
 import { moneyExact, percent } from '../lib/format'
 
 const unitWords: Record<DurationUnit, [string, string]> = {
@@ -55,7 +55,35 @@ function rateText(v: Varying): string {
   return `${percent(v.from)} a year, ${v.stepBy < 0 ? '−' : '+'}${percent(Math.abs(v.stepBy))} every ${durationText(v.every)}`
 }
 
-/** "$50 a week for 4 years, growing 7% a year" */
-export function phaseSentence(phase: Phase, currency: Currency): string {
-  return `${depositText(phase.deposit, phase.depositFrequency, currency)} for ${durationText(phase.duration)}, growing ${rateText(phase.returnRate)}`
+/** "VAS", "70% VGS / 30% VAS", "a savings account", "a custom asset (7%, volatility 15%)" */
+export function investmentText(inv: Investment): string {
+  if (inv.kind === 'etf') return inv.etf
+  if (inv.kind === 'mix') return inv.parts.map((p) => `${percent(p.weight)} ${p.etf}`).join(' / ')
+  if (inv.kind === 'cash') return 'a savings account'
+  return `a custom asset (${percent(inv.mean)} a year, volatility ${percent(inv.volatility)})`
+}
+
+/**
+ * Manual mode: "$50 a week for 4 years, growing 7% a year" (a savings account: "earning 4% a year in a savings account").
+ * Prediction mode: "$50 a week for 4 years, in VAS".
+ */
+export function phaseSentence(phase: Phase, currency: Currency, mode: 'manual' | 'prediction' = 'manual'): string {
+  const start = `${depositText(phase.deposit, phase.depositFrequency, currency)} for ${durationText(phase.duration)}`
+  const inv = phase.investment
+  if (mode === 'prediction') return `${start}, ${inv ? `in ${investmentText(inv)}` : 'investment not chosen yet'}`
+  if (inv?.kind === 'cash') return `${start}, earning ${percent(inv.rate)} a year in a savings account`
+  return `${start}, growing ${rateText(phase.returnRate)}${inv ? ` (${investmentText(inv)})` : ''}`
+}
+
+/** "10th", "50th", "1st", "92.5th" */
+export function percentileName(p: number): string {
+  const n = Math.round(p * 10) / 10
+  if (!Number.isInteger(n)) return `${n}th`
+  const suffix = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'
+  return `${n}${suffix}`
+}
+
+/** ["Worst (10th)", "Likely (median)", "Best (90th)"] */
+export function percentileLabels([lo, mid, hi]: readonly [number, number, number]): [string, string, string] {
+  return [`Worst (${percentileName(lo)})`, mid === 50 ? 'Likely (median)' : `Likely (${percentileName(mid)})`, `Best (${percentileName(hi)})`]
 }

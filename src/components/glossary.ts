@@ -3,7 +3,7 @@
 export const glossary = {
   manualMode: {
     title: 'Manual mode',
-    body: 'Uses the return rates you type in, so you get one steady growth line. Real markets go up and down. Prediction mode (coming soon) will replay real market history to show a range of outcomes.',
+    body: 'Uses the return rates you type in, so you get one steady growth line. Real markets go up and down: Prediction mode replays real market history to show a range of outcomes.',
   },
   returnRate: {
     title: 'Return rate',

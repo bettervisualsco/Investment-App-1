@@ -1,0 +1,336 @@
+/* ---------------------------------------------------------------
+   Prediction mode (stage 3)
+   The fan uses the app's existing chart colours, already checked for
+   colour-blind separation in both themes: harbour blue for the fan
+   (one hue at different strengths, plus solid vs dashed lines, so it
+   never relies on telling colours apart) and wattle gold for the few
+   single simulations drawn on top (blue vs gold stays distinct for
+   the common red-green colour blindness).
+---------------------------------------------------------------- */
+:root {
+  --fan: var(--series-mine);
+  --fan-path: var(--series-growth);
+}
+
+.predict-results.is-stale > :not(.predict-status) {
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+.predict-status {
+  display: grid;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.predict-status.is-problem {
+  color: var(--bad);
+}
+
+.progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--band);
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.15s linear;
+}
+
+/* Worst / likely / best */
+.predict-range {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: -4px 0 0;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.predict-range div {
+  padding: 8px 10px;
+  background: var(--surface);
+}
+
+.predict-range div.is-mid {
+  background: var(--surface-2);
+}
+
+.predict-range dt {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.predict-range dd {
+  margin: 0;
+  font-weight: 650;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.predict-basis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+/* Fan chart legend and controls */
+.fan-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+  padding: 0 8px;
+  list-style: none;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.fan-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fan-key {
+  display: inline-block;
+  width: 18px;
+  height: 0;
+  border-top: 2.5px solid var(--fan);
+}
+
+.fan-key-edge {
+  border-top: 2px dashed var(--fan);
+}
+
+.fan-key-path {
+  border-top: 1.5px solid var(--fan-path);
+}
+
+.predict-chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.predict-chart-controls .toggle-row {
+  flex: 1 1 260px;
+}
+
+/* Goal chance */
+.predict-goal {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.predict-goal-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 650;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.predict-goal-text {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.meter {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--band);
+  overflow: hidden;
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+  background: var(--fan);
+}
+
+/* Two key numbers */
+.predict-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.predict-stats > div {
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+}
+
+.predict-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.predict-stat-value {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.predict-stats p {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.predict-detail {
+  display: grid;
+  gap: 8px;
+}
+
+/* Things to fix before it can run */
+.predict-blockers {
+  display: grid;
+  gap: 10px;
+}
+
+.predict-quickfix {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+  font-size: 14px;
+}
+
+.predict-quickfix-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Prediction settings (editor column) */
+.predict-clipped {
+  color: var(--warn);
+}
+
+.predict-seed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 15px;
+}
+
+.predict-seed > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.predict-seed-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+/* What it's invested in (phase card) */
+.invest {
+  display: grid;
+  gap: 10px;
+}
+
+.invest-facts {
+  margin-top: -4px;
+}
+
+.mix {
+  display: grid;
+  gap: 8px;
+}
+
+.mix-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.mix-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mix-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.mix-row .input-select {
+  min-width: 0;
+}
+
+.mix-row .input-select select {
+  width: 100%;
+  text-overflow: ellipsis;
+}
+
+.mix-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mix-total {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--good);
+}
+
+.mix-total.is-off {
+  color: var(--bad);
+}
+
+.custom-asset {
+  display: grid;
+  gap: 10px;
+}
+
+.custom-asset > .block-hint:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.growth-note {
+  display: block;
+}

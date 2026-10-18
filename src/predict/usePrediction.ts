@@ -44,6 +44,15 @@ interface RunState {
 /** Wait this long after the last change before starting, so typing doesn't start dozens of runs. */
 const DEBOUNCE_MS = 250
 
+/** A number for each copy of the market data, so a new copy (new data arrived) means a new run. */
+const dataIds = new WeakMap<object, number>()
+let nextDataId = 1
+function dataIdOf(data: object): number {
+  let id = dataIds.get(data)
+  if (id === undefined) dataIds.set(data, (id = nextDataId++))
+  return id
+}
+
 export function usePrediction(plan: Plan, enabled: boolean): PredictionState {
   const defaults = usePredictionDefaults()
   const settings = resolvePrediction(plan.prediction, defaults)
@@ -71,27 +80,18 @@ export function usePrediction(plan: Plan, enabled: boolean): PredictionState {
     return j
   }, [build, plan, settings.runs, settings.blockMonths, settings.seed, settings.percentiles, wantCost])
 
-  // A fingerprint of the job: the plan, the settings and the data's identity.
-  const dataId = useRef(new WeakMap<object, number>())
-  const nextDataId = useRef(1)
-  let key = ''
-  if (job && monthly.data) {
-    if (!dataId.current.has(monthly.data)) dataId.current.set(monthly.data, nextDataId.current++)
-    key = `${dataId.current.get(monthly.data)}|${JSON.stringify({ ...job, history: build?.ok ? build.info : null })}`
-  }
+  // A fingerprint of the job: the plan, the settings and which copy of the data.
+  const key = job && monthly.data && build?.ok ? `${dataIdOf(monthly.data)}|${JSON.stringify({ ...job, history: build.info })}` : ''
 
   const [run, setRun] = useState<RunState>({ key: '', progress: null, result: null, resultKey: null, cost: null, costKey: null, error: null, ms: null })
   const worker = useRef<Worker | null>(null)
   const busy = useRef(false)
   const jobId = useRef(0)
-  const jobRef = useRef(job)
-  jobRef.current = job
 
   useEffect(() => {
-    if (!key) return
+    const j = job
+    if (!key || !j) return
     const timer = setTimeout(() => {
-      const j = jobRef.current
-      if (!j) return
       const id = ++jobId.current
       // A run still going is for an older plan: stop it by starting a fresh worker.
       if (worker.current && busy.current) {
@@ -128,6 +128,8 @@ export function usePrediction(plan: Plan, enabled: boolean): PredictionState {
       worker.current.postMessage({ ...j, id } satisfies PredictionJob)
     }, DEBOUNCE_MS)
     return () => clearTimeout(timer)
+    // `key` changes exactly when the job does.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
   // Stop the worker when the Planner closes.
