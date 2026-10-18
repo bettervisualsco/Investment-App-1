@@ -136,6 +136,28 @@ export function planShapeProblem(x: unknown): string | null {
     if (!isStr(p.depositFrequency) || !FREQUENCIES.includes(p.depositFrequency)) return `phase “${p.name}” has a damaged deposit frequency`
     if (!varyingOk(p.deposit)) return `phase “${p.name}” has a damaged deposit`
     if (!varyingOk(p.returnRate)) return `phase “${p.name}” has a damaged return rate`
+    // Settings added in later stages are optional, but if present they must have the right shape.
+    for (const key of ['mer', 'otherIncome', 'marginalRate'] as const) {
+      if (p[key] !== undefined && !isNum(p[key])) return `phase “${p.name}” has damaged tax or fee settings`
+    }
+    if (p.distribution !== undefined && !(isObject(p.distribution) && ['yield', 'frankedPct', 'foreignPct', 'foreignTaxPct'].every((k) => isNum((p.distribution as Record<string, unknown>)[k])))) {
+      return `phase “${p.name}” has damaged distribution settings`
+    }
+    if (p.investment !== undefined && !(isObject(p.investment) && isStr(p.investment.kind))) return `phase “${p.name}” has a damaged investment`
+  }
+  if (x.realism !== undefined && !(isObject(x.realism) && ['fees', 'tax', 'inflation'].every((k) => typeof (x.realism as Record<string, unknown>)[k] === 'boolean'))) {
+    return 'its Fees, Tax and Inflation settings are damaged'
+  }
+  if (isObject(x.realism)) {
+    for (const k of ['feeSettings', 'taxSettings', 'inflationSettings']) {
+      const v = x.realism[k]
+      if (v !== undefined && !isObject(v)) return 'its Fees, Tax and Inflation settings are damaged'
+    }
+    const infl = x.realism.inflationSettings
+    if (isObject(infl) && !varyingOk(infl.rate)) return 'its inflation rate is damaged'
+  }
+  if (x.prediction !== undefined && !(isObject(x.prediction) && (x.prediction.mode === 'manual' || x.prediction.mode === 'prediction'))) {
+    return 'its Prediction settings are damaged'
   }
   if (!Array.isArray(x.events)) return 'its one-off events are missing'
   for (const e of x.events) {

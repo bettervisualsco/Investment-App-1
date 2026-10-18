@@ -245,3 +245,34 @@ describe('comparing plan contents', () => {
     expect(samePlan({ a: 1 }, { a: 2 })).toBe(false)
   })
 })
+
+describe('settings added in later stages (fees, tax, inflation, prediction)', () => {
+  const full = plan('a', 'A', {
+    realism: { fees: true, tax: true, inflation: false, feeSettings: { brokerage: { kind: 'flat', fee: 500 } }, inflationSettings: { rate: { kind: 'fixed', value: 2.5 } } },
+    prediction: { mode: 'prediction', window: 'since1990', runs: 1000 },
+  })
+  full.phases[0] = {
+    ...full.phases[0],
+    mer: 0.07,
+    otherIncome: 5_000_000,
+    distribution: { yield: 3, frankedPct: 80, foreignPct: 0, foreignTaxPct: 15, frequency: 'quarterly' },
+    investment: { kind: 'etf', etf: 'VAS' },
+  }
+
+  it('accepts a plan that uses them, and keeps them through a backup round trip', () => {
+    expect(planShapeProblem(full)).toBeNull()
+    const read = readBackup(backupToText(makeBackup([rec(full)])))
+    expect(read.ok && read.entries[0].plan).toEqual(full)
+  })
+
+  it('rejects damaged versions instead of letting them break the Planner', () => {
+    const p0 = full.phases[0]
+    expect(planShapeProblem({ ...full, realism: { fees: 'yes', tax: true, inflation: false } })).toBe('its Fees, Tax and Inflation settings are damaged')
+    expect(planShapeProblem({ ...full, realism: { ...full.realism, taxSettings: 'x' } })).toBe('its Fees, Tax and Inflation settings are damaged')
+    expect(planShapeProblem({ ...full, realism: { ...full.realism, inflationSettings: { rate: 3 } } })).toBe('its inflation rate is damaged')
+    expect(planShapeProblem({ ...full, prediction: { mode: 'guess' } })).toBe('its Prediction settings are damaged')
+    expect(planShapeProblem({ ...full, phases: [{ ...p0, mer: '0.07' }] })).toBe('phase “Uni” has damaged tax or fee settings')
+    expect(planShapeProblem({ ...full, phases: [{ ...p0, distribution: { yield: 3 } }] })).toBe('phase “Uni” has damaged distribution settings')
+    expect(planShapeProblem({ ...full, phases: [{ ...p0, investment: 'VAS' }] })).toBe('phase “Uni” has a damaged investment')
+  })
+})
