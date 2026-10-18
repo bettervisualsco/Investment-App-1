@@ -160,6 +160,22 @@ describe('history windows with the real data', () => {
     expect(b.ok).toBe(false)
   })
 
+  it('a lump sum’s middle result grows at about history’s own average rate (with Fees on, after the fee)', () => {
+    const lump = plan([phase({ kind: 'etf', etf: 'VAS' }, { duration: { count: 30, unit: 'years' }, depositFrequency: 'none', mer: 0.07 })], {
+      startDate: '2027-01-01',
+      startingBalance: 1_000_000,
+      realism: { fees: true, tax: false, inflation: false, feeSettings: { brokerage: { kind: 'flat', fee: 0 }, buyFrequency: 'eachDeposit', cashRate: 0, fxFeePct: 0, platformFee: 0, platformFeePer: 'month', spreadPct: 0 } },
+    })
+    const b = buildHistory(monthly, lump, { window: 'full' })
+    if (!b.ok) throw new Error(b.message)
+    // History's own typical growth, after VAS's fee: the average monthly log return of the data as published.
+    const net = monthly.etfs.VAS.values.filter((v): v is number => v !== null).map((v) => Math.log1p(v / monthly.scale))
+    const yearly = Math.exp((12 * net.reduce((s, x) => s + x, 0)) / net.length)
+    const r = runPrediction(preparePrediction(lump, b.table, { runs: 2000, blockMonths: 12, seed: 1, percentiles: [10, 50, 90] }))
+    const middleYearly = Math.pow(r.final.mid / 1_000_000, 1 / 30)
+    expect(Math.abs(middleYearly - yearly)).toBeLessThan(0.006)
+  })
+
   it('runs end to end on the real data with sensible numbers', () => {
     // $500 a month into VAS for 10 years: the middle result should be well above what was put in.
     const b = buildHistory(monthly, vas, { window: 'full' })
