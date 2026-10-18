@@ -1,10 +1,9 @@
 import { useId } from 'react'
 import { glossary, type GlossaryKey } from './glossary'
 
-/** A small ⓘ button that opens a short explanation card. */
-export function InfoTip({ term }: { term: GlossaryKey }) {
+/** A small ⓘ button that opens a short explanation card. Every tab's ⓘ uses this, so they all look and behave the same. */
+export function InfoButton({ title, body }: { title: string; body: string }) {
   const id = useId()
-  const { title, body } = glossary[term]
   return (
     <>
       <button type="button" className="info-btn" popoverTarget={id} aria-label={`What is “${title}”?`}>
@@ -23,4 +22,9 @@ export function InfoTip({ term }: { term: GlossaryKey }) {
       </div>
     </>
   )
+}
+
+/** ⓘ for a term in the shared glossary. */
+export function InfoTip({ term }: { term: GlossaryKey }) {
+  return <InfoButton {...glossary[term]} />
 }

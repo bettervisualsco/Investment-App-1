@@ -1,6 +1,7 @@
 // Plain-English explanations behind the Markets tab's ⓘ buttons. Same look as the app's other ⓘ
 // buttons (src/components/InfoTip.tsx); kept here so the Markets tab is self-contained.
 
+import { InfoButton } from '../components/InfoTip'
 import { useId } from 'react'
 
 const marketWords = {
@@ -58,26 +59,7 @@ export type MarketWord = keyof typeof marketWords
 
 /** A small ⓘ button that opens a short explanation card. */
 export function Tip({ term }: { term: MarketWord }) {
-  const id = useId()
-  const { title, body } = marketWords[term]
-  return (
-    <>
-      <button type="button" className="info-btn" popoverTarget={id} aria-label={`What is “${title}”?`}>
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-          <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" strokeWidth="1.3" />
-          <circle cx="8" cy="4.9" r="0.95" fill="currentColor" />
-          <path d="M8 7.2v4.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </button>
-      <div id={id} popover="auto" className="info-card" role="dialog" aria-label={title}>
-        <h3>{title}</h3>
-        <p>{body}</p>
-        <button type="button" className="btn btn-quiet" popoverTarget={id} popoverTargetAction="hide">
-          Got it
-        </button>
-      </div>
-    </>
-  )
+  return <InfoButton {...marketWords[term]} />
 }
 
 /** An iOS-style switch with a label (same look as the Planner's switches). */
