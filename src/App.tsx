@@ -1,17 +1,19 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { InflationIcon, MarketsIcon, PlannerIcon, SavedIcon, SettingsIcon } from './components/Icons'
-import { InflationPage } from './inflation/InflationPage'
 import { useHistoricalInflation } from './inflation/useHistoricalInflation'
 import { DisclaimerSheet, SettingsPage } from './pages/OtherPages'
-import { MarketsPage } from './markets/MarketsPage'
 import { useDataFile, type EtfsFile } from './data'
 import { applyHistoryWindow } from './predict/fromMarkets'
 import { PlannerPage } from './planner/PlannerPage'
 import { SaveBar } from './saved/SaveBar'
-import { SavedPage } from './saved/SavedPage'
 import { useSavedPlans } from './state/plans'
 import { usePlan } from './state/usePlan'
 import { hasSeenDisclaimer, markDisclaimerSeen, useTheme } from './state/theme'
+
+// These tabs load the first time they're opened, so the app starts faster. The offline copy still has them.
+const MarketsPage = lazy(() => import('./markets/MarketsPage').then((m) => ({ default: m.MarketsPage })))
+const InflationPage = lazy(() => import('./inflation/InflationPage').then((m) => ({ default: m.InflationPage })))
+const SavedPage = lazy(() => import('./saved/SavedPage').then((m) => ({ default: m.SavedPage })))
 
 type Tab = 'planner' | 'markets' | 'inflation' | 'saved' | 'settings'
 
@@ -68,6 +70,7 @@ export default function App() {
       </nav>
 
       <main className="main">
+        <Suspense fallback={<div className="loading">Loading…</div>}>
         {tab === 'planner' &&
           (plan ? (
             <>
@@ -93,6 +96,7 @@ export default function App() {
         {tab === 'inflation' && <InflationPage />}
         {tab === 'saved' && <SavedPage plan={plan} setPlan={setPlan} saved={savedPlans} openPlanner={() => go('planner')} />}
         {tab === 'settings' && <SettingsPage theme={theme} setTheme={setTheme} onShowSaved={() => go('saved')} />}
+        </Suspense>
       </main>
 
       {showDisclaimer && (
