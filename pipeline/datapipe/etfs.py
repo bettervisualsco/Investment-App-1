@@ -8,7 +8,7 @@ from typing import List
 from .config import Ticker
 from .safety import ValidationError, save_validated
 
-INFO_FIELDS = ["name", "index", "mer", "yield", "franking", "exchange", "currency", "inception", "distributions", "allocation", "duration"]
+INFO_FIELDS = ["index", "mer", "yield", "franking", "exchange", "inception", "distributions", "allocation", "duration"]
 
 
 def _check(new: dict, old) -> None:
