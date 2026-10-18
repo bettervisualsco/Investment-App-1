@@ -49,6 +49,8 @@ export interface ResolvedPhase {
   otherIncome: number
   marginalRate: number
   growWithInflation: boolean
+  /** Buying and selling pays brokerage, spread and currency fees (Fees on). False for a cash/savings account. */
+  tradingCosts: boolean
 }
 
 export interface ResolvedRealism {
@@ -63,14 +65,24 @@ export interface ResolvedRealism {
 }
 
 export function resolvePhase(phase: Phase): ResolvedPhase {
-  return {
+  const resolved: ResolvedPhase = {
     mer: phase.mer ?? DEFAULT_MER,
     usListed: phase.usListed ?? false,
     distribution: { ...DEFAULT_DISTRIBUTION, ...phase.distribution },
     otherIncome: phase.otherIncome ?? 0,
     marginalRate: phase.marginalRate ?? DEFAULT_MARGINAL_RATE,
     growWithInflation: phase.growWithInflation ?? false,
+    tradingCosts: true,
   }
+  if (phase.investment?.kind === 'cash') {
+    // A savings account: no management fee or trading costs, and all of its return is interest,
+    // paid monthly and taxed as income (Prediction mode replaces the yield with each month's real rate).
+    resolved.mer = 0
+    resolved.usListed = false
+    resolved.tradingCosts = false
+    resolved.distribution = { yield: phase.investment.rate, frankedPct: 0, foreignPct: 0, foreignTaxPct: 0, frequency: 'monthly' }
+  }
+  return resolved
 }
 
 export function resolveRealism(plan: Plan): ResolvedRealism {

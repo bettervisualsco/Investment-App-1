@@ -37,7 +37,8 @@ export interface ManualResult extends Omit<SimResult, 'phases'> {
   phases: PhaseSummary[]
 }
 
-function withPhaseInfo(c: CompiledPlan, r: SimResult): ManualResult {
+/** Adds each phase's id and dates to a simulation's phase totals. */
+export function withPhaseInfo(c: CompiledPlan, r: SimResult): ManualResult {
   return {
     ...r,
     phases: r.phases.map((p, i) => ({ phaseId: c.plan.phases[i].id, start: c.ranges[i].start, end: c.ranges[i].end, ...p })),

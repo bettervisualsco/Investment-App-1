@@ -2,7 +2,7 @@
 
 import { isValidISO, toDayNumber } from './dates'
 import { phaseRanges } from './schedule'
-import type { Brokerage, Plan, Varying } from './types'
+import type { Brokerage, Investment, Plan, PredictionSettings, Varying } from './types'
 
 export const MAX_PLAN_YEARS = 100
 
@@ -64,6 +64,11 @@ export function validatePlan(plan: Plan): PlanProblem[] {
       add(phase.id, `${label}: distribution percentages need to be between 0 and 100 (yield up to 50%).`)
     }
   }
+  // Stage 3: what each phase is invested in (optional).
+  for (const phase of plan.phases) {
+    const problem = investmentProblem(phase.investment)
+    if (problem) add(phase.id, `${phase.name || 'A phase'}: ${problem}`)
+  }
   const r = plan.realism
   if (r?.feeSettings) {
     const f = r.feeSettings
@@ -106,4 +111,69 @@ function brokerageOk(b: Brokerage): boolean {
   if (b.kind === 'flat') return ok(b.fee)
   if (b.kind === 'percent') return ok(b.pct) && ok(b.min)
   return b.tiers.length > 0 && b.tiers.every((t) => ok(t.fee) && ok(t.pct) && (t.upTo === null || ok(t.upTo)))
+}
+
+/** What's wrong with a phase's investment choice, in words, or null if it's fine. */
+export function investmentProblem(inv: Investment | undefined): string | null {
+  if (!inv) return null
+  const num = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n)
+  switch (inv.kind) {
+    case 'etf':
+      return inv.etf ? null : 'pick an ETF.'
+    case 'cash':
+      return num(inv.rate) && inv.rate >= 0 && inv.rate <= 50 ? null : 'the savings rate should be between 0% and 50% a year.'
+    case 'mix': {
+      if (inv.parts.length === 0) return 'add at least one ETF to the mix.'
+      if (inv.parts.some((p) => !p.etf || !num(p.weight) || p.weight < 0)) return 'each part of the mix needs an ETF and a share of 0% or more.'
+      if (new Set(inv.parts.map((p) => p.etf)).size !== inv.parts.length) return 'each ETF can only be in the mix once.'
+      const total = inv.parts.reduce((sum, p) => sum + p.weight, 0)
+      return Math.abs(total - 100) < 0.01 ? null : `the mix adds up to ${Math.round(total * 100) / 100}%, but it needs to add up to 100%.`
+    }
+    case 'custom':
+      if (!num(inv.mean) || inv.mean <= -50 || inv.mean > 50) return 'the average return should be between −50% and 50% a year.'
+      if (!num(inv.volatility) || inv.volatility < 0 || inv.volatility > 100) return 'the volatility should be between 0% and 100%.'
+      if (inv.crashes) {
+        const { everyYears, drop } = inv.crashes
+        if (!num(everyYears) || everyYears < 1 || everyYears > 1000) return 'crashes need to be at most once a year (1 year or more between them).'
+        if (!num(drop) || drop <= 0 || drop >= 100) return 'a crash drop should be between 0% and 100%.'
+      }
+      return null
+    default:
+      return 'choose what it’s invested in.'
+  }
+}
+
+export const MIN_RUNS = 500
+export const MAX_RUNS = 10_000
+
+/** Extra checks before Prediction mode can run (on top of validatePlan). */
+export function predictionProblems(plan: Plan): PlanProblem[] {
+  const problems: PlanProblem[] = []
+  for (const phase of plan.phases) {
+    if (!phase.investment) {
+      problems.push({ where: phase.id, message: `${phase.name || 'A phase'}: choose what it’s invested in, so Prediction mode knows which history to replay.` })
+    }
+  }
+  problems.push(...predictionSettingsProblems(plan.prediction))
+  return problems
+}
+
+export function predictionSettingsProblems(s: PredictionSettings | undefined): PlanProblem[] {
+  const problems: PlanProblem[] = []
+  if (!s) return problems
+  const add = (message: string) => problems.push({ where: 'prediction', message })
+  if (s.runs !== undefined && !(Number.isInteger(s.runs) && s.runs >= MIN_RUNS && s.runs <= MAX_RUNS)) {
+    add(`Simulations: use a whole number from ${MIN_RUNS.toLocaleString('en-AU')} to ${MAX_RUNS.toLocaleString('en-AU')}.`)
+  }
+  if (s.blockMonths !== undefined && !(Number.isInteger(s.blockMonths) && s.blockMonths >= 1 && s.blockMonths <= 120)) add('Block length: use a whole number of months from 1 to 120.')
+  if (s.percentiles && !percentilesOk(s.percentiles)) add('Percentiles: worst must be below likely, and likely below best, all between 1 and 99.')
+  if (s.window === 'custom') {
+    const ok = (y: unknown) => typeof y === 'number' && Number.isInteger(y) && y >= 1800 && y <= 2200
+    if (!ok(s.windowFrom) || !ok(s.windowTo) || s.windowFrom! > s.windowTo!) add('History: pick a first year that is before (or the same as) the last year.')
+  }
+  return problems
+}
+
+export function percentilesOk(p: readonly number[]): boolean {
+  return p.length === 3 && p.every((x) => Number.isFinite(x) && x >= 1 && x <= 99) && p[0] < p[1] && p[1] < p[2]
 }

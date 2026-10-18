@@ -179,6 +179,8 @@ export interface SimResult {
   endSale: EndSale | null
   /** Balance at each chart point (always kept). */
   balances: Float64Array
+  /** Price level (CPI, 1 = start) at each chart point, so balances can be shown in today's dollars. */
+  cpis: Float64Array
   series: SeriesPoint[]
   years: YearRow[]
   phases: PhaseDeposits[]
@@ -256,6 +258,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   // ---- Chart points and goal ---------------------------------------------
   const sampleEvery = Math.max(1, Math.ceil(n / 720))
   const balances = new Float64Array(Math.ceil(n / sampleEvery) + 2)
+  const cpis = new Float64Array(balances.length)
   let sampleCount = 0
   const series: SeriesPoint[] = []
   const goalDayRaw = plan.goal ? toDayNumber(plan.goal.date) : null
@@ -264,6 +267,8 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   let firstReachedT = -1
 
   const holdings = () => units * price + accrued
+  /** Buying and selling on day t pays trading costs (Fees on, and not a cash/savings account). */
+  const costsOn = (t: number) => feesOn && ph[c.phaseOf[t]].tradingCosts
 
   // ---- Buying and selling -------------------------------------------------
 
@@ -271,7 +276,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   const invest = (amount: number, t: number, trade: boolean) => {
     if (amount <= 0) return
     let invested = amount
-    if (trade && feesOn) {
+    if (trade && costsOn(t)) {
       const brokerage = brokerageFor(fs.brokerage, amount)
       const afterBrokerage = amount - brokerage
       const currency = ph[c.phaseOf[t]].usListed ? (afterBrokerage * fs.fxFeePct) / 100 : 0
@@ -332,7 +337,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     const all = gross >= h - 1e-9
     if (all) gross = h
     let net = gross
-    if (trade && feesOn) {
+    if (trade && costsOn(t)) {
       const costs = saleCosts(gross, fs.brokerage, fs.spreadPct, ph[c.phaseOf[t]].usListed ? fs.fxFeePct : 0)
       addFee('brokerage', costs.brokerage)
       addFee('currency', costs.fx)
@@ -422,7 +427,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     const remaining = wanted - got
     if (remaining > 0 && holdings() > 0) {
       const usListed = ph[c.phaseOf[t]].usListed
-      const gross = feesOn ? grossForNet(remaining, fs.brokerage, fs.spreadPct, usListed ? fs.fxFeePct : 0) : remaining
+      const gross = costsOn(t) ? grossForNet(remaining, fs.brokerage, fs.spreadPct, usListed ? fs.fxFeePct : 0) : remaining
       const net = sell(gross, t, true)
       if (net > remaining) {
         cash += net - remaining
@@ -528,6 +533,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   if (plan.startingBalance > 0) invest(plan.startingBalance, 0, false)
   year.opening = year.closing = year.real.opening = year.real.closing = plan.startingBalance
   if (detail) series.push({ day: c.startDay, balance: plan.startingBalance, netContributed: plan.startingBalance, cpi: 1, realNet: plan.startingBalance })
+  cpis[sampleCount] = 1
   balances[sampleCount++] = plan.startingBalance
 
   let phase = 0
@@ -575,8 +581,9 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     if (events) for (const e of events) if (e.amount < 0) withdraw(e.name, -e.amount, t)
 
     // 2. Buying day: invest waiting cash, unless the brokerage would eat all of it.
-    if (feesOn && cash > 0 && c.buyDay[t]) {
-      if (cash > brokerageFor(fs.brokerage, cash)) {
+    //    A cash/savings account takes deposits straight away, with no brokerage.
+    if (feesOn && cash > 0 && (c.buyDay[t] || !rp.tradingCosts)) {
+      if (!rp.tradingCosts || cash > brokerageFor(fs.brokerage, cash)) {
         const amount = cash
         cash = 0
         invest(amount, t, true)
@@ -587,7 +594,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
 
     // 3. One day of growth. Each month is 1/12 of a year, spread over its days.
     const g = path.growth[t]
-    const h = taxOn ? incomeFactor[p * 4 + c.dim[t] - 28] : 1
+    const h = taxOn ? (path.income && path.income[t] > 0 ? path.income[t] : incomeFactor[p * 4 + c.dim[t] - 28]) : 1
     if ((g !== 1 || h !== 1) && (units !== 0 || accrued !== 0)) {
       const before = holdings()
       const after = before * g
@@ -656,6 +663,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
       if (t === goalCheckT) goalBalance = goalValue
     }
     if (isLast || (t + 1) % sampleEvery === 0) {
+      cpis[sampleCount] = cpi
       balances[sampleCount++] = balance
       if (detail) {
         series.push({
@@ -673,7 +681,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   function imaginedSale(t: number): EndSale {
     const marketValue = holdings()
     const usListed = ph[c.phaseOf[t]].usListed
-    const costs = feesOn ? saleCosts(marketValue, fs.brokerage, fs.spreadPct, usListed ? fs.fxFeePct : 0) : null
+    const costs = costsOn(t) ? saleCosts(marketValue, fs.brokerage, fs.spreadPct, usListed ? fs.fxFeePct : 0) : null
     const net = costs ? costs.net : marketValue
     const extra: YearIncome = { ...income }
     if (units > 0) {
@@ -721,6 +729,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     },
     endSale,
     balances: balances.subarray(0, sampleCount),
+    cpis: cpis.subarray(0, sampleCount),
     series,
     years,
     phases,

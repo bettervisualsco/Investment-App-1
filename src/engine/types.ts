@@ -71,6 +71,10 @@ export interface Phase {
   marginalRate?: number
   /** Inflation switch: deposits rise with inflation during this phase. */
   growWithInflation?: boolean
+
+  // Stage 3: optional, so older plans still load.
+  /** What this phase is invested in. Missing → not chosen (see Investment). */
+  investment?: Investment
 }
 
 export type DistributionFrequency = 'monthly' | 'quarterly' | 'halfYearly' | 'yearly'
@@ -113,6 +117,8 @@ export interface Plan {
   goal?: Goal
   /** Stage 4: the Fees, Tax and Inflation switches and their settings. Missing → all switches off. */
   realism?: Realism
+  /** Stage 3: Manual or Prediction mode, and the prediction settings. Missing → Manual mode. */
+  prediction?: PredictionSettings
 }
 
 // ---------------------------------------------------------------------------
@@ -200,4 +206,58 @@ export interface TaxYear {
 export interface InflationSettings {
   /** % per year. Fixed, a ramp or steps over the whole plan. */
   rate: Varying
+}
+
+// ---------------------------------------------------------------------------
+// What each phase is invested in, and Prediction mode (stage 3).
+
+/** One part of a custom mix: an ETF from the watchlist and its share, %. */
+export interface MixPart {
+  etf: string
+  weight: number
+}
+
+/** A made-up investment described by its average return and bumpiness. */
+export interface CustomAsset {
+  kind: 'custom'
+  /** Long-run average yearly growth, % (compound, before fees). The middle outcome grows at about this rate. */
+  mean: number
+  /** Volatility: how far a typical year's return strays from the average (standard deviation of yearly returns), %. */
+  volatility: number
+  /** Optional sudden crashes: on average once every `everyYears` years, the value falls about `drop`% in one month. */
+  crashes?: { everyYears: number; drop: number }
+}
+
+/**
+ * What a phase is invested in. Missing (plans made before stage 3) → nothing chosen: Manual
+ * mode uses the phase's return rate exactly as before, and Prediction mode asks you to choose.
+ *
+ * - etf:    one ETF from the watchlist (data/etfs.json), e.g. "VAS".
+ * - mix:    several ETFs, e.g. 70% VGS / 30% VAS, put back to these shares once a year.
+ * - cash:   a savings account. Manual mode: `rate` % a year. Prediction mode: the RBA cash rate history.
+ * - custom: an investment you describe (CustomAsset).
+ *
+ * In Manual mode ETF, mix and custom phases grow at the phase's return rate.
+ */
+export type Investment = { kind: 'etf'; etf: string } | { kind: 'mix'; parts: MixPart[] } | { kind: 'cash'; rate: number } | CustomAsset
+
+export type HistoryWindowKind = 'full' | 'since1950' | 'since1990' | 'last20' | 'custom'
+
+export interface PredictionSettings {
+  mode: 'manual' | 'prediction'
+  /** Which part of history to replay. Default "full". */
+  window?: HistoryWindowKind
+  /** For window "custom": first and last calendar year (inclusive). */
+  windowFrom?: number
+  windowTo?: number
+  /** Length of each chunk of real history, months. Default 12. */
+  blockMonths?: number
+  /** Number of simulations. Missing → the default from Settings. */
+  runs?: number
+  /** Worst, likely, best percentiles. Missing → the default from Settings. */
+  percentiles?: [number, number, number]
+  /** Random seed. Missing → the seed from Settings. "Re-roll" sets a new one. */
+  seed?: number
+  /** Draw a few individual simulations on the chart. */
+  showPaths?: boolean
 }

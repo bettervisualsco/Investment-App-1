@@ -22,6 +22,12 @@ export interface MarketPath {
   inflation: Float64Array
   /** Optional: daily factor earned by waiting cash (e.g. from RBA cash-rate history). If missing, the Fees "cash rate" is used. */
   cash?: Float64Array
+  /**
+   * Optional: daily factor for the part of the growth that is income (distributions or interest),
+   * used with Tax on. 0 on a day (or missing) → the phase's distribution yield. Prediction mode
+   * sets it on cash/savings days, where each month's whole return is interest.
+   */
+  income?: Float64Array
   warnings: string[]
 }
 
@@ -36,7 +42,12 @@ export function manualPath(c: CompiledPlan): MarketPath {
   const growth = new Float64Array(c.n)
   const inflation = new Float64Array(c.n)
 
-  const rateFns = c.plan.phases.map((phase, i) => valueByDay(phase.returnRate, c.ranges[i].start, c.ranges[i].end))
+  // A cash/savings phase grows at its savings rate; everything else at the return rate typed in the phase.
+  const rateFns = c.plan.phases.map((phase, i) => {
+    const inv = phase.investment
+    if (inv?.kind === 'cash') return () => inv.rate
+    return valueByDay(phase.returnRate, c.ranges[i].start, c.ranges[i].end)
+  })
   let clampWarned = false
   for (let t = 0; t < c.n; t++) {
     let rate = rateFns[c.phaseOf[t]](c.startDay + t) / 100
