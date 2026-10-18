@@ -331,3 +331,23 @@ describe('checks', () => {
     expect(compilePlan(p).n).toBe(compilePlan(withEtf).n)
   })
 })
+
+describe('ending below what you put in (audit fix)', () => {
+  it('counts distributions paid to you in cash as money back, not money lost', () => {
+    // 0% total return and 0% tax: everything paid out comes back to you, so no simulation really lost money.
+    const flat = flatHistory(60, { [etfKey('AAA')]: 0 }, 0)
+    const realism: Realism = {
+      fees: false,
+      tax: true,
+      inflation: false,
+      taxSettings: { basis: 'rate', medicare: false, brackets: 'fixed', distributions: 'cash', atEnd: 'hold', owner: 'adult', minorMoney: 'family', cgtRules: 'discount', cgtMinimum: false },
+    }
+    const p = plan({
+      realism,
+      phases: [phase({ marginalRate: 0, distribution: { yield: 4, frankedPct: 0, foreignPct: 0, foreignTaxPct: 0, frequency: 'quarterly' } })],
+    })
+    const r = runPrediction(preparePrediction(p, flat, opts({ runs: 50 })))
+    expect(r.median.detail.totalPaidOut).toBeGreaterThan(0)
+    expect(r.belowPutIn.count).toBe(0)
+  })
+})

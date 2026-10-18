@@ -230,3 +230,28 @@ describe('prediction defaults', () => {
     expect(resolvePrediction(undefined, BUILT_IN_DEFAULTS).mode).toBe('manual')
   })
 })
+
+describe('Australian cash rate (audit fix)', () => {
+  it('a 4.35% yearly RBA rate compounds to exactly 4.35% over 12 months, like a typed savings rate', async () => {
+    const { auCashMonthly } = await import('./history')
+    const m = auCashMonthly(0.0435 / 12)
+    expect(Math.pow(1 + m, 12) - 1).toBeCloseTo(0.0435, 12)
+    expect(auCashMonthly(0)).toBe(0)
+  })
+})
+
+describe('foreign income share of ASX-listed ETFs (audit fix)', () => {
+  it('comes from what the fund holds, not where it is listed', async () => {
+    const { foreignShareOf, factsFor } = await import('./etfFacts')
+    const etfs = JSON.parse(etfsRaw) as EtfsFile
+    const info = (id: string) => etfs.etfs.find((e) => e.id === id)!
+    expect(foreignShareOf(info('VGS'))).toBe(100)
+    expect(foreignShareOf(info('IVV'))).toBe(100)
+    expect(foreignShareOf(info('NDQ'))).toBe(100)
+    expect(foreignShareOf(info('VAS'))).toBe(0)
+    expect(foreignShareOf(info('VAF'))).toBe(0)
+    expect(foreignShareOf(info('VDHG'))).toBeCloseTo(61, 0) // 38 + 16 + 7 of 100
+    expect(factsFor({ kind: 'etf', etf: 'VGS' }, etfs, 'AUD')!.foreignPct).toBe(100)
+    expect(factsFor({ kind: 'etf', etf: 'VDHG' }, etfs, 'AUD')!.gaps.join(' ')).toMatch(/foreign income share/)
+  })
+})

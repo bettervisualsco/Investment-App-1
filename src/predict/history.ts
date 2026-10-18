@@ -39,6 +39,11 @@ export type HistoryBuild = { ok: true; table: HistoryTable; info: HistoryInfo } 
 export const MIN_HISTORY_MONTHS = 24
 
 /** Change in a month for a currency, as a fraction (gross of fees). */
+/** The RBA cash rate stored as yearly rate ÷ 12 → the monthly return that compounds to that yearly rate. */
+export function auCashMonthly(rateOver12: number): number {
+  return Math.pow(1 + 12 * rateOver12, 1 / 12) - 1
+}
+
 export function grossOfFee(r: number, yearlyFee: number): number {
   return (1 + r) / (1 - yearlyFee / 12) - 1
 }
@@ -154,7 +159,12 @@ export function buildHistory(file: MonthlyFile, plan: Plan, choice: HistoryChoic
     }
     assets[etfKey(id)] = col
   }
-  if (usesCash(plan)) assets[CASH_KEY] = Float64Array.from(aligned.columns[home === 'AUD' ? 'cash_au' : 'cash_us'])
+  if (usesCash(plan)) {
+    // cash_au is the RBA's yearly rate ÷ 12. Turn it into the monthly return that compounds to exactly that yearly
+    // rate, the same convention as a savings rate typed in Manual mode. cash_us is already real monthly T-bill returns.
+    assets[CASH_KEY] =
+      home === 'AUD' ? Float64Array.from(aligned.columns.cash_au, (m) => auCashMonthly(m)) : Float64Array.from(aligned.columns.cash_us)
+  }
   const inflation = Float64Array.from(aligned.columns[home === 'AUD' ? 'au_cpi' : 'us_cpi'])
 
   // Words: what was used, and why it starts (and ends) where it does.

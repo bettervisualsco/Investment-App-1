@@ -326,7 +326,8 @@ export function runPrediction(prep: PreparedPrediction): PredictionResult {
     for (let j = 0; j < points; j++) values[base + j] = shown(sw.inflation, sim.balances[j], sim.cpis[j])
     if (r < keep) paths.push(values.slice(base, base + points))
     finals[r] = sw.inflation ? sim.finalReal : sim.finalBalance
-    nets[r] = sw.inflation ? sim.real.netContributed : sim.netContributed
+    // Distributions paid to you in cash left the account but weren't lost, so they count as money back.
+    nets[r] = sw.inflation ? sim.real.netContributed - sim.real.paidOut : sim.netContributed - sim.totalPaidOut
     if (sim.goal) {
       reached[r] = sim.goal.reached ? 1 : 0
       goalInfo ??= { amount: sim.goal.amount, day: sim.goal.day, outsidePlan: sim.goal.outsidePlan, inTodaysDollars: sim.goal.inTodaysDollars, count: 0, share: 0 }

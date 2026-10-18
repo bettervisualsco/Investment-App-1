@@ -32,7 +32,7 @@ export const predictWords = {
   },
   percentiles: {
     title: 'Worst, likely and best',
-    body: 'Line up all the simulations from lowest to highest. “Worst” is the 10th percentile: 9 in 10 simulations did better. “Likely” is the middle one (the median). “Best” is the 90th percentile: only 1 in 10 did better. Real outcomes can be outside this range.',
+    body: 'Line up all the simulations from lowest to highest. “Worst” is the low percentile in its label: with the 10th, 9 in 10 simulations did better. “Likely” is the middle one (the median) unless you chose another. “Best” is the high percentile: with the 90th, only 1 in 10 did better. You can change these in Prediction settings. Real outcomes can be outside this range.',
   },
   history: {
     title: 'Which history',
@@ -56,7 +56,7 @@ export const predictWords = {
   },
   belowPutIn: {
     title: 'Ending below what you put in',
-    body: 'The share of simulations that finished with less than the money you put in: your starting balance plus deposits, minus withdrawals. With Inflation on, both are in today’s dollars.',
+    body: 'The share of simulations that finished with less than the money you put in: your starting balance plus deposits, minus withdrawals and minus any distributions paid to you in cash (that money came back to you). With Inflation on, both are in today’s dollars.',
   },
   drawdown: {
     title: 'Biggest drop along the way',

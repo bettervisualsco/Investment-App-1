@@ -158,7 +158,9 @@ export function PredictionResults({
 
       <div className="predict-detail">
         <h3 className="sub-head">The likely simulation in detail</h3>
-        <p className="block-hint">One replay of history: the one with the middle final amount. Real years will be different.</p>
+        <p className="block-hint">
+          One replay of history: the one with the middle final amount. It ends at {money(v.final, currency)}; the “Likely” figure above is the median of all {result.runs.toLocaleString('en-AU')}, so the two can differ a little. Real years will be different.
+        </p>
         <dl className="totals realism-totals">
           <div>
             <dt>Starting balance</dt>

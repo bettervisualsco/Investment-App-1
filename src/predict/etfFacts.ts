@@ -25,6 +25,20 @@ export interface FilledFacts {
   gaps: string[]
 }
 
+/**
+ * Roughly what % of an ASX-listed ETF's distributions is foreign income, from what it holds (its proxy series):
+ * overseas shares and bonds pay foreign income, with foreign tax already taken off. Exact for single-region
+ * funds (VGS, IVV, NDQ: 100%; VAS: 0%); an estimate for diversified ones (VDHG, DHHF), whose Australian
+ * shares usually pay a bigger share of the distributions than their weight.
+ */
+export function foreignShareOf(info: { proxy?: { series: string; weight: number }[] }): number {
+  const parts = info.proxy ?? []
+  const total = parts.reduce((s, p) => s + p.weight, 0)
+  if (total <= 0) return 0
+  const foreign = parts.filter((p) => !p.series.startsWith('au_') && p.series !== 'cash_au').reduce((s, p) => s + p.weight, 0)
+  return Math.round((foreign / total) * 1000) / 10
+}
+
 /** The facts for an ETF or a mix (weighted by each part's share). Null if an ETF isn't in the file. */
 export function factsFor(inv: Investment, file: EtfsFile, currency: Currency): FilledFacts | null {
   const parts = inv.kind === 'etf' ? [{ etf: inv.etf, weight: 100 }] : inv.kind === 'mix' ? inv.parts : null
@@ -48,7 +62,9 @@ export function factsFor(inv: Investment, file: EtfsFile, currency: Currency): F
     mer += w * (info.mer?.value ?? 0)
     yieldPct += w * y
     franked += w * y * (info.franking?.value ?? 0)
-    foreign += w * y * (isUs ? 100 : 0)
+    const foreignShare = isUs ? 100 : foreignShareOf(info)
+    foreign += w * y * foreignShare
+    if (!isUs && foreignShare > 0 && foreignShare < 100) gaps.push(`${info.id} foreign income share (estimated from what it holds)`)
     if (isUs) usWeight += w
     freqs.add(frequencyOf(info))
     for (const f of [info.mer, info.yield, info.franking]) if (f) dates.push(f.checkedOn)
