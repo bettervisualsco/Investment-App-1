@@ -16,6 +16,14 @@ Stages are built in batches (see SPEC.md section 8). Full notes for each stage a
 - **Joined up after merging:** Compare shows which switches each plan uses, its fees, tax and today's-dollars value, and warns when plans aren't like for like. Settings shows the date the tax rates were checked.
 - **Tests:** 148 app tests (`npm test`) and 55 pipeline tests (`npm run test:pipeline`, needs the Python setup in `pipeline/.venv`).
 
+### Batch 3: Stages 3, 5 and 6 (built in parallel, merged 18 Oct 2026)
+- **Shared foundation (built first, on main):** `src/engine/bootstrap.ts`, the one "replay chunks of real history" sampler (circular block bootstrap with a fixed seed), percentiles and biggest-drop maths, used by all three stages.
+- **Stage 3, Prediction mode** (`notes/stage-3.md`): each phase can be invested in an ETF, a mix (rebalanced yearly), cash or a custom fat-tailed asset; picking an ETF fills its fee, yield and franking. Prediction mode replays real history 2,000 times (same real month for every asset, inflation, AUD/USD and cash rate), with worst/likely/best fan chart, goal chance, chance of ending below what you put in, and the middle simulation's biggest drop. Runs in a background worker. Fees, Tax and Inflation work the same in both modes; a constant history gives exactly the Manual answer (tested).
+- **Stage 5, Markets tab** (`notes/stage-5.md`): dashboard with indexes, watchlist, sparklines, open/closed badges (daylight saving and holidays), favourites; ETF pages with TradingView Lightweight Charts, ranges 1D to Max, price vs total return, A$ view, prediction lines, a past-return "rate puller" with Use in Planner, key facts, Compare; data status in Settings.
+- **Stage 6, Inflation tab** (`notes/stage-6.md`): Australian and US inflation history with drag-to-average, predictions with the RBA's 2–3% band (default window since 1993), buying-power calculator, returns after inflation; the Planner's "Use historical average" button now works (2.72%, Australia 1993–2026).
+- **Joined up after merging:** Markets' "replay this period in Prediction mode" now works (puts the ETF in the phase and sets the plan's history years); Compare says when a plan is in Prediction mode (Compare still uses typed rates); open screens refresh when a data file is removed; clearer "waiting for inflation data" text.
+- **Tests:** 281 app tests and 55 pipeline tests pass; type-check, lint and build are clean.
+
 ## How the maths works (decided in stage 1)
 - Return rates are yearly *total* returns (price growth + distributions). Growth is added daily, and each calendar month counts as exactly 1/12 of a year, so 12 months at 7% is exactly 7%.
 - Deposits and events land at the start of their day. The first deposit lands on a phase's first day.
@@ -26,8 +34,7 @@ Stages are built in batches (see SPEC.md section 8). Full notes for each stage a
 
 ## Next
 - **Put it online (finishes stage 2):** Soham makes a free GitHub account (steps in `notes/stage-2.md`), then Claude pushes the app, turns on the website and the scheduled data updates, and Soham installs it on the iPhone and Mac.
-- **Batch 3:** stage 3 (Prediction mode), stage 5 (Markets tab) and stage 6 (Inflation tab). These use stage 2's data and stage 4's engine.
-- **Last:** stage 7 part 2 (polish, final accuracy check).
+- **Last:** stage 7 part 2: polish (fold the separate ⓘ texts into one glossary, code-split the bundle, small wording fixes) and the final accuracy check across every stage.
 
 ## Problems / notes
 - The GitHub workflows can't be tested until the GitHub account exists.
@@ -35,3 +42,7 @@ Stages are built in batches (see SPEC.md section 8). Full notes for each stage a
 - There's no free no-signup backup if Yahoo breaks (Stooq now blocks robots). A backup that needs a free account (e.g. Alpha Vantage) would need Soham's OK.
 - Some details of the 2027 CGT law are still being finalised by the government; the app uses the best reading of the passed law, labelled as an estimate.
 - The iPhone share sheet and file picker for backups can only be fully tested once the app is online.
+- **Two different "history" defaults, both labelled:** Prediction mode replays full history by default (SPEC 4.1), which includes the 1970s–80s high inflation (about 4.6% a year since 1975). The Inflation tab and the Planner's historical-average button default to since 1993 (RBA targeting, 2.72%). With Inflation on, Prediction mode's "today's dollars" result can look much lower than people expect. "Since 1990" in Prediction settings is closer to recent times.
+- Simulations on the iPhone may take a few seconds (progress bar shown); 1,000 simulations in Settings is fine if it feels slow.
+- Market holiday lists run to 2027 (ASX) and 2028 (NYSE); add next year's dates to `src/markets/hours.ts` each year.
+- No 1-day chart on the Mac preview: 5-minute prices only exist on the website once it's online.

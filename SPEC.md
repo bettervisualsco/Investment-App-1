@@ -116,10 +116,11 @@ Bottom tab bar on iPhone and sidebar on Mac: **Planner · Markets · Inflation �
 - **Outputs:**
   - Fan chart: **Worst (10th percentile), Likely (median), Best (90th percentile)** lines with shaded bands. Percentiles adjustable (e.g. 5/50/95).
   - Toggle to show a handful of individual simulated paths.
-  - Goal probability: "In 1,624 of 2,000 simulations (81%) you reached $500,000 by 2040." Always worded as an estimate based on history, never as a guarantee.
+  - Goal probability: "In 1,624 of 2,000 simulations (81%) you reached $500,000 by 2040." Always worded as an estimate based on history, never as a guarantee. *(Stage 3: counts the balance on the goal date, in today's dollars when Inflation is on.)*
   - Chance of ending below total money deposited.
-  - Typical worst drop along the way (max drawdown) for the median path.
-- **Custom asset:** enter an average yearly return + how bumpy it is (volatility), optionally crash frequency. Simulate with fat tails (e.g. Student-t), not a smooth bell curve, so crashes are realistic.
+  - Typical worst drop along the way (max drawdown) for the median path. *(Stage 3: measured on the value of each invested dollar in the simulation with the median final amount, so deposits and withdrawals don't hide or fake a drop.)*
+  - *(Stage 3: with Fees off, Prediction returns are before the ETF's fee; the fee already inside history is added back so it is never counted twice.)*
+- **Custom asset:** enter an average yearly return + how bumpy it is (volatility), optionally crash frequency. Simulate with fat tails (e.g. Student-t), not a smooth bell curve, so crashes are realistic. *(Stage 3: average = long-run compound growth; volatility = standard deviation of yearly returns; monthly Student-t with 5 degrees of freedom plus optional one-month crashes.)*
 - **Cash phases** use the fixed savings rate, or RBA cash-rate history in Prediction mode.
 
 #### Realism switches (apply to BOTH modes, each independent)
@@ -164,7 +165,7 @@ Bottom tab bar on iPhone and sidebar on Mac: **Planner · Markets · Inflation �
 **Inflation tab (its own full page):**
 - Historical CPI charts for Australia and the US: yearly inflation %, with ranges up to Max (decades).
 - Highlight any window to get the average inflation for that period.
-- **Inflation predictions:** worst / likely / best fan chart for future inflation (bootstrap from history), with the RBA's 2–3% target band shown.
+- **Inflation predictions:** worst / likely / best fan chart for future inflation (bootstrap from history), with the RBA's 2–3% target band shown. *(Stage 6: default history window is since 1993, when the RBA began inflation targeting; adjustable. The Planner's "use historical average" uses the same window. Australia has quarterly CPI since 1948 and monthly CPI since April 2024; the history chart shows quarterly by default, with a switch.)*
 - **Purchasing power calculator:** what $X in year A is worth in year B (past and predicted future).
 - **Real returns:** each ETF's returns after inflation.
 - Updates automatically when new CPI data is released.
@@ -175,10 +176,10 @@ Bottom tab bar on iPhone and sidebar on Mac: **Planner · Markets · Inflation �
 - Sort/reorder; star favourites (saved on device).
 
 **ETF detail page**
-- Large interactive chart. Ranges: **1D, 1W, 1M, 3M, 6M, YTD, 1Y, 5Y, 10Y, Max**. Smooth switching. Crosshair showing date and price on touch/hover.
+- Large interactive chart. Ranges: **1D, 1W, 1M, 3M, 6M, YTD, 1Y, 5Y, 10Y, Max**. Smooth switching. Crosshair showing date and price on touch/hover. *(Stage 5: scroll/zoom on charts is replaced by the range buttons, so a finger never fights the page scroll. Highlight a period by mouse drag, or with "Pick a period" on touch.)*
 - Toggles: price only vs total return (with distributions); show in AUD.
 - **Prediction lines:** stemming from today's price, three dotted lines (worst / likely / best) with a shaded band, from the same bootstrap engine using the ETF's long-run proxy history. Horizon: 1, 5, 10 or 20 years.
-- **Historical rate puller:** drag to highlight any period (e.g. 2010–2020). The app shows average yearly return (price and total return), volatility, biggest drop, and best and worst year. A **"Use in Planner"** button sends that rate (or that history window) to a phase.
+- **Historical rate puller:** drag to highlight any period (e.g. 2010–2020). The app shows average yearly return (price and total return), volatility, biggest drop, and best and worst year. A **"Use in Planner"** button sends that rate (or that history window) to a phase. *(Merged batch 3: the history-window option puts that ETF in the phase and switches the plan to Prediction mode over those whole calendar years; the window applies to the whole plan.)*
 - Key facts: what it tracks, fee, distribution yield, franking, inception date.
 - **Compare:** overlay 2+ ETFs on one chart (as % growth).
 - Everything updates automatically on open with the latest data.
