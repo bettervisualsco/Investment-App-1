@@ -1,4 +1,7 @@
 import { Segmented } from '../components/inputs'
+import { TAX_RATES_CHECKED_ON, TAX_SOURCES } from '../engine/taxTables'
+import { toDayNumber } from '../engine/dates'
+import { dateLong } from '../lib/format'
 import type { ThemeChoice } from '../state/theme'
 
 export const DISCLAIMER = 'General information only, not financial advice. Predictions are estimates based on past data, and the future can be different.'
@@ -40,6 +43,25 @@ export function SettingsPage({ theme, setTheme, onShowSaved }: { theme: ThemeCho
         <button type="button" className="btn btn-quiet settings-link" onClick={onShowSaved}>
           Go to Saved plans
         </button>
+      </section>
+      <section className="block">
+        <div className="block-head">
+          <h2>Tax rates</h2>
+        </div>
+        <p>
+          Tax rates were checked on the ATO website on {dateLong(toDayNumber(TAX_RATES_CHECKED_ON))}. You can change any rate in the Planner, under the Tax settings.
+        </p>
+        <p className="block-hint">
+          Sources:{' '}
+          <a href={TAX_SOURCES.rates} target="_blank" rel="noreferrer">
+            ATO tax rates
+          </a>{' '}
+          and{' '}
+          <a href={TAX_SOURCES.cgtReform} target="_blank" rel="noreferrer">
+            capital gains tax changes from July 2027
+          </a>
+          .
+        </p>
       </section>
       <section className="block">
         <div className="block-head">

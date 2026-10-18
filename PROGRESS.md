@@ -1,35 +1,37 @@
 # Progress
 
+Stages are built in batches (see SPEC.md section 8). Full notes for each stage are in `notes/`.
+
 ## Done
 
-### Stage 1: Setup + Planner, Manual mode (18 Oct 2026)
+### Batch 1: Stage 1, Planner in Manual mode (18 Oct 2026)
 - Project set up: Vite + React + TypeScript, git. Node.js 24 LTS installed in `~/.local/node` (no admin password needed).
-- **Calculation engine** in `src/engine` (plain TypeScript, no screen code):
-  - Phases with any length (days to decades), deposits daily to yearly, or none.
-  - Step-ups for deposits and return rates: ramp (straight line, slow-then-fast, fast-then-slow) or steps (e.g. +$20 every 6 months), over the whole phase or part of it.
-  - One-off deposits and withdrawals (a withdrawal can't take the balance below $0; you get a warning).
-  - Optional goal: checks the balance at the end of the goal date.
-  - Year-by-year table in Australian financial years (1 July to 30 June).
-  - 27 automated tests, checked against the standard compound-interest formulas (`npm test`).
-- **Planner screen**: big result number, chart of "your money" vs "growth", life-timeline ribbon under the chart (tap a phase to edit it), drag to reorder phases, duplicate/delete, events, goal, year-by-year table, CSV download, ⓘ explanations, light/dark mode, first-open disclaimer.
-- The current plan saves itself on the device (IndexedDB).
-- Other tabs show what's coming and in which stage.
+- **Calculation engine** in `src/engine` (plain TypeScript, no screen code): phases of any length, deposits daily to yearly, step-ups (ramp or steps, whole phase or part), one-off events, goal, Australian financial-year table.
+- **Planner screen**: big result number, "your money" vs "growth" chart, life-timeline ribbon, drag to reorder phases, events, goal, year-by-year table, CSV download, ⓘ explanations, light/dark mode, first-open disclaimer. The current plan saves itself on the device.
+
+### Batch 2: Stages 2, 4 and 7 (built in parallel, merged 18 Oct 2026)
+- **Stage 2, data pipeline + hosting prep** (`notes/stage-2.md`): Python pipeline (`pipeline/`) with real data in `data/` (as of 16 Oct 2026): daily history for 11 ETFs, 4 indexes and AUD/USD; long-run monthly history lined up by real month for Prediction mode (US shares since 1871, Australian since 1975); Australian and US CPI; RBA cash rate; ETF facts with checked-on dates. Safety checks so bad downloads never replace good data. GitHub workflows written for scheduled updates and website deploys (**not tested yet: needs Soham's GitHub account**). App side: data loader with offline copy (`src/data`), and the app installs as a PWA and opens offline.
+- **Stage 4, Fees, Tax and Inflation switches** (`notes/stage-4.md`): brokerage presets, buying less often than depositing, MER, currency fee, platform fee, spread; Australian tax per financial year (brackets, Medicare, low income offset, franking refunds, foreign tax offset, CGT per purchase lot, under-18 rules); **the new CGT law from 1 July 2027** (indexation + minimum 30% tax, checked on the ATO site); inflation and today's dollars; "Show the cost". Every rate has a source and a checked-on date (18 Oct 2026).
+- **Stage 7 (part 1), Saved tab** (`notes/stage-7.md`): save, rename, duplicate, delete, open plans; compare up to 3; backup file export/import between iPhone and Mac.
+- **Joined up after merging:** Compare shows which switches each plan uses, its fees, tax and today's-dollars value, and warns when plans aren't like for like. Settings shows the date the tax rates were checked.
+- **Tests:** 148 app tests (`npm test`) and 55 pipeline tests (`npm run test:pipeline`, needs the Python setup in `pipeline/.venv`).
 
 ## How the maths works (decided in stage 1)
-- Return rates are yearly. Growth is added daily, and each calendar month counts as exactly 1/12 of a year, so 12 months at 7% is exactly 7%.
+- Return rates are yearly *total* returns (price growth + distributions). Growth is added daily, and each calendar month counts as exactly 1/12 of a year, so 12 months at 7% is exactly 7%.
 - Deposits and events land at the start of their day. The first deposit lands on a phase's first day.
-- Monthly deposits keep the same day of the month (the 31st becomes the last day in shorter months).
-- Weekly deposits follow the real calendar, so a year can have 53 of them.
+- Monthly deposits keep the same day of the month (the 31st becomes the last day in shorter months). Weekly deposits follow the real calendar, so a year can have 53.
 - Ramps: the first deposit is exactly the start amount and the last is exactly the end amount.
 - Money in and out is stored in whole cents. Growth is tracked to a fraction of a cent and only rounded when shown.
 - Plans can be up to 100 years long.
 
 ## Next
-- **Stage 2:** data pipeline (GitHub Actions + yfinance), historical data, hosting on GitHub Pages, install on iPhone and Mac. Needs a free GitHub account.
-
-## Not done yet in stage 1 (on purpose, later stages)
-- Choosing an ETF or mix for a phase (needs market data, stage 2/3).
-- Fees, tax, inflation switches and "grow deposits with inflation" (stage 4).
+- **Put it online (finishes stage 2):** Soham makes a free GitHub account (steps in `notes/stage-2.md`), then Claude pushes the app, turns on the website and the scheduled data updates, and Soham installs it on the iPhone and Mac.
+- **Batch 3:** stage 3 (Prediction mode), stage 5 (Markets tab) and stage 6 (Inflation tab). These use stage 2's data and stage 4's engine.
+- **Last:** stage 7 part 2 (polish, final accuracy check).
 
 ## Problems / notes
-- The app's code bundle is about 230 KB zipped, mostly the chart library. Fine for now; can be split up later if loading feels slow.
+- The GitHub workflows can't be tested until the GitHub account exists.
+- Yahoo data is "personal use only", and a public repo makes the data files visible to anyone. Low risk for a small personal app (SPEC section 9).
+- There's no free no-signup backup if Yahoo breaks (Stooq now blocks robots). A backup that needs a free account (e.g. Alpha Vantage) would need Soham's OK.
+- Some details of the 2027 CGT law are still being finalised by the government; the app uses the best reading of the passed law, labelled as an estimate.
+- The iPhone share sheet and file picker for backups can only be fully tested once the app is online.

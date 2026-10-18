@@ -50,6 +50,7 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
   const outcomes: PlanOutcome[] = useMemo(() => plans.map(runPlan), [plans])
   const results = useMemo(() => outcomes.map((o) => (o.ok ? o.result : null)), [outcomes])
   const mixedCurrency = new Set(plans.map((p) => p.currency)).size > 1
+  const mixedSwitches = new Set(results.filter((r) => r).map((r) => switchesText(r!))).size > 1
   const overlapping = useMemo(() => {
     const same = (a: ManualResult, b: ManualResult) => a.series.length === b.series.length && a.series.every((p, i) => p.day === b.series[i].day && p.balance === b.series[i].balance)
     return results.some((a, i) => a && results.some((b, j) => j > i && b && same(a, b)))
@@ -77,6 +78,9 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
           ))}
         </ul>
         {results.some(Boolean) ? <CompareChart plans={plans} results={results} /> : <p className="block-hint">None of these plans can be worked out yet.</p>}
+        {mixedSwitches && (
+          <p className="block-hint">These plans use different Fees, Tax and Inflation switches, so their numbers aren’t like for like. The chart shows amounts before inflation.</p>
+        )}
         {overlapping && <p className="block-hint">Some lines sit exactly on top of each other, because those plans give the same balances.</p>}
         {mixedCurrency && <p className="saved-note">These plans use different currencies (AUD and USD), so their amounts can’t be compared directly.</p>}
       </section>
@@ -97,6 +101,15 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
             </thead>
             <tbody>
               <Row label="At the end" outcomes={outcomes} plans={plans} strong value={(r, p) => money(r.finalBalance, p.currency)} />
+              <Row label="Switches on" outcomes={outcomes} plans={plans} value={(r) => switchesText(r)} />
+              <Row label="In today’s dollars" outcomes={outcomes} plans={plans} value={(r, p) => (r.switches.inflation ? money(r.finalReal, p.currency) : '—')} />
+              <Row label="Fees paid" outcomes={outcomes} plans={plans} value={(r, p) => (r.switches.fees ? money(r.fees.total, p.currency) : '—')} />
+              <Row
+                label="Tax paid"
+                outcomes={outcomes}
+                plans={plans}
+                value={(r, p) => (!r.switches.tax ? '—' : r.tax.total < 0 ? `${money(-r.tax.total, p.currency)} refunded` : money(r.tax.total, p.currency))}
+              />
               <Row label="Ends on" outcomes={outcomes} plans={plans} value={(r) => dateLong(r.endDay - 1)} />
               <Row label="Length" outcomes={outcomes} plans={plans} value={(r) => lengthText(r)} />
               <Row label="Starting balance" outcomes={outcomes} plans={plans} value={(r, p) => money(r.startingBalance, p.currency)} />
@@ -140,6 +153,12 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
       </section>
     </div>
   )
+}
+
+/** Which Fees / Tax / Inflation switches a plan's result used. */
+function switchesText(r: ManualResult): string {
+  const on = (['fees', 'tax', 'inflation'] as const).filter((k) => r.switches[k]).map((k) => k[0].toUpperCase() + k.slice(1))
+  return on.length ? on.join(', ') : 'None'
 }
 
 function Row({

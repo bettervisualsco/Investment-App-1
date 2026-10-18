@@ -57,16 +57,17 @@ The calculation engine must be plain TypeScript with **no UI code in it**, so it
 - **Inflation:** Australian CPI (ABS) and US CPI (BLS/FRED), as far back as available. Check whether ABS now publishes a full monthly CPI or only quarterly, and handle both.
 - **Cash rate:** RBA cash rate history (for a "cash / savings account" asset).
 - Claude Code must research free sources, check they're free for personal use, and record every source, date range and gap in `DATA_SOURCES.md`.
+- *(Found in stage 2: free monthly Australian share data starts in 1975 and AUD/USD in 1969, so "full history" for Australian ETFs effectively starts in 1975. Global shares before 1990 are approximate. Details in `DATA_SOURCES.md`.)*
 
 ### 3.3 Automatic updates (the pipeline)
 A GitHub Actions workflow runs on a schedule, with no one needing to touch it:
 
-- **Intraday prices** (latest quote + 5-minute bars for the 1-day chart): every ~15 minutes during ASX hours (10:00–16:10 Sydney time) and US hours (NYSE 9:30–16:00 New York time). Cron runs in UTC, so handle daylight saving in **both** Sydney and New York.
+- **Intraday prices** (latest quote + 5-minute bars for the 1-day chart): every ~15 minutes during ASX hours (10:00–16:10 Sydney time) and US hours (NYSE 9:30–16:00 New York time). Cron runs in UTC, so handle daylight saving in **both** Sydney and New York. *(Stage 2: intraday files go to the website only, not into git, to keep the repo small. Daily, monthly and macro data are committed.)*
 - **Daily history:** append each day's close after each market closes.
 - **Inflation / cash rate:** check daily; update when a new figure is released.
 - Writes compact JSON files to `/data`, plus `data/meta.json` with "last updated" times and the health status of each source.
 - **Safety:** never overwrite good data with empty or broken data. If a fetch fails, keep the last good file and record the error in `meta.json`.
-- **Known GitHub limits to handle:** scheduled runs can start late (accepted). GitHub can switch off scheduled workflows in public repos after 60 days with no repo activity, so verify whether the pipeline's own data commits prevent that, and add a fix if they don't.
+- **Known GitHub limits to handle:** scheduled runs can start late (accepted). GitHub can switch off scheduled workflows in public repos after 60 days with no repo activity, so verify whether the pipeline's own data commits prevent that, and add a fix if they don't. *(Stage 2: GitHub's docs confirm the 60-day rule but don't say whether the workflow's own commits count. The pipeline commits every trading day, which should count. No keep-alive tricks (GitHub disabled the popular one). If 45 days pass without a commit, `meta.json` gets a warning the app can show, with steps to re-enable.)*
 - Plan a **fallback data source** in case Yahoo changes and `yfinance` breaks.
 
 ### 3.4 How the app uses the data
