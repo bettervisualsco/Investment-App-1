@@ -86,7 +86,9 @@ export function RealReturns({ monthly, chains }: { monthly: MonthlyFile; chains:
                     </td>
                     <td>
                       <span className="infl-real-cell">
-                        <span className={`infl-bar${r.result.real < 0 ? ' is-neg' : ''}`} style={{ width: `${(Math.abs(r.result.real) / maxAbs) * 100}%` }} aria-hidden="true" />
+                        <span className="infl-bar-track" aria-hidden="true">
+                          <span className={`infl-bar${r.result.real < 0 ? ' is-neg' : ''}`} style={{ width: `${(Math.abs(r.result.real) / maxAbs) * 100}%` }} />
+                        </span>
                         {pct(r.result.real)}
                       </span>
                     </td>

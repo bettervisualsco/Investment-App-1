@@ -207,6 +207,11 @@
   margin: 0 -8px;
 }
 
+/* Recharts focuses an inner layer when the chart is clicked or dragged; no box around the plot */
+.infl-figure .recharts-wrapper :focus {
+  outline: none;
+}
+
 .infl-drag {
   touch-action: pan-y;
   user-select: none;
@@ -374,9 +379,15 @@
   width: 100%;
 }
 
+.infl-bar-track {
+  display: inline-flex;
+  width: 48px;
+  flex: 0 0 auto;
+}
+
 .infl-bar {
+  display: block;
   height: 6px;
-  max-width: 48px;
   border-radius: 3px;
   background: var(--accent);
   opacity: 0.55;
@@ -439,5 +450,25 @@
   .infl-pair {
     display: grid;
     gap: 16px;
+  }
+}
+
+/* iPhone: keep every column of the returns table on screen, and let long button rows wrap */
+@media (max-width: 480px) {
+  .infl-controls .segmented {
+    flex-wrap: wrap;
+  }
+
+  .infl-bar-track {
+    display: none;
+  }
+
+  .infl-real-table th,
+  .infl-real-table td {
+    padding: 8px 6px;
+  }
+
+  .infl-real-table td:last-child {
+    min-width: 0;
   }
 }

@@ -3,7 +3,7 @@ import { MoneyInput, Segmented, Select } from '../components/inputs'
 import type { InflationFile } from '../data/types'
 import { moneyExact } from '../lib/format'
 import { pct } from './chartBits'
-import { COUNTRY_NAME, CPI_SOURCE, yearLevels, type Country, type MonthlyChain } from './cpi'
+import { CPI_SOURCE, yearLevels, type Country, type MonthlyChain } from './cpi'
 import { growthBetween, MAX_YEARS } from './predict'
 import { powerAnswer, type When } from './power'
 import { getPrediction } from './predictionCache'
@@ -94,9 +94,9 @@ export function PurchasingPower({ file, chains, choice }: { file: InflationFile;
             </p>
           ) : (
             <p>
-              {moneyExact(amount, currency)} {name(from)} might be worth about {moneyExact(Math.round(answer.value), currency)} {name(to)} (likely). Range:{' '}
+              {moneyExact(amount, currency)} {name(from)} might buy about the same as {moneyExact(Math.round(answer.value), currency)} {name(to)} (likely). Range:{' '}
               {moneyExact(Math.round(answer.low!), currency)} to {moneyExact(Math.round(answer.high!), currency)}, depending on how high inflation turns out. This is an estimate based on{' '}
-              {COUNTRY_NAME[country]}’s inflation {windowYears(choice, chain)}, not a promise.
+              inflation in {country === 'us' ? 'the US' : 'Australia'} {windowYears(choice, chain)}, not a promise.
             </p>
           )}
         </div>

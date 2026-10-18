@@ -71,7 +71,9 @@ export function PredictionSection({ chains, choice, setChoice }: { chains: Recor
       const before = m - 12 >= chain.start ? chain.levels[m - 12 - chain.start] : chain.base
       out.push({ m, actual: (lv / before - 1) * 100 })
     }
-    for (let k = 0; k <= months; k++) {
+    // one point a year: monthly points in the first year would mix lumpy real months (Australia's
+    // monthly CPI jumps around with the seasons) with smooth simulated ones and zig-zag for no real reason
+    for (let k = 0; k <= months; k += 12) {
       const low = band.low[k] * 100
       const high = band.high[k] * 100
       const row: Row = { m: end + k, mid: band.mid[k] * 100, low, high, range: [low, high] }
@@ -140,7 +142,7 @@ export function PredictionSection({ chains, choice, setChoice }: { chains: Recor
         </div>
       </div>
       <p className="infl-summary">
-        Over the next {horizon === '1' ? 'year' : `${horizon} years`}, {COUNTRY_NAME[country]}’s prices might rise by about {pct(avg.mid)} a year on average, based on history{' '}
+        Over the next {horizon === '1' ? 'year' : `${horizon} years`}, prices in {country === 'us' ? 'the US' : 'Australia'} might rise by about {pct(avg.mid)} a year on average, based on history{' '}
         {Math.floor(from / 12)}–{Math.floor(to / 12)}. In 8 out of 10 simulated futures it was between {pct(avg.low)} and {pct(avg.high)} <Tip term="percentiles" />.
         {Number(horizon) > 1 && <> Any single year swings more: from {pct(oneYear.low)} to {pct(oneYear.high)}.</>}
       </p>
@@ -226,8 +228,8 @@ export function PredictionSection({ chains, choice, setChoice }: { chains: Recor
       </figure>
       <p className="fine-print">
         {view === 'yearly'
-          ? 'Each year: inflation over the 12 months to each date. The first year still includes real recent months, so it starts from today’s figure.'
-          : 'Average from now: the average yearly inflation from today up to each date. Longer periods average out the ups and downs, so the range narrows.'}{' '}
+          ? 'Each year: inflation in each future year (one point a year), starting from today’s real figure.'
+          : 'Average from now: the average yearly inflation from today up to each year. Longer periods average out the ups and downs, so the range narrows.'}{' '}
         {PREDICTION_RUNS.toLocaleString('en-AU')} simulated futures, built from random 12-month chunks of real monthly inflation. The same data always gives the same answer.
       </p>
 

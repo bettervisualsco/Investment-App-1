@@ -111,7 +111,9 @@ export function HistorySection({ file }: { file: InflationFile }) {
     const left = rect.left + Y_AXIS_WIDTH
     const width = rect.width - Y_AXIS_WIDTH - RIGHT_GAP
     const f = Math.min(1, Math.max(0, (clientX - left) / width))
-    return Math.round(x0 + f * (x1 - x0))
+    const m = Math.round(x0 + f * (x1 - x0))
+    // with quarterly figures on show, snap to quarter ends so both countries cover the same months
+    return shown.some((x) => x.levels.freq === 'quarterly') ? Math.round((m - 2) / 3) * 3 + 2 : m
   }
   const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
@@ -251,7 +253,7 @@ export function HistorySection({ file }: { file: InflationFile }) {
                 axisLine={false}
               />
               <Tooltip content={(props) => <HistoryTip {...(props as TooltipContentProps<number, string>)} shown={shown} />} cursor={{ stroke: 'var(--ink-3)', strokeWidth: 1 }} isAnimationActive={false} />
-              {shown.map((x) => (
+              {[...shown].reverse().map((x) => (
                 <Line key={x.country} dataKey={x.country} type="linear" stroke={COUNTRY_COLOR[x.country]} strokeWidth={x.yearly.length > 600 && range === 'max' ? 1.5 : 2} dot={false} connectNulls isAnimationActive={false} />
               ))}
             </ComposedChart>
@@ -275,16 +277,16 @@ export function HistorySection({ file }: { file: InflationFile }) {
       <div className="infl-window">
         <div className="infl-window-pick">
           <label>
-            <span>From the start of</span>
+            <span>From</span>
             <Select label="From the start of year" value={fromYear} onChange={(v) => pickYears(Number(v), Number(toYear))} options={years.map((y) => ({ value: y, label: y }))} />
           </label>
           <label>
-            <span>to the end of</span>
+            <span>To</span>
             <Select
               label="To the end of year"
               value={toYear}
               onChange={(v) => pickYears(Number(fromYear), Number(v))}
-              options={years.map((y) => ({ value: y, label: Number(y) === lastYear ? `${y} (latest)` : y }))}
+              options={years.map((y) => ({ value: y, label: y }))}
             />
           </label>
         </div>
