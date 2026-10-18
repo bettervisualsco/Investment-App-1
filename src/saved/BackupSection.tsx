@@ -6,6 +6,7 @@ import { putImported } from '../state/plans'
 import { planImport, readBackup, resolveImport, type ConflictChoice, type ImportItem, type SkippedPlan } from './backup'
 import { changedOn, exportPlans } from './actions'
 import { readTextFile } from './files'
+import type { SaveStatus } from './status'
 import { HelpTip, Sheet } from './ui'
 
 type ImportState =
@@ -13,7 +14,15 @@ type ImportState =
   | { step: 'review'; items: ImportItem[]; skipped: SkippedPlan[]; exportedAt: string | null }
   | { step: 'done'; message: string }
 
-export function BackupSection({ saved, currentUnsaved }: { saved: SavedPlanRecord[]; currentUnsaved: boolean }) {
+export function BackupSection({
+  saved,
+  currentStatus,
+  onImported,
+}: {
+  saved: SavedPlanRecord[]
+  currentStatus: SaveStatus
+  onImported: (written: SavedPlanRecord[]) => void
+}) {
   const input = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState('')
   const [importing, setImporting] = useState<ImportState | null>(null)
@@ -63,19 +72,32 @@ export function BackupSection({ saved, currentUnsaved }: { saved: SavedPlanRecor
           {message}
         </p>
       )}
-      {currentUnsaved && saved.length > 0 && <p className="saved-note">The plan in the Planner has changes that aren’t saved, so they won’t be in the backup. Save it first if you want them.</p>}
+      {currentStatus !== 'saved' && saved.length > 0 && (
+        <p className="saved-note">
+          {currentStatus === 'new'
+            ? 'The plan in the Planner isn’t saved, so it won’t be in the backup. Save it first if you want it.'
+            : 'The plan in the Planner has changes that aren’t saved, so they won’t be in the backup. Save them first if you want them.'}
+        </p>
+      )}
       <p className="block-hint saved-how">
         <strong>iPhone:</strong> after tapping Back up, choose “Save to Files”, or AirDrop it to your Mac. <strong>Mac:</strong> the file goes to Downloads. On the other device, tap Import a backup and pick the file.
       </p>
 
-      {importing && <ImportSheet state={importing} onClose={() => setImporting(null)} onDone={(m) => setImporting({ step: 'done', message: m })} />}
+      {importing && <ImportSheet
+          state={importing}
+          onClose={() => setImporting(null)}
+          onDone={(m, written) => {
+            setImporting({ step: 'done', message: m })
+            if (written.length) onImported(written)
+          }}
+        />}
     </section>
   )
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
-function ImportSheet({ state, onClose, onDone }: { state: ImportState; onClose: () => void; onDone: (message: string) => void }) {
+function ImportSheet({ state, onClose, onDone }: { state: ImportState; onClose: () => void; onDone: (message: string, written: SavedPlanRecord[]) => void }) {
   const [choice, setChoice] = useState<ConflictChoice>('keepBoth')
   const [busy, setBusy] = useState(false)
 
@@ -116,7 +138,7 @@ function ImportSheet({ state, onClose, onDone }: { state: ImportState; onClose: 
       await putImported(outcome.put)
     } catch {
       setBusy(false)
-      onDone('Something went wrong while saving, so nothing was imported. Please try again.')
+      onDone('Something went wrong while saving, so nothing was imported. Please try again.', [])
       return
     }
     const parts = [
@@ -126,7 +148,7 @@ function ImportSheet({ state, onClose, onDone }: { state: ImportState; onClose: 
       outcome.skipped && `${plural(outcome.skipped, 'plan', 'plans')} skipped`,
       outcome.alreadyHere && `${plural(outcome.alreadyHere, 'plan was', 'plans were')} already here`,
     ].filter(Boolean)
-    onDone(`${parts.join(', ')}.`.replace(/^./, (c) => c.toUpperCase()))
+    onDone(`${parts.join(', ')}.`.replace(/^./, (c) => c.toUpperCase()), outcome.put)
   }
 
   return (

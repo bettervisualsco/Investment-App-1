@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CopyIcon, PlusIcon, TrashIcon } from '../components/Icons'
+import { CopyIcon, DownloadIcon, PlusIcon, TrashIcon } from '../components/Icons'
 import type { Plan } from '../engine/types'
 import { dateMonthYear, money } from '../lib/format'
 import { newId } from '../lib/id'
@@ -68,7 +68,9 @@ export function SavedPage({
   }
 
   const saveAsNew = async () => {
-    const copy = { ...plan, id: newId(), name: `${displayName(plan)}${COPY_SUFFIX}` }
+    // Only add "(copy)" if another saved plan already has this name.
+    const taken = saved.some((r) => displayName(r.plan) === displayName(plan))
+    const copy = { ...plan, id: newId(), name: taken ? `${displayName(plan)}${COPY_SUFFIX}` : displayName(plan) }
     setPlan(copy)
     await savePlan(copy)
     say(`Saved as a new plan, “${copy.name}”. The Planner now shows the new one.`)
@@ -173,12 +175,26 @@ export function SavedPage({
         </div>
       )}
 
-      <BackupSection saved={saved} currentUnsaved={status !== 'saved'} />
+      <BackupSection
+        saved={saved}
+        currentStatus={status}
+        onImported={(written) => {
+          // If the import replaced the plan open in the Planner (and it had no unsaved edits), show the new version there too.
+          const replaced = written.find((r) => r.id === plan.id)
+          if (replaced && status === 'saved') setPlan(structuredClone(replaced.plan))
+        }}
+      />
 
       {popup && <Popups popup={popup} plan={plan} close={close} setPopup={setPopup} setPlan={setPlan} savedCopy={savedCopy} say={say} />}
     </div>
   )
 }
+
+const PencilIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4" />
+  </svg>
+)
 
 function StatusPill({ status }: { status: ReturnType<typeof saveStatus> }) {
   if (status === 'saved') return <span className="pill pill-good">✓ Saved</span>
@@ -220,20 +236,20 @@ function PlanRow({
           <span className="pick-box" aria-hidden="true" />
         </label>
       )}
-      <div className="plan-row-text">
-        <p className="plan-row-name">
+      <button type="button" className="plan-row-main" onClick={onOpen} aria-label={`Open ${name} in the Planner`}>
+        <span className="plan-row-name">
           {name}
           {isOpen && <span className="pill pill-small">{openChanged ? 'In Planner, edited' : 'In Planner'}</span>}
-        </p>
-        <p className="plan-row-sum">
+        </span>
+        <span className="plan-row-sum">
           {outcome?.ok
             ? `${money(outcome.result.finalBalance, p.currency)} by ${dateMonthYear(outcome.result.endDay - 1)} · ${phases}`
             : `Needs fixing in the Planner · ${phases}`}
-        </p>
-        <p className="plan-row-date">Saved {changedOn(rec.updatedAt)}</p>
-      </div>
+        </span>
+        <span className="plan-row-date">Saved {changedOn(rec.updatedAt)}</span>
+      </button>
       <div className="plan-row-btns">
-        <button type="button" className="btn btn-secondary btn-small" onClick={onOpen}>
+        <button type="button" className="btn btn-secondary btn-small plan-row-open" onClick={onOpen} tabIndex={-1} aria-hidden="true">
           Open
         </button>
         <button type="button" className="icon-btn more-btn" onClick={onMore} aria-label={`More for ${name}`}>
@@ -272,7 +288,7 @@ function Popups({
         <Sheet title={displayName(rec.plan)} onClose={close}>
           <div className="menu-list">
             <button type="button" className="menu-item" onClick={() => setPopup({ kind: 'rename', rec })}>
-              Rename
+              <PencilIcon /> Rename
             </button>
             <button
               type="button"
@@ -293,7 +309,7 @@ function Popups({
                 exportPlans([rec], true).then(say, () => say('The file couldn’t be saved. Please try again.'))
               }}
             >
-              Back up just this plan
+              <DownloadIcon /> Back up just this plan
             </button>
             <button type="button" className="menu-item is-danger" onClick={() => setPopup({ kind: 'delete', rec })}>
               <TrashIcon /> Delete

@@ -50,6 +50,10 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
   const outcomes: PlanOutcome[] = useMemo(() => plans.map(runPlan), [plans])
   const results = useMemo(() => outcomes.map((o) => (o.ok ? o.result : null)), [outcomes])
   const mixedCurrency = new Set(plans.map((p) => p.currency)).size > 1
+  const overlapping = useMemo(() => {
+    const same = (a: ManualResult, b: ManualResult) => a.series.length === b.series.length && a.series.every((p, i) => p.day === b.series[i].day && p.balance === b.series[i].balance)
+    return results.some((a, i) => a && results.some((b, j) => j > i && b && same(a, b)))
+  }, [results])
 
   return (
     <div className="page-wide compare">
@@ -73,6 +77,7 @@ export function CompareView({ plans, onBack, onOpen }: { plans: Plan[]; onBack: 
           ))}
         </ul>
         {results.some(Boolean) ? <CompareChart plans={plans} results={results} /> : <p className="block-hint">None of these plans can be worked out yet.</p>}
+        {overlapping && <p className="block-hint">Some lines sit exactly on top of each other, because those plans give the same balances.</p>}
         {mixedCurrency && <p className="saved-note">These plans use different currencies (AUD and USD), so their amounts can’t be compared directly.</p>}
       </section>
 
