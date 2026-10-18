@@ -43,6 +43,15 @@ function expectAddsUp(r: ManualResult) {
     expect(y.closing).toBeCloseTo(y.opening + y.deposits - y.withdrawals + y.growth - y.fees - y.tax - y.paidOut, 4)
   }
   for (let i = 1; i < r.years.length; i++) expect(r.years[i].opening).toBeCloseTo(r.years[i - 1].closing, 6)
+  // The same in today's dollars.
+  const real = r.real
+  expect(r.finalReal).toBeCloseTo(real.netContributed + real.growth - real.fees - real.tax - real.paidOut, 4)
+  for (const y of r.years) {
+    const v = y.real
+    expect(v.closing).toBeCloseTo(v.opening + v.deposits - v.withdrawals + v.growth - v.fees - v.tax - v.paidOut, 4)
+    expect(v.closing).toBeCloseTo(y.closing / y.cpiClosing, 4)
+  }
+  for (let i = 1; i < r.years.length; i++) expect(r.years[i].real.opening).toBeCloseTo(r.years[i - 1].real.closing, 6)
 }
 
 describe('old plans and switches off', () => {
@@ -404,6 +413,7 @@ describe('inflation', () => {
     const r = runManual(plan({ startingBalance: 1_000_000, phases: [phase({ duration: { count: 10, unit: 'years' } })], realism: { fees: false, tax: false, inflation: true, inflationSettings: { rate: { kind: 'fixed', value: 3 } } } }))
     expect(r.finalBalance).toBe(1_000_000)
     expect(r.finalReal).toBeCloseTo(1_000_000 / Math.pow(1.03, 10), 4)
+    expect(r.real.growth).toBeCloseTo(r.finalReal - 1_000_000, 4) // the loss to inflation
   })
 
   it('grow deposits with inflation: each monthly $100 rises with prices from the phase start', () => {

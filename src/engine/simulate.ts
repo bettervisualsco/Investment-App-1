@@ -55,6 +55,20 @@ export interface SeriesPoint {
   netContributed: number // cents
   /** Price level compared with the plan's start (1 = start). Divide by this for today's dollars. */
   cpi: number
+  /** netContributed in today's dollars: each amount counted at the prices of the day it went in or out. */
+  realNet: number
+}
+
+/** A year's numbers in today's dollars: each amount at the prices of the day it happened. Growth is what's left over, so it includes the loss to inflation. */
+export interface RealYear {
+  opening: number
+  deposits: number
+  withdrawals: number
+  growth: number
+  fees: number
+  tax: number
+  paidOut: number
+  closing: number
 }
 
 export interface YearRow {
@@ -76,6 +90,19 @@ export interface YearRow {
   closing: number
   /** Price level at the end of the year compared with the plan's start. */
   cpiClosing: number
+  real: RealYear
+}
+
+/** Totals in today's dollars (each amount at the prices of the day it happened). */
+export interface RealTotals {
+  deposited: number
+  withdrawn: number
+  fees: number
+  tax: number
+  paidOut: number
+  netContributed: number
+  /** Growth after inflation: finalReal minus everything else. */
+  growth: number
 }
 
 export interface FeeTotals {
@@ -148,6 +175,7 @@ export interface SimResult {
   totalPaidOut: number
   fees: FeeTotals
   tax: TaxTotals
+  real: RealTotals
   endSale: EndSale | null
   /** Balance at each chart point (always kept). */
   balances: Float64Array
@@ -202,6 +230,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   let totalPaidOut = 0
   let endSale: EndSale | null = null
   let cpi = 1
+  const real = { deposited: 0, withdrawn: 0, fees: 0, tax: 0, paidOut: 0 }
 
   const phases: PhaseDeposits[] = c.depositCount.map((count) => ({ depositCount: count, depositTotal: 0, firstDeposit: null, lastDeposit: null }))
   const phaseStartCpi = new Float64Array(plan.phases.length).fill(1)
@@ -289,6 +318,8 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     fees[kind] += amount
     fees.total += amount
     year.fees += amount
+    year.real.fees += amount / cpi
+    real.fees += amount / cpi
   }
 
   /**
@@ -365,10 +396,14 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
         }
         tax.total += paid
         year.tax += paid
+        year.real.tax += paid / cpi
+        real.tax += paid / cpi
       } else {
         pot += -due
         tax.total += due
         year.tax += due
+        year.real.tax += due / cpi
+        real.tax += due / cpi
       }
     }
     return pot
@@ -401,6 +436,8 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     }
     totalWithdrawn += got
     year.withdrawals += got
+    year.real.withdrawals += got / cpi
+    real.withdrawn += got / cpi
     if (taxOn) putBack(settle(t), t)
   }
 
@@ -427,6 +464,8 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     else {
       totalPaidOut += pot
       year.paidOut += pot
+      year.real.paidOut += pot / cpi
+      real.paidOut += pot / cpi
     }
   }
 
@@ -435,7 +474,22 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     const info = c.fys[k]
     cpiAtFyStart[k] = cpi
     const bal = holdings() + cash
-    year = { fy: info.fy, firstDay: c.startDay + t, lastDay: c.startDay + t, opening: bal, deposits: 0, withdrawals: 0, growth: 0, fees: 0, tax: 0, paidOut: 0, closing: bal, cpiClosing: cpi }
+    const realBal = bal / cpi
+    year = {
+      fy: info.fy,
+      firstDay: c.startDay + t,
+      lastDay: c.startDay + t,
+      opening: bal,
+      deposits: 0,
+      withdrawals: 0,
+      growth: 0,
+      fees: 0,
+      tax: 0,
+      paidOut: 0,
+      closing: bal,
+      cpiClosing: cpi,
+      real: { opening: realBal, deposits: 0, withdrawals: 0, growth: 0, fees: 0, tax: 0, paidOut: 0, closing: realBal },
+    }
     years.push(year)
     if (!taxOn) return
     let index = 1
@@ -472,8 +526,8 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   // ---- The starting balance is already invested on day one (no buying costs). ----
   startYear(0, 0)
   if (plan.startingBalance > 0) invest(plan.startingBalance, 0, false)
-  year.opening = year.closing = plan.startingBalance
-  if (detail) series.push({ day: c.startDay, balance: plan.startingBalance, netContributed: plan.startingBalance, cpi: 1 })
+  year.opening = year.closing = year.real.opening = year.real.closing = plan.startingBalance
+  if (detail) series.push({ day: c.startDay, balance: plan.startingBalance, netContributed: plan.startingBalance, cpi: 1, realNet: plan.startingBalance })
   balances[sampleCount++] = plan.startingBalance
 
   let phase = 0
@@ -513,6 +567,8 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     if (incoming > 0) {
       totalDeposited += incoming
       year.deposits += incoming
+      year.real.deposits += incoming / cpi
+      real.deposited += incoming / cpi
       if (feesOn) cash += incoming
       else invest(incoming, t, false)
     }
@@ -590,6 +646,9 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     year.lastDay = c.startDay + t
     year.closing = balance
     year.cpiClosing = cpi
+    const yr = year.real
+    yr.closing = balance / cpi
+    yr.growth = yr.closing - yr.opening - yr.deposits + yr.withdrawals + yr.fees + yr.tax + yr.paidOut
 
     if (plan.goal) {
       const goalValue = inflOn ? balance / cpi : balance
@@ -598,7 +657,15 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     }
     if (isLast || (t + 1) % sampleEvery === 0) {
       balances[sampleCount++] = balance
-      if (detail) series.push({ day: c.startDay + t + 1, balance, netContributed: plan.startingBalance + totalDeposited - totalWithdrawn, cpi })
+      if (detail) {
+        series.push({
+          day: c.startDay + t + 1,
+          balance,
+          netContributed: plan.startingBalance + totalDeposited - totalWithdrawn,
+          cpi,
+          realNet: plan.startingBalance + real.deposited - real.withdrawn,
+        })
+      }
     }
   }
 
@@ -647,6 +714,11 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     totalPaidOut,
     fees,
     tax,
+    real: {
+      ...real,
+      netContributed: plan.startingBalance + real.deposited - real.withdrawn,
+      growth: finalBalance / cpi - (plan.startingBalance + real.deposited - real.withdrawn - real.fees - real.tax - real.paidOut),
+    },
     endSale,
     balances: balances.subarray(0, sampleCount),
     series,
