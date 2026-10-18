@@ -1,0 +1,501 @@
+/* Stage 4: Fees, Tax and Inflation switches. Uses the colour tokens from src/styles.css. */
+
+/* Switch chips under the plan basics */
+.realism-bar {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.realism-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.realism-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+}
+
+.chip:focus-visible {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-3);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.chip.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.chip.is-on .chip-dot {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+}
+
+.chip-quiet {
+  border-style: dashed;
+  font-weight: 550;
+}
+
+.chip-quiet.is-on {
+  background: var(--accent-soft);
+  border-style: solid;
+  color: var(--accent);
+}
+
+.chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.chip:disabled:hover {
+  border-color: var(--line-strong);
+}
+
+/* Settings block */
+.realism-group {
+  border-top: 1px solid var(--line);
+}
+
+.realism-group:first-of-type {
+  border-top: 0;
+}
+
+.realism-group > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  font-size: 17px;
+  font-weight: 650;
+  cursor: pointer;
+  list-style: none;
+}
+
+.realism-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.realism-group > summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-right: 2px solid var(--ink-3);
+  border-bottom: 2px solid var(--ink-3);
+  transform: rotate(45deg) translateY(-3px);
+  transition: transform 150ms ease;
+}
+
+.realism-group[open] > summary::after {
+  transform: rotate(-135deg) translateY(-1px);
+}
+
+.realism-fields {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.realism-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px 14px;
+}
+
+.inline-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+
+.toggle-text {
+  display: grid;
+  gap: 2px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  font-weight: 550;
+}
+
+.toggle-hint {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.check-fees {
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--warn-soft);
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.check-fees strong {
+  color: var(--warn);
+}
+
+.estimate-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.hist-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.brokerage-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.tier-list {
+  display: grid;
+  gap: 8px;
+}
+
+.tier-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.tier-label {
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+.tier-row .input-money {
+  width: 120px;
+  flex: 0 0 auto;
+}
+
+.tier-row .input-number {
+  flex: 0 0 auto;
+}
+
+.inline-pair > .input-money,
+.inline-pair > .input-select,
+.inline-pair > .field {
+  width: auto;
+  flex: 1 1 140px;
+}
+
+.hist-row .btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tax-tables > summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.tax-tables[open] {
+  display: grid;
+  gap: 12px;
+}
+
+.tax-year {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.tax-year h4 {
+  font-size: 15px;
+}
+
+.tax-year-table td,
+.tax-year-table th {
+  padding: 4px 6px;
+}
+
+.tax-year-table .input-money {
+  width: 140px;
+}
+
+.tax-year-table td {
+  width: 1%;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* Inside a phase */
+.mini-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 14px 0 8px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+
+.phase-realism .field + .field,
+.phase-realism .field + .toggle-row,
+.phase-realism .block-hint {
+  margin-top: 8px;
+}
+
+/* Results */
+/* The totals can have any number of boxes now, so draw the lines on each box instead of relying on the gap. */
+.totals.realism-totals {
+  gap: 0;
+  background: var(--surface);
+}
+
+.totals.realism-totals div {
+  box-shadow:
+    1px 0 0 var(--line),
+    0 1px 0 var(--line);
+}
+
+.todays-dollars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 650;
+  color: var(--accent);
+}
+
+.hero-sub {
+  margin-top: -6px;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+.key-baseline {
+  background: none;
+  border: 2px dashed var(--ink-2);
+}
+
+.end-sale {
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.end-sale-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.breakdown > summary {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.breakdown-list {
+  display: grid;
+  margin: 6px 0 10px;
+  font-size: 14px;
+}
+
+.breakdown-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.breakdown-list dt {
+  color: var(--ink-2);
+}
+
+.breakdown-list dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-total {
+  font-weight: 650;
+}
+
+.breakdown-total dt {
+  color: var(--ink);
+}
+
+.cost-panel {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+}
+
+.cost-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 650;
+}
+
+.cost-row {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.cost-label {
+  color: var(--ink-2);
+}
+
+.cost-value {
+  min-width: 6.5em;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-row.is-total .cost-label,
+.cost-row.is-total .cost-value {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.cost-bar {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--band);
+  overflow: hidden;
+}
+
+.cost-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 250ms ease;
+}
+
+.cost-fill.is-base {
+  background: var(--ink-3);
+}
+
+.cost-fill.is-fees {
+  background: var(--warn);
+}
+
+.cost-fill.is-tax {
+  background: var(--bad);
+}
+
+.cost-fill.is-inflation {
+  background: var(--series-mine);
+}
+
+.cost-fill.is-keep {
+  background: var(--accent);
+}
+
+.muted-cell {
+  color: var(--ink-3);
+}
+
+.year-table td.muted-cell:last-child {
+  font-weight: 500;
+}
+
+.tier-row .input-number.input-sm,
+.tax-year-table .input-number.input-sm,
+.inline-pair .input-number.input-sm {
+  width: 92px;
+}
+
+.phase-realism .toggle-row {
+  margin-top: 6px;
+}

@@ -16,10 +16,11 @@ import { ChevronIcon, CopyIcon, GripIcon, PlusIcon, TrashIcon } from '../compone
 import { Field, Select } from '../components/inputs'
 import type { PhaseSummary } from '../engine/manual'
 import type { PlanProblem } from '../engine/validate'
-import type { Currency, Phase } from '../engine/types'
+import type { Currency, Phase, Realism } from '../engine/types'
 import { dateLong, moneyExact } from '../lib/format'
 import { newId } from '../lib/id'
 import { blankPhase } from '../state/defaultPlan'
+import { PhaseRealism } from './PhaseRealism'
 import { DurationInput, VaryingEditor } from './VaryingEditor'
 import { frequencyOptions, phaseSentence } from './words'
 
@@ -28,12 +29,14 @@ interface Props {
   summaries: PhaseSummary[] | null
   problems: PlanProblem[]
   currency: Currency
+  realism: Realism
+  taxBasis: 'income' | 'rate'
   openId: string | null
   setOpenId: (id: string | null) => void
   onChange: (phases: Phase[]) => void
 }
 
-export function PhaseList({ phases, summaries, problems, currency, openId, setOpenId, onChange }: Props) {
+export function PhaseList({ phases, summaries, problems, currency, realism, taxBasis, openId, setOpenId, onChange }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
@@ -66,6 +69,8 @@ export function PhaseList({ phases, summaries, problems, currency, openId, setOp
                 summary={summaries?.find((s) => s.phaseId === phase.id) ?? null}
                 problems={problems.filter((p) => p.where === phase.id)}
                 currency={currency}
+                realism={realism}
+                taxBasis={taxBasis}
                 open={openId === phase.id}
                 onToggle={() => setOpenId(openId === phase.id ? null : phase.id)}
                 onChange={(next) => update(phase.id, next)}
@@ -109,6 +114,8 @@ function PhaseCard({
   summary,
   problems,
   currency,
+  realism,
+  taxBasis,
   open,
   onToggle,
   onChange,
@@ -120,6 +127,8 @@ function PhaseCard({
   summary: PhaseSummary | null
   problems: PlanProblem[]
   currency: Currency
+  realism: Realism
+  taxBasis: 'income' | 'rate'
   open: boolean
   onToggle: () => void
   onChange: (p: Phase) => void
@@ -188,6 +197,9 @@ function PhaseCard({
             Growth <InfoTip term="returnRate" />
           </h3>
           <VaryingEditor name="Return rate" isMoney={false} currency={currency} value={phase.returnRate} onChange={(returnRate) => onChange({ ...phase, returnRate })} />
+          {(realism.fees || realism.tax) && <p className="block-hint">This is the return before fees and tax: the switches take those off.</p>}
+
+          <PhaseRealism phase={phase} realism={realism} taxBasis={taxBasis} currency={currency} onChange={onChange} />
 
           <div className="phase-actions">
             <button type="button" className="btn btn-quiet" onClick={onDuplicate}>

@@ -2,19 +2,42 @@ import { useDeferredValue, useMemo, useState } from 'react'
 import { InfoTip } from '../components/InfoTip'
 import { Field, MoneyInput, Segmented } from '../components/inputs'
 import { dayToISO } from '../engine/dates'
-import { runManual } from '../engine/manual'
+import { resolveRealism } from '../engine/defaults'
+import { runCostComparison, runManual } from '../engine/manual'
 import type { Plan } from '../engine/types'
 import { validatePlan } from '../engine/validate'
 import { EventsSection, GoalSection } from './EventsAndGoal'
+import type { HistoricalInflation } from './inflationHook'
 import { PhaseList } from './PhaseList'
+import { RealismSettings, RealismSwitches } from './RealismPanel'
+import { realismOf } from './realismView'
 import { ResultsHero, YearTable } from './Results'
 
-export function PlannerPage({ plan, setPlan }: { plan: Plan; setPlan: (p: Plan) => void }) {
+export function PlannerPage({
+  plan,
+  setPlan,
+  historicalInflation = null,
+}: {
+  plan: Plan
+  setPlan: (p: Plan) => void
+  /** Average inflation from the CPI history (stage 2 data), for the "Use historical average" button. */
+  historicalInflation?: HistoricalInflation | null
+}) {
   const [openPhase, setOpenPhase] = useState<string | null>(null)
   const deferredPlan = useDeferredValue(plan)
+  const realism = realismOf(plan)
+  const taxBasis = resolveRealism(plan).taxSettings.basis
 
   const problems = useMemo(() => validatePlan(deferredPlan), [deferredPlan])
-  const result = useMemo(() => (problems.length === 0 ? runManual(deferredPlan) : null), [deferredPlan, problems])
+  const { result, comparison } = useMemo(() => {
+    if (problems.length > 0) return { result: null, comparison: null }
+    const r = realismOf(deferredPlan)
+    if (r.showCost && (r.fees || r.tax || r.inflation)) {
+      const cmp = runCostComparison(deferredPlan)
+      return { result: cmp.actual, comparison: cmp }
+    }
+    return { result: runManual(deferredPlan), comparison: null }
+  }, [deferredPlan, problems])
   const planProblems = problems.filter((p) => p.where === 'plan' || p.where === 'goal')
 
   const midDate = result ? dayToISO(Math.round((result.startDay + result.endDay) / 2)) : plan.startDate
@@ -66,6 +89,7 @@ export function PlannerPage({ plan, setPlan }: { plan: Plan; setPlan: (p: Plan) 
             />
           </Field>
         </div>
+        <RealismSwitches plan={plan} setPlan={setPlan} />
         {planProblems.length > 0 && (
           <ul className="problems">
             {planProblems.map((p, i) => (
@@ -78,7 +102,7 @@ export function PlannerPage({ plan, setPlan }: { plan: Plan; setPlan: (p: Plan) 
       <div className="planner-results">
         {result ? (
           <>
-            <ResultsHero result={result} phases={plan.phases} currency={plan.currency} onPickPhase={pickPhase} />
+            <ResultsHero result={result} comparison={comparison} phases={plan.phases} currency={plan.currency} realism={realism} onPickPhase={pickPhase} />
             <YearTable result={result} currency={plan.currency} planName={plan.name} />
           </>
         ) : (
@@ -94,11 +118,14 @@ export function PlannerPage({ plan, setPlan }: { plan: Plan; setPlan: (p: Plan) 
       </div>
 
       <div className="planner-editor">
+        <RealismSettings plan={plan} setPlan={setPlan} historicalInflation={historicalInflation} />
         <PhaseList
           phases={plan.phases}
           summaries={result?.phases ?? null}
           problems={problems}
           currency={plan.currency}
+          realism={realism}
+          taxBasis={taxBasis}
           openId={openPhase}
           setOpenId={setOpenPhase}
           onChange={(phases) => setPlan({ ...plan, phases })}

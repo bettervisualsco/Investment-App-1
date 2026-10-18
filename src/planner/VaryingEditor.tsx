@@ -40,6 +40,7 @@ export function VaryingEditor({
   isMoney,
   currency,
   name,
+  scopeWord = 'phase',
 }: {
   value: Varying
   onChange: (v: Varying) => void
@@ -47,6 +48,8 @@ export function VaryingEditor({
   currency: Currency
   /** e.g. "Deposit" or "Return rate", used in labels */
   name: string
+  /** What the change happens over: "phase" (default) or "plan". */
+  scopeWord?: string
 }) {
   const id = useId()
 
@@ -66,7 +69,7 @@ export function VaryingEditor({
             label={`${name}: when it changes`}
             value={partial ? 'part' : 'whole'}
             options={[
-              { value: 'whole', label: 'Whole phase' },
+              { value: 'whole', label: `Whole ${scopeWord}` },
               { value: 'part', label: 'Part of it' },
             ]}
             onChange={(w) =>
@@ -94,7 +97,7 @@ export function VaryingEditor({
 
   return (
     <div className="varying">
-      <Field label="Over this phase" info={<InfoTip term="changeOverTime" />}>
+      <Field label={`Over this ${scopeWord}`} info={<InfoTip term="changeOverTime" />}>
         <Segmented
           label={`${name}: change over time`}
           value={value.kind}

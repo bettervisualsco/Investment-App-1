@@ -49,6 +49,120 @@ export const glossary = {
     title: 'Financial year',
     body: 'Australia’s tax year runs from 1 July to 30 June. “2026–27” means 1 July 2026 to 30 June 2027. The first and last rows may be part-years.',
   },
+
+  // Stage 4: realism switches
+  realism: {
+    title: 'Fees, Tax and Inflation switches',
+    body: 'Each switch adds one real-world cost on top of the return rates you typed. Turn on any mix. Every change recalculates straight away. Tax is a simplified estimate, not tax advice.',
+  },
+  showCost: {
+    title: 'Show the cost',
+    body: 'Shows the result with every switch off as a dashed line, and how much fees, then tax, then inflation each take away. Each one is measured on top of the ones before it.',
+  },
+  mer: {
+    title: 'Management fee (MER)',
+    body: 'The yearly fee the fund charges, as a % of what you hold. It comes out a little each month (1/12 of the yearly fee on the last day of each month), so you never see a bill, just slightly lower growth.',
+  },
+  brokerage: {
+    title: 'Brokerage',
+    body: 'What your broker charges for each buy or sell. A flat fee hurts small, frequent buys the most. The presets are what brokers’ websites showed on 18 Oct 2026, so check current fees.',
+  },
+  buyFrequency: {
+    title: 'How often you buy',
+    body: 'You can deposit weekly but only buy every month or quarter to pay less brokerage. Money waiting to be invested sits as cash and earns the cash rate below. A buy is put off if the brokerage would be as much as the cash.',
+  },
+  cashRate: {
+    title: 'Cash rate',
+    body: 'Interest earned by money waiting to be invested, % a year (like a savings account). Use 0 if it just sits in a broker account.',
+  },
+  fxFee: {
+    title: 'Currency conversion fee',
+    body: 'For ETFs listed in the US (like VOO), your Australian dollars are changed into US dollars to buy, and back to sell. Brokers charge a % each time. Only phases marked “Listed in the US” pay it.',
+  },
+  platformFee: {
+    title: 'Account / platform fee',
+    body: 'A fixed fee some platforms charge just for having an account. Monthly fees come off on the last day of each month; yearly fees on 30 June (part-years pay part).',
+  },
+  spread: {
+    title: 'Buy/sell spread',
+    body: 'The small gap between the price you pay to buy and the price you get to sell. It’s charged on each buy and each sale, as a % of the trade.',
+  },
+  taxBasis: {
+    title: 'How tax is worked out',
+    body: 'From your other income: the app adds your investment income on top of your job income and uses the real tax brackets, low income tax offset and Medicare levy. Or just pick your marginal rate: the % you pay on your last dollar.',
+  },
+  otherIncome: {
+    title: 'Other taxable income',
+    body: 'Your income from everything else (job etc.) for a full year. It decides which tax bracket your investment income lands in. If a financial year covers two phases, each phase counts for its share of the days.',
+  },
+  marginalRate: {
+    title: 'Marginal tax rate',
+    body: 'The tax rate on your last dollar of income. For 2026–27: 0% up to $18,200, 15% to $45,000, 30% to $135,000, 37% to $190,000, 45% above. The Medicare levy (2%) is added separately if it’s on.',
+  },
+  medicare: {
+    title: 'Medicare levy',
+    body: '2% of taxable income, paying for Medicare. People on low incomes pay less or none (no levy up to $28,011 in 2025–26).',
+  },
+  brackets: {
+    title: 'Future tax brackets',
+    body: '“Stay the same”: brackets never change, so as incomes rise with prices you slowly pay more (bracket creep). “Rise with inflation”: every threshold goes up with the inflation rate from 2027–28 on. In real life governments sometimes adjust them.',
+  },
+  distribution: {
+    title: 'Distributions',
+    body: 'Cash an ETF pays you from the dividends and interest it earns, usually every 3 or 6 months. The yield is part of your return rate, not extra. Distributions are taxed in the financial year you get them.',
+  },
+  franking: {
+    title: 'Franking credits',
+    body: 'Australian companies pay 30% company tax before paying dividends. A franked dividend carries a credit for that tax. You add the credit to your income, then it comes off your tax bill, and any left over is refunded.',
+  },
+  foreignTax: {
+    title: 'Foreign tax offset',
+    body: 'The US usually keeps 15% of dividends paid to Australians (with a W-8BEN form). You can claim that as an offset so you aren’t taxed twice, but it can only cancel tax: it’s never refunded.',
+  },
+  reinvest: {
+    title: 'Reinvest or take as cash',
+    body: 'Reinvest: the distribution, after its tax, buys more units (no brokerage, like a dividend reinvestment plan). Cash: it’s paid to you and leaves the investment.',
+  },
+  cgt: {
+    title: 'Capital gains tax (CGT)',
+    body: 'When you sell for more than you paid (plus buying costs), the profit is a capital gain and is added to your taxable income. Each purchase is tracked separately, and sales use the oldest ones first. A loss can be used against gains, now or in later years.',
+  },
+  cgtDiscount: {
+    title: 'The 50% CGT discount',
+    body: 'If you held something at least 12 months (not counting the day you bought or sold), only half the gain is taxed. A new law replaces this from 1 July 2027 for gains made from then on.',
+  },
+  cgt2027: {
+    title: 'CGT changes from 1 July 2027',
+    body: 'Now law: for gains from 1 July 2027, instead of halving the gain, the price you paid is raised by inflation (cost base indexation), and a minimum 30% tax applies to those gains. Gains you made before then keep the 50% discount. Some details are still being finalised, so this is an estimate.',
+  },
+  minimumTax: {
+    title: 'Minimum 30% tax on gains',
+    body: 'From 1 July 2027, the basic tax on your (inflation-adjusted) capital gains must be at least 30% of them, counting them as your last dollars of income. People getting certain government payments (like JobSeeker or the Age Pension) are exempt.',
+  },
+  atEnd: {
+    title: 'At the end of the plan',
+    body: 'Sell everything: shows what you’d have in cash after brokerage and tax. Don’t sell: shows the value, plus the tax you would owe if you did sell.',
+  },
+  under18: {
+    title: 'Under 18',
+    body: 'Under-18s pay special high tax on investment income from money given by family: nothing up to $416, 66% of the amount over $416 up to $1,307, then 45% of all of it. Income from investing their own job earnings is taxed at normal rates. The rules use their age on 30 June.',
+  },
+  inflation: {
+    title: 'Inflation',
+    body: 'Prices rise over time, so a dollar later buys less. With Inflation on, results are shown in today’s dollars: what the money would buy at the plan’s start date.',
+  },
+  todaysDollars: {
+    title: 'Today’s dollars',
+    body: 'Future money divided by how much prices rose, so you can compare it with prices now. Each deposit, fee and tax is counted at the prices of the day it happened.',
+  },
+  growWithInflation: {
+    title: 'Grow deposits with inflation',
+    body: 'Each deposit rises with prices during this phase, so it keeps buying the same amount. The first deposit is the amount you typed. Works with ramps and steps too. Needs the Inflation switch on.',
+  },
+  taxEstimate: {
+    title: 'A simplified estimate',
+    body: 'Tax is worked out per financial year from the ATO rates (checked 18 Oct 2026), but leaves out many details: deductions, other offsets, the 45-day rule, capital gains inside ETF distributions, and more. Check with the ATO or a tax adviser before acting on it.',
+  },
 } as const
 
 export type GlossaryKey = keyof typeof glossary
