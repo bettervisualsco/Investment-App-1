@@ -41,9 +41,16 @@ Stages are built in batches (see SPEC.md section 8). Full notes for each stage a
 - Money in and out is stored in whole cents. Growth is tracked to a fraction of a cent and only rounded when shown.
 - Plans can be up to 100 years long.
 
+## Online (19 Oct 2026)
+- **App:** https://bettervisualsco.github.io/Investment-App-1/ (repository github.com/bettervisualsco/Investment-App-1, public). Commits are signed with bettervisuals.co@gmail.com.
+- **Data updates run by themselves** on GitHub: intraday prices during ASX and NYSE hours, closing prices after each close, and inflation, cash rate and exchange rates daily. GitHub often starts scheduled runs late (every ~40 minutes instead of 15 on day one); SPEC accepts this.
+- **Fixed on day one:** a run during trading hours saved a midday price as the day's close (rows for days that haven't closed are now dropped); FRED (US CPI and bond yields) was rejecting the pipeline's request name (now uses one it accepts).
+- **Before working on the app again:** pull first (`git pull`), because the update robot commits new data every trading day.
+
 ## Next
-- **Put it online (finishes stage 2):** Soham makes a free GitHub account (steps in `notes/stage-2.md`), then Claude pushes the app, turns on the website and the scheduled data updates, and Soham installs it on the iPhone and Mac.
-- After that, the app is complete. Each year: add next year's market holidays to `src/markets/hours.ts`, and re-check the tax rates when the ATO publishes the new year's tables.
+- Install on the iPhone (Safari → Share → Add to Home Screen) and the Mac (Safari → File → Add to Dock).
+- Each year: add next year's market holidays to `src/markets/hours.ts`, and re-check the tax rates when the ATO publishes the new year's tables.
+- After about 2 months, check Settings → Data status for the "updates may stop" warning (GitHub's 60-day rule).
 
 ## Problems / notes
 - The GitHub workflows can't be tested until the GitHub account exists.
