@@ -6,7 +6,7 @@ import { PlusIcon, TrashIcon } from '../components/Icons'
 import { InfoTip } from '../components/InfoTip'
 import { Field, MoneyInput, NumberInput, Segmented, Select } from '../components/inputs'
 import { useDataFile, type EtfsFile } from '../data'
-import { parseISO, toDayNumber, toISO } from '../engine/dates'
+import { toDayNumber } from '../engine/dates'
 import { resolveHoldingSettings } from '../engine/defaults'
 import { DEFAULT_HOLDING_RETURN, hasSeparateHoldings, holdingHandling, isSeparate, startingTotal } from '../engine/holdings'
 import type { Currency, DistributionSettings, Holding, HoldingDetails, Investment, Plan, Realism, StartingMoney } from '../engine/types'
@@ -15,11 +15,11 @@ import { newId } from '../lib/id'
 import { dateLong, money } from '../lib/format'
 import { holdingWithInvestment } from '../predict/etfFacts'
 import { FactsLine, InvestmentFields } from './InvestmentPicker'
+import { PurchasesEditor } from './Purchases'
 import { distFrequencyOptions, investmentName } from './investmentChoices'
 import { Toggle } from './RealismPanel'
 import './holdings.css'
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** The first phase's return rate (where a new holding's expected return starts). */
 function firstPhaseRate(plan: Plan): number {
@@ -258,19 +258,14 @@ function HoldingEditor({
       </div>
 
       <div className="holding-grid">
-        <Field label="What you paid" htmlFor={`${id}-cost`} info={<InfoTip term="costBase" />}>
-          <MoneyInput id={`${id}-cost`} label="What you paid, including brokerage" currency={currency} value={details.costBase ?? value} onChange={(costBase) => onChange({ ...details, costBase })} />
-        </Field>
-        <Field label="Roughly when you bought it" htmlFor={`${id}-month`} info={<InfoTip term="boughtWhen" />}>
-          <MonthYear id={`${id}-month`} value={details.boughtOn ?? plan.startDate} startDate={plan.startDate} onChange={(boughtOn) => onChange({ ...details, boughtOn })} />
-        </Field>
+        <PurchasesEditor id={id} plan={plan} details={details} value={value} currency={currency} onChange={onChange} />
         {separate && !moved && !predicting && !cash && (
           <Field label="Expected return" htmlFor={`${id}-ret`} info={<InfoTip term="holdingReturn" />}>
             <NumberInput id={`${id}-ret`} label="Expected return, Manual mode" value={details.returnRate ?? DEFAULT_HOLDING_RETURN} suffix="% a year" onChange={(returnRate) => onChange({ ...details, returnRate })} />
           </Field>
         )}
       </div>
-      {details.costBase === undefined && details.boughtOn === undefined && (
+      {details.costBase === undefined && details.boughtOn === undefined && !details.purchases?.length && (
         <p className="block-hint">Leave these as they are if you’re buying it on the start date. They matter with the Tax switch on.</p>
       )}
 
@@ -321,18 +316,3 @@ function HoldingEditor({
 }
 
 /** Month and year boxes for "roughly when you bought it". Stored as the 1st of that month (or the start date, for the start month). */
-function MonthYear({ id, value, startDate, onChange }: { id: string; value: string; startDate: string; onChange: (iso: string) => void }) {
-  const { y, m } = parseISO(value)
-  const set = (year: number, month: number) => {
-    const iso = toISO({ y: year, m: month, d: 1 })
-    const start = parseISO(startDate)
-    // Picking the plan's start month means "bought on the start date".
-    onChange(year === start.y && month === start.m ? startDate : iso)
-  }
-  return (
-    <span className="month-year">
-      <Select id={id} label="Month you bought it" value={String(m)} options={MONTHS.map((name, i) => ({ value: String(i + 1), label: name }))} onChange={(v) => set(y, Number(v))} />
-      <NumberInput label="Year you bought it" width="sm" integer min={1900} value={y} onChange={(year) => year >= 1900 && year <= 9999 && set(year, m)} />
-    </span>
-  )
-}

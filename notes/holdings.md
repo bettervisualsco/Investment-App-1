@@ -155,3 +155,9 @@ Built 19 Oct 2026. Not committed yet.
   - `src/components/inputs.tsx`: `Select` groups
   - `src/components/glossary.ts`: 7 new ⓘ entries
 - Notes: `notes/holdings.md`
+
+## Several purchases (added 19 Oct 2026)
+- A holding (or the one amount) can list each purchase: roughly when, and what was paid. Each becomes its own tax lot with its own cost base and date (12-month discount and the 1 July 2027 split per purchase).
+- Today's value is split between purchases from the app's price history: each purchase's weight is what it paid × (today's price ÷ the price in the middle of its month), weighted by the mix's shares for a mix. The estimate is saved in the plan (`purchases[].value`), so results, backups and Compare don't need price files. With no price history (savings account, custom asset, or a date before an ETF's history) the value is shared by what was paid.
+- Lots go into the holding's investment oldest first. Tests: `src/predict/purchases.test.ts` and "bought in two goes" in `src/engine/holdings.test.ts` (hand-worked: $654.26 tax vs $486.17 as one 2023 purchase).
+

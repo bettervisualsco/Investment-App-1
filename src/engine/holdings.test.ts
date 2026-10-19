@@ -191,6 +191,52 @@ describe('tax lots with a real cost base and purchase date', () => {
     expect(older.tax.total).toBeCloseTo(0.3 * 0.5 * (value - 600_000), 4) // $636.17
   })
 
+  it('bought in two goes: each purchase is its own lot with its own date', () => {
+    // Plan 1 Jul – 30 Sep 2025, 10% a year. $10,000 now, bought in two purchases:
+    //   1 Jul 2023: paid $3,000, now worth $5,000 → held over 12 months when sold: half the gain is taxed
+    //   1 Mar 2025: paid $4,000, now worth $5,000 → held 7 months when sold: all of the gain is taxed
+    // Each is worth $5,000 × 1.1^(3/12) = $5,120.57 when sold on 30 Sep 2025.
+    // Taxable: ($5,120.57 − $3,000) × 50% + ($5,120.57 − $4,000) = $2,180.85 → 30% = $654.26.
+    const p = plan({
+      startDate: '2025-07-01',
+      phases: [rate30({ duration: { count: 3, unit: 'months' } })],
+      realism: flatTax(),
+      startingMoney: {
+        entry: 'single',
+        single: {
+          purchases: [
+            { id: 'b', boughtOn: '2025-03-01', paid: 400_000, value: 500_000 },
+            { id: 'a', boughtOn: '2023-07-01', paid: 300_000, value: 500_000 },
+          ],
+        },
+      },
+    })
+    const each = 500_000 * Math.pow(1.1, 3 / 12)
+    const r = runManual(p)
+    expect(r.tax.netCapitalGains).toBeCloseTo((each - 300_000) * 0.5 + (each - 400_000), 3)
+    expect(r.tax.total).toBeCloseTo(0.3 * ((each - 300_000) * 0.5 + (each - 400_000)), 3) // $654.26
+    // As one purchase of $7,000 back in 2023, all of the gain would get the discount: $486.17.
+    const one = runManual({ ...p, startingMoney: { entry: 'single', single: { costBase: 700_000, boughtOn: '2023-07-01' } } })
+    expect(one.tax.total).toBeCloseTo(0.3 * 0.5 * (2 * each - 700_000), 3)
+    // Without estimates, today's value is shared by what was paid: $4,285.71 and $5,714.29.
+    const byPaid = runManual({
+      ...p,
+      startingMoney: { entry: 'single', single: { purchases: [{ id: 'a', boughtOn: '2023-07-01', paid: 300_000 }, { id: 'b', boughtOn: '2025-03-01', paid: 400_000 }] } },
+    })
+    const g = Math.pow(1.1, 3 / 12)
+    expect(byPaid.tax.total).toBeCloseTo(0.3 * ((300_000 / 0.7) * g - 300_000) * 0.5 + 0.3 * ((400_000 / 0.7) * g - 400_000), 3)
+  })
+
+  it('purchases are checked: dates after the start and negative amounts are refused', () => {
+    const p = plan({
+      startDate: '2025-07-01',
+      startingMoney: { entry: 'single', single: { purchases: [{ id: 'a', boughtOn: '2025-08-01', paid: 100 }, { id: 'b', boughtOn: '2024-01-01', paid: -5 }] } },
+    })
+    const messages = validatePlan(p).map((x) => x.message).join(' ')
+    expect(messages).toMatch(/purchase 1: the date you bought it can’t be after the plan starts/)
+    expect(messages).toMatch(/purchase 2: what you paid can’t be negative/)
+  })
+
   it('owned before 1 July 2027 and sold in 2029: the gain is split there', () => {
     // Plan 1 Jul 2026 – 30 Jun 2029, inflation 0% (so indexing the cost base changes nothing), no minimum tax.
     // Paid $6,000 on 1 Jul 2023; worth $10,000 at the start, $11,000 on 30 June 2027, $13,310 when sold.

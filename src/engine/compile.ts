@@ -6,7 +6,7 @@
 
 import { addMonths, daysInMonth, fromDayNumber, parseISO, toDayNumber } from './dates'
 import { resolveHoldingSettings, resolveRealism, type ResolvedHolding, type ResolvedRealism } from './defaults'
-import { DEFAULT_HOLDING_RETURN, holdingHandling, isSeparate, startingHoldings, startingTotal } from './holdings'
+import { DEFAULT_HOLDING_RETURN, holdingHandling, holdingPurchases, isSeparate, startingHoldings, startingTotal } from './holdings'
 import { dailyFactor } from './path'
 import { paymentDays, phaseRanges, type PhaseRange } from './schedule'
 import { CGT_REFORM } from './taxTables'
@@ -39,6 +39,20 @@ export interface CompiledEvent {
 }
 
 /** Something you own at the start of the plan, ready for the simulation (see holdings.ts). */
+/** One purchase of a holding, as a tax lot. */
+export interface CompiledLot {
+  /** Its share of today's value, cents. */
+  value: number
+  /** Cost base, cents. */
+  cost: number
+  /** The first day (plan day index) it can be sold with the 12-month discount. */
+  from: number
+  /** The price level when the cost base was set. */
+  cpi: number
+  /** Any gain up to 30 June 2027 (when that's before the plan starts). */
+  pre: number
+}
+
 export interface CompiledHolding {
   id: string
   name: string
@@ -59,11 +73,8 @@ export interface CompiledHolding {
   settings: ResolvedHolding
   /** Manual mode: its return, % a year (kept holdings). */
   manualRate: number
-  /** Its tax lot: cost base (cents), the first day it can be sold with the 12-month discount, the price level when the cost base was set, and any gain up to 30 June 2027 (when that's before the plan starts). */
-  lotCost: number
-  lotFrom: number
-  lotCpi: number
-  lotPre: number
+  /** Its tax lots, one per purchase, oldest first. */
+  lots: CompiledLot[]
   /** Kept holdings: the days its distributions are paid (its own frequency, plus the plan's last day). */
   payoutDay: Uint8Array | null
 }
@@ -256,24 +267,30 @@ export function compilePlan(plan: Plan): CompiledPlan {
   for (const h of startingHoldings(plan)) {
     if (!(h.value > 0)) continue
     const label = h.name || (h.investment?.kind === 'etf' ? h.investment.etf : 'A holding')
-    const bought = h.boughtOn ? toDayNumber(h.boughtOn) : startDay
-    const cost = h.costBase ?? h.value
     const role = isSeparate(plan, h) ? handling : 'plan'
-    const ymd = h.boughtOn ? parseISO(h.boughtOn) : fromDayNumber(startDay)
-    let lotCost = cost
-    let lotCpi = 1
-    let lotPre = 0
-    if (bought < startDay && bought >= reformDay) lotCpi = cpiBeforeStart(bought)
-    else if (bought < reformDay && reformDay < startDay) {
-      // Bought before 1 July 2027, but the plan starts after it: the gain up to 30 June 2027 needs its value then,
-      // estimated as steady growth from what you paid to today's value.
-      const share = (reformDay - bought) / (startDay - bought)
-      const atReform = cost > 0 && h.value > 0 ? cost * Math.pow(h.value / cost, share) : cost + (h.value - cost) * share
-      lotPre = atReform - cost
-      lotCost = atReform
-      lotCpi = cpiBeforeStart(reformDay)
-      warnings.push(`${label}: bought before 1 July 2027, when the capital gains tax rules changed. Its value on 30 June 2027 was estimated as steady growth from what you paid to today’s value.`)
-    }
+    let warnedReform = false
+    const lots: CompiledLot[] = holdingPurchases(h).map((p) => {
+      const bought = p.boughtOn ? toDayNumber(p.boughtOn) : startDay
+      const ymd = p.boughtOn ? parseISO(p.boughtOn) : fromDayNumber(startDay)
+      let cost = p.cost
+      let lotCpi = 1
+      let pre = 0
+      if (bought < startDay && bought >= reformDay) lotCpi = cpiBeforeStart(bought)
+      else if (bought < reformDay && reformDay < startDay) {
+        // Bought before 1 July 2027, but the plan starts after it: the gain up to 30 June 2027 needs its value then,
+        // estimated as steady growth from what you paid to today's value.
+        const share = (reformDay - bought) / (startDay - bought)
+        const atReform = p.cost > 0 && p.value > 0 ? p.cost * Math.pow(p.value / p.cost, share) : p.cost + (p.value - p.cost) * share
+        pre = atReform - p.cost
+        cost = atReform
+        lotCpi = cpiBeforeStart(reformDay)
+        if (!warnedReform) {
+          warnings.push(`${label}: bought before 1 July 2027, when the capital gains tax rules changed. Its value on 30 June 2027 was estimated as steady growth from what you paid to today’s value.`)
+          warnedReform = true
+        }
+      }
+      return { value: p.value, cost, from: toDayNumber(addMonths(ymd, 12)) + 1 - startDay, cpi: lotCpi, pre }
+    })
     const settings = resolveHoldingSettings(h)
     let holdingPayout: Uint8Array | null = null
     if (role === 'keep') {
@@ -292,18 +309,15 @@ export function compilePlan(plan: Plan): CompiledPlan {
       value: h.value,
       investment: h.investment,
       role,
-      plain: h.costBase === undefined && (h.boughtOn === undefined || bought === startDay),
+      plain: !h.purchases?.length && h.costBase === undefined && (h.boughtOn === undefined || toDayNumber(h.boughtOn) === startDay),
       settings,
       manualRate: h.investment?.kind === 'cash' ? h.investment.rate : (h.returnRate ?? DEFAULT_HOLDING_RETURN),
-      lotCost,
-      lotFrom: toDayNumber(addMonths(ymd, 12)) + 1 - startDay,
-      lotCpi,
-      lotPre,
+      lots,
       payoutDay: holdingPayout,
     })
   }
   // Oldest purchase first, so sales use the oldest lots first.
-  holdings.sort((a, b) => a.lotFrom - b.lotFrom)
+  holdings.sort((a, b) => a.lots[0].from - b.lots[0].from)
 
   return {
     plan,

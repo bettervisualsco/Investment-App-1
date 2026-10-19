@@ -137,6 +137,8 @@ export interface Plan {
  *   Something different from the first phase's investment is a separate holding (see StartingMoney.handling).
  * - costBase: what you paid for it, cents, including brokerage (for capital gains tax). Missing → today's value.
  * - boughtOn: roughly when you bought it. Missing → the plan's start date. Can't be after the start date.
+ * - purchases: when you bought it in several goes. When present (one or more), these replace costBase and boughtOn:
+ *   each purchase is its own tax lot with its own cost base and date.
  * - returnRate: Manual mode, % a year, for an ETF, mix or custom asset kept separately (cash uses its savings rate).
  *   Missing → 7%.
  * - mer / usListed / distribution: its own fee and distributions when kept separately. Missing → the defaults in
@@ -146,10 +148,26 @@ export interface HoldingDetails {
   investment?: Investment
   costBase?: number
   boughtOn?: ISODate
+  purchases?: Purchase[]
   returnRate?: number
   mer?: number
   usListed?: boolean
   distribution?: DistributionSettings
+}
+
+/** One purchase of something you own now, e.g. "$2,000 of VGS in March 2023". */
+export interface Purchase {
+  id: string
+  /** Roughly when (the app stores the 1st of the month). Can't be after the plan's start date. */
+  boughtOn: ISODate
+  /** What you paid, cents, including brokerage. */
+  paid: number
+  /**
+   * This purchase's share of today's value, cents. The app estimates it from price history (an earlier purchase at a
+   * lower price has grown more). Missing → shared in proportion to what you paid. The shares are scaled so they add
+   * up to the holding's value.
+   */
+  value?: number
 }
 
 /** One thing you own now, e.g. "$8,000 of VGS bought in 2023". */

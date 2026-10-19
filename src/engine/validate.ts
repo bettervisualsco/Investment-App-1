@@ -135,6 +135,19 @@ export function startingMoneyProblems(plan: Plan): PlanProblem[] {
       else if (startOk && toDayNumber(h.boughtOn) > toDayNumber(plan.startDate)) add(`${label}: the date you bought it can’t be after the plan starts.`)
       else if (toDayNumber(h.boughtOn) < toDayNumber('1900-01-01')) add(`${label}: pick a date you bought it from 1900 on.`)
     }
+    if (h.purchases !== undefined) {
+      if (!Array.isArray(h.purchases)) add(`${label}: its purchases need filling in again.`)
+      else
+        h.purchases.forEach((p, i) => {
+          const which = h.purchases!.length > 1 ? `${label}, purchase ${i + 1}` : label
+          if (typeof p !== 'object' || p === null) return add(`${which}: fill in this purchase again.`)
+          if (!(num(p.paid) && p.paid >= 0)) add(`${which}: what you paid can’t be negative.`)
+          if (p.value !== undefined && !(num(p.value) && p.value >= 0)) add(`${which}: its share of today’s value needs fixing.`)
+          if (typeof p.boughtOn !== 'string' || !isValidISO(p.boughtOn)) add(`${which}: pick roughly when you bought it.`)
+          else if (startOk && toDayNumber(p.boughtOn) > toDayNumber(plan.startDate)) add(`${which}: the date you bought it can’t be after the plan starts.`)
+          else if (toDayNumber(p.boughtOn) < toDayNumber('1900-01-01')) add(`${which}: pick a date from 1900 on.`)
+        })
+    }
     if (h.returnRate !== undefined && !(num(h.returnRate) && h.returnRate > -100 && h.returnRate <= 100)) add(`${label}: the expected return should be between −100% and 100% a year.`)
     if (h.mer !== undefined && !(num(h.mer) && h.mer >= 0 && h.mer <= 10)) add(`${label}: the management fee should be between 0% and 10% a year.`)
     if (h.usListed !== undefined && typeof h.usListed !== 'boolean') add(`${label}: “Listed in the US” needs fixing.`)

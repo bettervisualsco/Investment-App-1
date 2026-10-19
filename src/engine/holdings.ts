@@ -16,7 +16,7 @@
 //
 // Plain data helpers only; the day-by-day work is in simulate.ts.
 
-import type { Holding, Investment, Plan } from './types'
+import type { Holding, HoldingDetails, Investment, Plan } from './types'
 
 /** Manual-mode return for a holding kept separately when none was typed, % a year. */
 export const DEFAULT_HOLDING_RETURN = 7
@@ -79,4 +79,35 @@ export function keptHoldings(plan: Plan): Holding[] {
 /** True if any holding is in something different from the first phase's investment (the Keep / Move choice matters). */
 export function hasSeparateHoldings(plan: Plan): boolean {
   return startingHoldings(plan).some((h) => isSeparate(plan, h))
+}
+
+/** One purchase of a holding, ready for the tax lots: when, what was paid, and its share of today's value (cents). */
+export interface HoldingPurchase {
+  /** Missing → bought on the plan's start date. */
+  boughtOn?: string
+  cost: number
+  value: number
+}
+
+/**
+ * A holding's purchases, oldest first. Several purchases (`purchases`) each become their own tax lot; otherwise
+ * it's one purchase from `costBase` / `boughtOn` (missing: today's value, bought on the start date).
+ * Today's value is shared between purchases by their estimated `value` (scaled to add up to the holding's value),
+ * or in proportion to what was paid when there's no estimate.
+ */
+export function holdingPurchases(h: HoldingDetails & { value: number }): HoldingPurchase[] {
+  const list = h.purchases
+  if (!list || list.length === 0) return [{ boughtOn: h.boughtOn, cost: h.costBase ?? h.value, value: h.value }]
+  const estimates = list.map((p) => (typeof p.value === 'number' && Number.isFinite(p.value) && p.value >= 0 ? p.value : NaN))
+  const haveEstimates = estimates.every((v) => !Number.isNaN(v)) && estimates.reduce((a, b) => a + b, 0) > 0
+  const weights = haveEstimates ? estimates : list.map((p) => Math.max(0, p.paid))
+  const total = weights.reduce((a, b) => a + b, 0)
+  return list
+    .map((p, i) => ({ boughtOn: p.boughtOn, cost: p.paid, value: total > 0 ? (h.value * weights[i]) / total : h.value / list.length }))
+    .sort((a, b) => (a.boughtOn ?? '').localeCompare(b.boughtOn ?? ''))
+}
+
+/** Total paid for a holding (all its purchases), cents. */
+export function holdingCost(h: HoldingDetails & { value: number }): number {
+  return holdingPurchases(h).reduce((sum, p) => sum + p.cost, 0)
 }

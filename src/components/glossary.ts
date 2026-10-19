@@ -168,6 +168,10 @@ export const glossary = {
     title: 'Holding',
     body: 'One thing you own now, like $8,000 of VGS or $3,000 in a savings account. Each holding has today’s value, what you paid for it and roughly when you bought it. Your starting balance is the total of your holdings.',
   },
+  purchases: {
+    title: 'Several purchases',
+    body: 'If you bought in more than one go, add each purchase with roughly when and what you paid. Each one is taxed on its own: a purchase held over 12 months gets the 50% discount, a newer one may not. Today’s value is split between them using the app’s price history (an earlier, cheaper purchase bought more units), or by what you paid when there’s no history.',
+  },
   costBase: {
     title: 'What you paid (cost base)',
     body: 'What you paid for it, including brokerage. Capital gains tax is worked out on what you sell it for minus this. If you bought it over time, add up all the buys. Leave it as today’s value if you don’t know (then only growth from the start date is taxed).',

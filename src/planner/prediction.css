@@ -334,3 +334,8 @@
 .growth-note {
   display: block;
 }
+
+/* Wide enough to show a share like 61.45% in full. */
+.mix-row .input-number.input-sm {
+  width: 112px;
+}

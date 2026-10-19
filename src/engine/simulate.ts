@@ -430,9 +430,12 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
 
   /** Something you own at the start: its value, with its own cost base and purchase date (no buying costs). */
   const addHolding = (s: Sleeve, h: CompiledHolding) => {
-    const u = h.value / s.price
-    s.units += u
-    if (taxOn) addLot(s, u, h.lotCost, h.lotFrom, h.lotCpi, h.lotPre)
+    // One tax lot per purchase, oldest first.
+    for (const lot of h.lots) {
+      const u = lot.value / s.price
+      s.units += u
+      if (taxOn) addLot(s, u, lot.cost, lot.from, lot.cpi, lot.pre)
+    }
   }
 
   /** 1 July 2027: what you own is treated as sold and bought back at its value (the gain up to then keeps the 50% discount). */

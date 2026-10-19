@@ -180,6 +180,12 @@ function startingMoneyShapeProblem(x: unknown): string | null {
     if (d.investment !== undefined && !(isObject(d.investment) && isStr(d.investment.kind))) return false
     for (const k of ['costBase', 'returnRate', 'mer']) if (d[k] !== undefined && !isNum(d[k])) return false
     if (d.boughtOn !== undefined && !isStr(d.boughtOn)) return false
+    if (d.purchases !== undefined) {
+      if (!Array.isArray(d.purchases)) return false
+      for (const p of d.purchases) {
+        if (!isObject(p) || !isStr(p.id) || !isStr(p.boughtOn) || !isNum(p.paid) || (p.value !== undefined && !isNum(p.value))) return false
+      }
+    }
     if (d.usListed !== undefined && typeof d.usListed !== 'boolean') return false
     if (d.distribution !== undefined && !(isObject(d.distribution) && ['yield', 'frankedPct', 'foreignPct', 'foreignTaxPct'].every((k) => isNum((d.distribution as Record<string, unknown>)[k])))) return false
     return true
