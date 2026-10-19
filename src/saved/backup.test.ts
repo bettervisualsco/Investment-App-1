@@ -276,3 +276,54 @@ describe('settings added in later stages (fees, tax, inflation, prediction)', ()
     expect(planShapeProblem({ ...full, phases: [{ ...p0, investment: 'VAS' }] })).toBe('phase “Uni” has a damaged investment')
   })
 })
+
+describe('"Money you have now" in backups', () => {
+  const withHoldings = plan('h', 'Holdings', {
+    startingBalance: 1_500_000,
+    startingMoney: {
+      entry: 'holdings',
+      handling: 'move',
+      single: { investment: { kind: 'cash', rate: 4 } },
+      holdings: [
+        { id: 'h1', name: 'Dad’s shares', value: 1_000_000, costBase: 700_000, boughtOn: '2022-05-01', investment: { kind: 'etf', etf: 'VGS' }, returnRate: 8, mer: 0.18, usListed: false, distribution: { yield: 2, frankedPct: 0, foreignPct: 100, foreignTaxPct: 15, frequency: 'quarterly' } },
+        { id: 'h2', value: 500_000 },
+      ],
+    },
+  })
+
+  it('keeps every new detail through a backup round trip', () => {
+    expect(planShapeProblem(withHoldings)).toBeNull()
+    const read = readBackup(backupToText(makeBackup([rec(withHoldings)])))
+    expect(read.ok && read.entries[0].plan).toEqual(withHoldings)
+  })
+
+  it('old backups (no "Money you have now") still import', () => {
+    const old = plan('o', 'Old')
+    expect('startingMoney' in old).toBe(false)
+    const read = readBackup(fileWith([{ plan: old, createdAt: 1, updatedAt: 2 }]))
+    expect(read.ok && read.entries.length).toBe(1)
+  })
+
+  it('rejects damaged shapes instead of letting them break the Planner', () => {
+    const sm = withHoldings.startingMoney!
+    const h1 = sm.holdings![0]
+    const damaged = 'its “Money you have now” is damaged'
+    const holdingDamaged = 'one of its holdings in “Money you have now” is damaged'
+    expect(planShapeProblem({ ...withHoldings, startingMoney: 'lots' })).toBe(damaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { entry: 'some' } })).toBe(damaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, handling: 'sell' } })).toBe(damaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, single: { costBase: '7000' } } })).toBe(damaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, holdings: 'VGS' } })).toBe(damaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, holdings: [{ ...h1, value: '10000' }] } })).toBe(holdingDamaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, holdings: [{ ...h1, id: 3 }] } })).toBe(holdingDamaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, holdings: [{ ...h1, investment: 'VGS' }] } })).toBe(holdingDamaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, holdings: [{ ...h1, boughtOn: 2022 }] } })).toBe(holdingDamaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, holdings: [{ ...h1, usListed: 'no' }] } })).toBe(holdingDamaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, holdings: [{ ...h1, distribution: { yield: 2 } }] } })).toBe(holdingDamaged)
+    expect(planShapeProblem({ ...withHoldings, startingMoney: { ...sm, holdings: [null] } })).toBe(holdingDamaged)
+    // A damaged plan is skipped and named; the rest of the file still imports.
+    const read = readBackup(fileWith([{ plan: { ...withHoldings, startingMoney: { entry: 'holdings', holdings: [{ id: 'x' }] } } }, { plan: plan('ok', 'Fine') }]))
+    expect(read.ok && read.skipped).toEqual([{ name: 'Holdings', reason: holdingDamaged }])
+    expect(read.ok && read.entries.map((e) => e.plan.id)).toEqual(['ok'])
+  })
+})

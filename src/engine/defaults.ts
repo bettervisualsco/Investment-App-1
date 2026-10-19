@@ -3,7 +3,7 @@
 // missing is filled in from here.
 
 import { ATO_TAX_YEARS } from './taxTables'
-import type { DistributionSettings, FeeSettings, InflationSettings, Phase, Plan, TaxSettings, TaxYear } from './types'
+import type { DistributionSettings, FeeSettings, HoldingDetails, InflationSettings, Phase, Plan, TaxSettings, TaxYear } from './types'
 
 export const DEFAULT_FEES: FeeSettings = {
   brokerage: { kind: 'flat', fee: 500 },
@@ -83,6 +83,22 @@ export function resolvePhase(phase: Phase): ResolvedPhase {
     resolved.distribution = { yield: phase.investment.rate, frankedPct: 0, foreignPct: 0, foreignTaxPct: 0, frequency: 'monthly' }
   }
   return resolved
+}
+
+/** A holding kept separately: its own fee, currency fee and distributions (the same defaults as a phase). */
+export type ResolvedHolding = Pick<ResolvedPhase, 'mer' | 'usListed' | 'distribution' | 'tradingCosts'>
+
+export function resolveHoldingSettings(h: HoldingDetails): ResolvedHolding {
+  if (h.investment?.kind === 'cash') {
+    // A savings account, as for a phase: no fees, and all of its return is interest paid monthly.
+    return { mer: 0, usListed: false, tradingCosts: false, distribution: { yield: h.investment.rate, frankedPct: 0, foreignPct: 0, foreignTaxPct: 0, frequency: 'monthly' } }
+  }
+  return {
+    mer: h.mer ?? DEFAULT_MER,
+    usListed: h.usListed ?? false,
+    distribution: { ...DEFAULT_DISTRIBUTION, ...h.distribution },
+    tradingCosts: true,
+  }
 }
 
 export function resolveRealism(plan: Plan): ResolvedRealism {

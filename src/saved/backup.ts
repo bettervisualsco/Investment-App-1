@@ -159,11 +159,38 @@ export function planShapeProblem(x: unknown): string | null {
   if (x.prediction !== undefined && !(isObject(x.prediction) && (x.prediction.mode === 'manual' || x.prediction.mode === 'prediction'))) {
     return 'its Prediction settings are damaged'
   }
+  const money = startingMoneyShapeProblem(x.startingMoney)
+  if (money) return money
   if (!Array.isArray(x.events)) return 'its one-off events are missing'
   for (const e of x.events) {
     if (!isObject(e) || !isStr(e.id) || !isStr(e.name) || !isStr(e.date) || !isNum(e.amount)) return 'a one-off event is damaged'
   }
   if (x.goal !== undefined && x.goal !== null && !(isObject(x.goal) && isNum(x.goal.amount) && isStr(x.goal.date))) return 'its goal is damaged'
+  return null
+}
+
+/** "Money you have now" (optional): if present, it must have the right shape. */
+function startingMoneyShapeProblem(x: unknown): string | null {
+  if (x === undefined) return null
+  const damaged = 'its “Money you have now” is damaged'
+  if (!isObject(x) || (x.entry !== 'single' && x.entry !== 'holdings')) return damaged
+  if (x.handling !== undefined && x.handling !== 'keep' && x.handling !== 'move') return damaged
+  const detailsOk = (d: unknown): boolean => {
+    if (!isObject(d)) return false
+    if (d.investment !== undefined && !(isObject(d.investment) && isStr(d.investment.kind))) return false
+    for (const k of ['costBase', 'returnRate', 'mer']) if (d[k] !== undefined && !isNum(d[k])) return false
+    if (d.boughtOn !== undefined && !isStr(d.boughtOn)) return false
+    if (d.usListed !== undefined && typeof d.usListed !== 'boolean') return false
+    if (d.distribution !== undefined && !(isObject(d.distribution) && ['yield', 'frankedPct', 'foreignPct', 'foreignTaxPct'].every((k) => isNum((d.distribution as Record<string, unknown>)[k])))) return false
+    return true
+  }
+  if (x.single !== undefined && !detailsOk(x.single)) return damaged
+  if (x.holdings !== undefined) {
+    if (!Array.isArray(x.holdings)) return damaged
+    for (const h of x.holdings) {
+      if (!isObject(h) || !isStr(h.id) || !isNum(h.value) || (h.name !== undefined && !isStr(h.name)) || !detailsOk(h)) return 'one of its holdings in “Money you have now” is damaged'
+    }
+  }
   return null
 }
 

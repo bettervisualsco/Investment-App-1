@@ -2,7 +2,7 @@
 
 import { isValidISO, toDayNumber } from './dates'
 import { phaseRanges } from './schedule'
-import type { Brokerage, Investment, Plan, PredictionSettings, Varying } from './types'
+import type { Brokerage, HoldingDetails, Investment, Plan, PredictionSettings, Varying } from './types'
 
 export const MAX_PLAN_YEARS = 100
 
@@ -87,6 +87,9 @@ export function validatePlan(plan: Plan): PlanProblem[] {
     if (!durationsOk(r.inflationSettings.rate)) add('plan', 'Inflation: change timings must be whole numbers.')
   }
 
+  // Money you have now (optional).
+  problems.push(...startingMoneyProblems(plan))
+
   for (const event of plan.events) {
     if (!isValidISO(event.date)) add(event.id, `${event.name || 'An event'}: pick a date.`)
     if (!Number.isFinite(event.amount)) add(event.id, `${event.name || 'An event'}: amount needs a number.`)
@@ -103,6 +106,60 @@ export function validatePlan(plan: Plan): PlanProblem[] {
     if (totalDays > MAX_PLAN_YEARS * 366) add('plan', `Plans can be up to ${MAX_PLAN_YEARS} years long.`)
   }
 
+  return problems
+}
+
+/** Where the "Money you have now" problems are shown. */
+export const MONEY_WHERE = 'money'
+
+/** Problems with "Money you have now": the one-amount details or each holding, in words. */
+export function startingMoneyProblems(plan: Plan): PlanProblem[] {
+  const sm = plan.startingMoney
+  if (sm === undefined) return []
+  const problems: PlanProblem[] = []
+  const add = (message: string) => problems.push({ where: MONEY_WHERE, message })
+  if (typeof sm !== 'object' || sm === null || (sm.entry !== 'single' && sm.entry !== 'holdings')) {
+    add('Money you have now: choose “One amount” or “My holdings” again.')
+    return problems
+  }
+  if (sm.handling !== undefined && sm.handling !== 'keep' && sm.handling !== 'move') add('Money you have now: choose “Keep them as they are” or “Move them into my plan’s investments” again.')
+  const startOk = isValidISO(plan.startDate)
+  const check = (h: HoldingDetails, label: string) => {
+    const num = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n)
+    if (typeof h !== 'object' || h === null) return add(`${label}: its details need filling in again.`)
+    const inv = investmentProblem(h.investment)
+    if (inv) add(`${label}: ${inv}`)
+    if (h.costBase !== undefined && !(num(h.costBase) && h.costBase >= 0)) add(`${label}: what you paid can’t be negative.`)
+    if (h.boughtOn !== undefined) {
+      if (typeof h.boughtOn !== 'string' || !isValidISO(h.boughtOn)) add(`${label}: pick roughly when you bought it.`)
+      else if (startOk && toDayNumber(h.boughtOn) > toDayNumber(plan.startDate)) add(`${label}: the date you bought it can’t be after the plan starts.`)
+      else if (toDayNumber(h.boughtOn) < toDayNumber('1900-01-01')) add(`${label}: pick a date you bought it from 1900 on.`)
+    }
+    if (h.returnRate !== undefined && !(num(h.returnRate) && h.returnRate > -100 && h.returnRate <= 100)) add(`${label}: the expected return should be between −100% and 100% a year.`)
+    if (h.mer !== undefined && !(num(h.mer) && h.mer >= 0 && h.mer <= 10)) add(`${label}: the management fee should be between 0% and 10% a year.`)
+    if (h.usListed !== undefined && typeof h.usListed !== 'boolean') add(`${label}: “Listed in the US” needs fixing.`)
+    const d = h.distribution
+    if (d !== undefined) {
+      const pct = (n: unknown, hi = 100) => num(n) && n >= 0 && n <= hi
+      if (typeof d !== 'object' || d === null || !(pct(d.yield, 50) && pct(d.frankedPct) && pct(d.foreignPct) && pct(d.foreignTaxPct, 99))) {
+        add(`${label}: distribution percentages need to be between 0 and 100 (yield up to 50%).`)
+      }
+    }
+  }
+  if (sm.entry === 'single') {
+    if (sm.single !== undefined) check(sm.single, 'Money you have now')
+    return problems
+  }
+  if (!Array.isArray(sm.holdings)) {
+    add('Money you have now: the list of holdings needs fixing. Add your holdings again.')
+    return problems
+  }
+  sm.holdings.forEach((h, i) => {
+    const label = (typeof h === 'object' && h !== null && typeof h.name === 'string' && h.name.trim()) || `Holding ${i + 1}`
+    if (typeof h !== 'object' || h === null) return add(`${label}: its details need filling in again.`)
+    if (!(typeof h.value === 'number' && Number.isFinite(h.value) && h.value >= 0)) add(`${label}: today’s value can’t be negative.`)
+    check(h, label)
+  })
   return problems
 }
 

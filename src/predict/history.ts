@@ -3,7 +3,9 @@
 //
 //   - Only the series the plan needs: each ETF it uses (single or in a mix),
 //     the cash rate if a phase is a savings account, inflation, and AUD/USD
-//     if any ETF trades in a different currency from the plan.
+//     if any ETF trades in a different currency from the plan. Holdings kept
+//     separately ("Money you have now") count too: their ETFs and cash are
+//     included, so they're replayed from the same months as everything else.
 //   - Only months where ALL of them have data, so every sampled month carries
 //     its own real returns, inflation and exchange-rate move together.
 //   - ETF months in monthly.json are after the fund's fee. The engine takes
@@ -13,7 +15,8 @@
 //     (1 + r in US$) / (1 + change in US$ per A$1) − 1. (And A$ ETFs into US$ for a US$ plan.)
 
 import { alignedMonths, monthFromNumber, monthNumber, type MonthlyFile } from '../data'
-import { CASH_KEY, etfKey, etfsUsed, usesCash } from '../engine/assets'
+import { CASH_KEY, etfKey, etfsOf, etfsUsed, usesCash } from '../engine/assets'
+import { keptHoldings } from '../engine/holdings'
 import type { HistoryTable } from '../engine/prediction'
 import type { Currency, HistoryWindowKind, Plan } from '../engine/types'
 
@@ -92,6 +95,16 @@ export function seriesNeeded(file: MonthlyFile, plan: Plan): { keys: string[]; n
   if (fx) keys.push('audusd')
   for (const k of [cash, cpi, 'audusd']) if (file.series[k as keyof MonthlyFile['series']]) names[k] = file.series[k as keyof MonthlyFile['series']].label
   return { keys, names, missing }
+}
+
+/** Names of the history series used by holdings kept separately, e.g. ["VGS", "cash"]. */
+function heldSeries(plan: Plan): string[] {
+  const out = new Set<string>()
+  for (const h of keptHoldings(plan)) {
+    if (h.investment?.kind === 'cash') out.add('the cash rate')
+    etfsOf(h.investment).forEach((id) => out.add(id))
+  }
+  return [...out]
 }
 
 /** First and last month with data for one series key. */
@@ -180,6 +193,8 @@ export function buildHistory(file: MonthlyFile, plan: Plan, choice: HistoryChoic
   if (clippedEnd) note += ` It ends in ${monthText(lastYm)}, the latest month of ${names[endsSoonest.key] ?? endsSoonest.key}.`
   const skipped = last - first + 1 - n
   if (skipped > 0) note += ` ${skipped} month${skipped === 1 ? '' : 's'} with a gap in the data ${skipped === 1 ? 'was' : 'were'} left out.`
+  const held = heldSeries(plan)
+  if (held.length > 0) note += ` It includes the history for what you have now (${listWords(held)}), and every investment uses the same months.`
 
   return {
     ok: true,

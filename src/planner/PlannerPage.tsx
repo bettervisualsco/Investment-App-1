@@ -1,16 +1,17 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { InfoTip } from '../components/InfoTip'
-import { Field, MoneyInput, Segmented } from '../components/inputs'
+import { Field, Segmented } from '../components/inputs'
 import { dayToISO } from '../engine/dates'
 import { resolveRealism } from '../engine/defaults'
 import { runCostComparison, runManual } from '../engine/manual'
 import type { Plan } from '../engine/types'
-import { validatePlan } from '../engine/validate'
+import { MONEY_WHERE, validatePlan } from '../engine/validate'
 import { HelpTip } from '../predict/HelpTip'
 import { withPrediction } from '../predict/settingsStore'
 import { usePrediction } from '../predict/usePrediction'
 import { EventsSection, GoalSection } from './EventsAndGoal'
 import type { HistoricalInflation } from './inflationHook'
+import { MoneyNow } from './MoneyNow'
 import { PhaseList } from './PhaseList'
 import { PredictionResults } from './PredictionResults'
 import { PredictionSettingsBlock } from './PredictionSettingsBlock'
@@ -83,9 +84,6 @@ export function PlannerPage({
               onChange={(e) => e.target.value && setPlan({ ...plan, startDate: e.target.value })}
             />
           </Field>
-          <Field label="Starting balance" htmlFor="plan-balance">
-            <MoneyInput id="plan-balance" label="Starting balance" currency={plan.currency} value={plan.startingBalance} onChange={(startingBalance) => setPlan({ ...plan, startingBalance })} />
-          </Field>
           <Field label="Currency">
             <Segmented
               label="Currency"
@@ -98,6 +96,7 @@ export function PlannerPage({
             />
           </Field>
         </div>
+        <MoneyNow plan={plan} setPlan={setPlan} realism={realism} predicting={predicting} problems={problems.filter((p) => p.where === MONEY_WHERE)} />
         <RealismSwitches plan={plan} setPlan={setPlan} />
         {planProblems.length > 0 && (
           <ul className="problems">

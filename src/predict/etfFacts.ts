@@ -2,7 +2,7 @@
 // data/etfs.json when you pick what it's invested in. You can still edit them.
 
 import type { EtfInfo, EtfsFile } from '../data'
-import type { Currency, DistributionFrequency, Investment, Phase } from '../engine/types'
+import type { Currency, DistributionFrequency, HoldingDetails, Investment, Phase } from '../engine/types'
 
 function frequencyOf(info: EtfInfo): DistributionFrequency {
   const text = (info.distributions?.value ?? '').toLowerCase()
@@ -105,6 +105,31 @@ export function withInvestment(phase: Phase, inv: Investment, file: EtfsFile | u
       frankedPct: facts.frankedPct,
       foreignPct: facts.foreignPct,
       foreignTaxPct: before?.foreignTaxPct ?? 15,
+      frequency: facts.frequency,
+    },
+  }
+}
+
+/**
+ * Money you have now: a holding (or the one amount) with its investment set. For an ETF or a mix, its fee, currency
+ * fee and distributions are filled in from the ETF facts, as for a phase. Undefined = "Same as the first phase".
+ */
+export function holdingWithInvestment<T extends HoldingDetails>(h: T, inv: Investment | undefined, file: EtfsFile | undefined, currency: Currency): T {
+  const next: T = { ...h, investment: inv }
+  if (!inv) return next
+  if (inv.kind === 'custom' && h.investment?.kind !== 'custom') next.mer = 0
+  if (!file) return next
+  const facts = factsFor(inv, file, currency)
+  if (!facts) return next
+  return {
+    ...next,
+    mer: facts.mer,
+    usListed: facts.usListed,
+    distribution: {
+      yield: facts.yield,
+      frankedPct: facts.frankedPct,
+      foreignPct: facts.foreignPct,
+      foreignTaxPct: h.distribution?.foreignTaxPct ?? 15,
       frequency: facts.frequency,
     },
   }

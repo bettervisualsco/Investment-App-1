@@ -102,16 +102,24 @@ export function NumberInput({
   )
 }
 
+export interface SelectGroup<T extends string> {
+  label: string
+  options: { value: T; label: string }[]
+}
+
+/** Drop-down list. `groups` (optional) are shown after `options` under their own headings. */
 export function Select<T extends string>({
   value,
   onChange,
   options,
+  groups,
   label,
   id,
 }: {
   value: T
   onChange: (v: T) => void
   options: { value: T; label: string }[]
+  groups?: SelectGroup<T>[]
   label: string
   id?: string
 }) {
@@ -122,6 +130,15 @@ export function Select<T extends string>({
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
+        ))}
+        {groups?.map((g) => (
+          <optgroup key={g.label} label={g.label}>
+            {g.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
       <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">

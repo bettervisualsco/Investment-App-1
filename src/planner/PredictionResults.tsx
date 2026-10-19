@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { InfoTip } from '../components/InfoTip'
-import { Select } from '../components/inputs'
 import { useDataFile, type EtfsFile } from '../data'
 import type { Plan } from '../engine/types'
 import { dateLong, dateMonthYear, money, yearOf } from '../lib/format'
@@ -10,6 +9,8 @@ import { monthText } from '../predict/history'
 import { newSeed, withPrediction } from '../predict/settingsStore'
 import type { PredictionState } from '../predict/usePrediction'
 import { FanChart } from './FanChart'
+import { EtfSelect } from './InvestmentPicker'
+import { etfChoices } from './investmentChoices'
 import { viewOf } from './realismView'
 import { Breakdown, CostPanel, EndSaleNote } from './Results'
 import { Toggle } from './RealismPanel'
@@ -265,7 +266,8 @@ function StatusLine({ state }: { state: PredictionState }) {
 function Blockers({ state, plan, setPlan }: { state: PredictionState; plan: Plan; setPlan: (p: Plan) => void }) {
   const { data: etfs } = useDataFile<EtfsFile>('etfs.json')
   const missing = plan.phases.filter((p) => !p.investment)
-  const options = (etfs?.etfs ?? []).map((e) => ({ value: e.id, label: `${e.id}: ${e.name}` }))
+  const choices = etfChoices(etfs)
+  const options = choices.all
   const [pick, setPick] = useState('VAS')
   const shown = [
     ...state.problems.filter((p) => !(missing.length > 0 && /choose what it’s invested in/.test(p.message))).map((p) => p.message),
@@ -282,7 +284,7 @@ function Blockers({ state, plan, setPlan }: { state: PredictionState; plan: Plan
           </p>
           {options.length > 0 && (
             <div className="predict-quickfix-row">
-              <Select label="ETF for those phases" value={choice} options={options} onChange={setPick} />
+              <EtfSelect label="ETF for those phases" value={choice} choices={choices} onChange={setPick} />
               <button
                 type="button"
                 className="btn btn-primary"

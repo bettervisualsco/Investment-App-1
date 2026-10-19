@@ -28,7 +28,17 @@ export interface MarketPath {
    * sets it on cash/savings days, where each month's whole return is interest.
    */
   income?: Float64Array
+  /**
+   * Holdings kept separately (CompiledPlan.kept, same order): each one's own daily growth factor, and optionally its
+   * income factor (as `income` above; a savings account's whole return is interest). Needed when the plan keeps any.
+   */
+  sleeves?: SleevePath[]
   warnings: string[]
+}
+
+export interface SleevePath {
+  growth: Float64Array
+  income?: Float64Array
 }
 
 /** Daily factor for a yearly rate, where each calendar month is exactly 1/12 of a year shared across its days. */
@@ -75,5 +85,13 @@ export function manualPath(c: CompiledPlan): MarketPath {
     inflation[t] = rate === 0 ? 1 : dailyFactor(rate, c.dim[t])
   }
 
-  return { growth, inflation, warnings }
+  // Holdings kept separately grow at their own rate (a savings account at its savings rate).
+  const sleeves: SleevePath[] = c.kept.map((h) => {
+    const g = new Float64Array(c.n)
+    const rate = Math.max(-99.99, h.manualRate) / 100
+    for (let t = 0; t < c.n; t++) g[t] = rate === 0 ? 1 : Math.pow(1 + rate, 1 / (12 * c.dim[t]))
+    return { growth: g }
+  })
+
+  return sleeves.length > 0 ? { growth, inflation, sleeves, warnings } : { growth, inflation, warnings }
 }

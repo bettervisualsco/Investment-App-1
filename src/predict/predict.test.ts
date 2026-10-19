@@ -148,6 +148,32 @@ describe('history windows with the real data', () => {
     expect(part.info.note).toMatch(/It ends in/)
   })
 
+  it('holdings kept separately are part of the history, cut to where their data starts, and the note says so', () => {
+    // VAS alone goes back to 1975. A VOO holding kept separately needs AUD/USD (from Aug 1969), so nothing changes
+    // there; a cash holding needs the cash rate, which starts later than VAS.
+    const holding = (investment: Investment) => plan([phase({ kind: 'etf', etf: 'VAS' })], { startingBalance: 1_000_000, startingMoney: { entry: 'single', single: { investment } } })
+    const voo = buildHistory(monthly, holding({ kind: 'etf', etf: 'VOO' }), { window: 'full' })
+    if (!voo.ok) throw new Error(voo.message)
+    expect(Object.keys(voo.table.assets).sort()).toEqual([etfKey('VAS'), etfKey('VOO')])
+    expect(voo.info.note).toMatch(/It includes the history for what you have now \(VOO\), and every investment uses the same months\./)
+    const cash = buildHistory(monthly, holding({ kind: 'cash', rate: 4 }), { window: 'full' })
+    if (!cash.ok) throw new Error(cash.message)
+    expect(Object.keys(cash.table.assets).sort()).toEqual([CASH_KEY, etfKey('VAS')])
+    const cashStart = monthly.series.cash_au.start
+    expect(cash.info.first >= cashStart && cash.info.first >= '1975-01').toBe(true)
+    expect(cash.info.note).toMatch(/the cash rate/)
+    // "Move them into my plan's investments": sold on day one, so their history isn't needed.
+    const moved = holding({ kind: 'etf', etf: 'VOO' })
+    moved.startingMoney!.handling = 'move'
+    const m = buildHistory(monthly, moved, { window: 'full' })
+    if (!m.ok) throw new Error(m.message)
+    expect(Object.keys(m.table.assets)).toEqual([etfKey('VAS')])
+    expect(m.info.note).not.toMatch(/what you have now/)
+    // End to end: the kept holding is replayed alongside the phase.
+    const r = runPrediction(preparePrediction(holding({ kind: 'etf', etf: 'VOO' }), voo.table, { runs: 200, blockMonths: 12, seed: 1, percentiles: [10, 50, 90] }))
+    expect(r.final.mid).toBeGreaterThan(1_000_000)
+  })
+
   it('a mix needs every part’s history', () => {
     const mix = plan([phase({ kind: 'mix', parts: [{ etf: 'VGS', weight: 70 }, { etf: 'VAS', weight: 30 }] })])
     const b = buildHistory(monthly, mix, { window: 'full' })

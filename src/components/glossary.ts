@@ -159,6 +159,35 @@ export const glossary = {
     title: 'Grow deposits with inflation',
     body: 'Each deposit rises with prices during this phase, so it keeps buying the same amount. The first deposit is the amount you typed. Works with ramps and steps too. Needs the Inflation switch on.',
   },
+  // Money you have now
+  moneyNow: {
+    title: 'Money you have now',
+    body: 'What you already own on the plan’s start date. Enter it as one amount, or as a list of holdings if it’s in different things. It’s already invested on day one, with no brokerage. What you paid and when you bought it only matter with the Tax switch on.',
+  },
+  holding: {
+    title: 'Holding',
+    body: 'One thing you own now, like $8,000 of VGS or $3,000 in a savings account. Each holding has today’s value, what you paid for it and roughly when you bought it. Your starting balance is the total of your holdings.',
+  },
+  costBase: {
+    title: 'What you paid (cost base)',
+    body: 'What you paid for it, including brokerage. Capital gains tax is worked out on what you sell it for minus this. If you bought it over time, add up all the buys. Leave it as today’s value if you don’t know (then only growth from the start date is taxed).',
+  },
+  boughtWhen: {
+    title: 'When you bought it',
+    body: 'Used for capital gains tax: something held at least 12 months gets the 50% discount on the gain up to 30 June 2027. The app counts from the 1st of the month you pick. If you bought it over time, pick the month of your first buy (or your biggest one).',
+  },
+  holdingReturn: {
+    title: 'Expected return (Manual mode)',
+    body: 'How much this holding grows each year, before fees and tax, in Manual mode. It starts as your first phase’s return rate. Prediction mode replays this investment’s real history instead, using the same months as the rest of the plan.',
+  },
+  keepOrMove: {
+    title: 'Keep them, or move them',
+    body: 'Keep them as they are: each holding stays in its own investment for the whole plan, with its own returns, fee and distributions. Your deposits still go into your phases’ investments. Move them into my plan’s investments: they are sold on the start date and the money goes into the first phase’s investment. Selling can mean capital gains tax (Tax switch) and brokerage on the sale and the buy (Fees switch).',
+  },
+  proRata: {
+    title: 'Withdrawals come from everything',
+    body: 'When money comes out (a one-off withdrawal, or a sale to pay tax or the platform fee), any cash waiting to be invested is used first. The rest is taken from each investment in proportion to its value. With $6,000 in your plan’s ETF and $4,000 kept in savings, a $1,000 withdrawal sells $600 of the ETF and takes $400 from savings. Each sale pays its own brokerage with Fees on.',
+  },
   taxEstimate: {
     title: 'A simplified estimate',
     body: 'Tax is worked out per financial year from the ATO rates (checked 18 Oct 2026), but leaves out many details: deductions, other offsets, the 45-day rule, capital gains inside ETF distributions, and more. Check with the ATO or a tax adviser before acting on it.',

@@ -119,6 +119,64 @@ export interface Plan {
   realism?: Realism
   /** Stage 3: Manual or Prediction mode, and the prediction settings. Missing → Manual mode. */
   prediction?: PredictionSettings
+  /**
+   * "Money you have now": what the starting balance is invested in, what you paid for it and when you bought it.
+   * Missing → today's behaviour: the starting balance is in the first phase's investment, bought on the start date
+   * for its value.
+   */
+  startingMoney?: StartingMoney
+}
+
+// ---------------------------------------------------------------------------
+// Money you have now (holdings at the start of the plan).
+
+/**
+ * The details of money you already have. Every field is optional; missing means today's behaviour.
+ *
+ * - investment: what it's in. Missing → "Same as the first phase" (it's simply part of the plan's investment).
+ *   Something different from the first phase's investment is a separate holding (see StartingMoney.handling).
+ * - costBase: what you paid for it, cents, including brokerage (for capital gains tax). Missing → today's value.
+ * - boughtOn: roughly when you bought it. Missing → the plan's start date. Can't be after the start date.
+ * - returnRate: Manual mode, % a year, for an ETF, mix or custom asset kept separately (cash uses its savings rate).
+ *   Missing → 7%.
+ * - mer / usListed / distribution: its own fee and distributions when kept separately. Missing → the defaults in
+ *   defaults.ts (a cash holding has no fee and all of its return is interest).
+ */
+export interface HoldingDetails {
+  investment?: Investment
+  costBase?: number
+  boughtOn?: ISODate
+  returnRate?: number
+  mer?: number
+  usListed?: boolean
+  distribution?: DistributionSettings
+}
+
+/** One thing you own now, e.g. "$8,000 of VGS bought in 2023". */
+export interface Holding extends HoldingDetails {
+  id: string
+  /** Optional label, e.g. "Dad's shares". */
+  name?: string
+  /** Today's value, cents. */
+  value: number
+}
+
+export interface StartingMoney {
+  /**
+   * How it's entered:
+   * - "single": one amount (the plan's startingBalance) with the details in `single`.
+   * - "holdings": a list of holdings. The starting balance is their total (the app keeps startingBalance equal to it).
+   */
+  entry: 'single' | 'holdings'
+  single?: HoldingDetails
+  holdings?: Holding[]
+  /**
+   * For holdings in something different from the first phase's investment:
+   * - "keep" (default): each keeps its own investment, returns, fee and distributions for the whole plan.
+   * - "move": sold on the start date and the money put into the first phase's investment (capital gains tax with
+   *   Tax on; brokerage, spread and currency fees with Fees on).
+   */
+  handling?: 'keep' | 'move'
 }
 
 // ---------------------------------------------------------------------------

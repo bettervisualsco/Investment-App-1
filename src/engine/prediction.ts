@@ -8,8 +8,8 @@
 //   1. Pick chunks of real history (shared block bootstrap, bootstrap.ts) to
 //      get one real month for every month of the plan.
 //   2. Every series is read from that SAME real month: each phase's asset
-//      return, inflation, and (already folded into the asset columns by the
-//      caller) the AUD/USD move. So a month like October 1987 brings its crash
+//      return, each holding kept separately ("Money you have now"), inflation,
+//      and (already folded into the asset columns by the caller) the AUD/USD move. So a month like October 1987 brings its crash
 //      to every asset at once, and a high-inflation year brings its inflation.
 //   3. Each month's return r is spread over its days: (1 + r)^(1 / days in the
 //      month) per day, the same way Manual mode spreads a yearly rate.
@@ -28,9 +28,9 @@ import { CASH_KEY, customParams, customReturns, etfKey, mixReturns, type CustomP
 import { blockBootstrap, countRuns, fanBands, hashSeed, percentileOfSorted } from './bootstrap'
 import { compilePlan, type CompiledPlan } from './compile'
 import { withPhaseInfo, type CostStep, type ManualResult } from './manual'
-import type { MarketPath } from './path'
+import type { MarketPath, SleevePath } from './path'
 import { ALL_OFF, simulate, type Switches } from './simulate'
-import type { Plan } from './types'
+import type { Investment, Plan } from './types'
 
 /**
  * Real monthly history, lined up by month. Every column has one number per month (the same months).
@@ -121,6 +121,8 @@ export interface PreparedPrediction {
   months: number
   /** Month number (0 = the plan's first month) of each day. */
   monthOf: Int32Array
+  /** First day (t) of each month, plus the plan's length at the end. */
+  monthFirstT: Int32Array
   /** Days in each month. */
   monthDays: Uint8Array
   /** Day number of the last plan day in each month. */
@@ -129,6 +131,9 @@ export interface PreparedPrediction {
   phaseMonths: { first: number; last: number }[]
   sources: Source[]
   cashPhase: boolean[]
+  /** Holdings kept separately (CompiledPlan.kept): where each one's months come from, and whether it's a savings account. */
+  sleeveSources: Source[]
+  sleeveCash: boolean[]
   warnings: string[]
 }
 
@@ -138,19 +143,19 @@ export function preparePrediction(plan: Plan, history: HistoryTable, options: Pr
   const monthOf = new Int32Array(c.n)
   const monthDays: number[] = []
   const monthLastDay: number[] = []
+  const monthFirstT: number[] = [0]
   let k = 0
   for (let t = 0; t < c.n; t++) {
     monthOf[t] = k
     if (c.monthEndShare[t] > 0) {
+      monthFirstT.push(t + 1)
       monthDays.push(c.dim[t])
       monthLastDay.push(c.startDay + t)
       k++
     }
   }
   const warnings: string[] = []
-  const sources: Source[] = plan.phases.map((phase) => {
-    const inv = phase.investment
-    if (!inv) throw new Error(`${phase.name || 'A phase'}: choose what it’s invested in.`)
+  const sourceOf = (inv: Investment, label: string, id: string): Source => {
     const column = (key: string) => {
       const values = history.assets[key]
       if (!values) throw new Error(`No history for ${key.replace('etf:', '')}.`)
@@ -161,21 +166,31 @@ export function preparePrediction(plan: Plan, history: HistoryTable, options: Pr
     if (inv.kind === 'mix') return { kind: 'mix', columns: inv.parts.map((p) => column(etfKey(p.etf))), weights: inv.parts.map((p) => p.weight) }
     const params = customParams(inv)
     if (params.crashesTooBig) {
-      warnings.push(`${phase.name || 'A phase'}: the crashes alone are bumpier than the volatility you typed, so the months in between were kept steady. Raise the volatility or make crashes rarer or smaller.`)
+      warnings.push(`${label}: the crashes alone are bumpier than the volatility you typed, so the months in between were kept steady. Raise the volatility or make crashes rarer or smaller.`)
     }
-    return { kind: 'custom', params, id: phase.id }
+    return { kind: 'custom', params, id }
+  }
+  const sources: Source[] = plan.phases.map((phase) => {
+    const inv = phase.investment
+    if (!inv) throw new Error(`${phase.name || 'A phase'}: choose what it’s invested in.`)
+    return sourceOf(inv, phase.name || 'A phase', phase.id)
   })
+  // Holdings kept separately: their own history, read from the same sampled months as everything else.
+  const sleeveSources: Source[] = c.kept.map((h) => sourceOf(h.investment!, h.name, `holding:${h.id}`))
   return {
     compiled: c,
     history,
     options,
     months: monthDays.length,
     monthOf,
+    monthFirstT: Int32Array.from(monthFirstT),
     monthDays: Uint8Array.from(monthDays),
     monthLastDay: Float64Array.from(monthLastDay),
     phaseMonths: c.ranges.map((r) => ({ first: monthOf[r.start - c.startDay], last: monthOf[r.end - 1 - c.startDay] })),
     sources,
     cashPhase: plan.phases.map((p) => p.investment?.kind === 'cash'),
+    sleeveSources,
+    sleeveCash: c.kept.map((h) => h.investment?.kind === 'cash'),
     warnings,
   }
 }
@@ -195,6 +210,8 @@ export function sampledMonths(prep: PreparedPrediction, run: number): Int32Array
 export interface BuiltPath extends MarketPath {
   /** Each phase's return in each plan month (row = phase), for the drawdown. */
   monthly: Float64Array[]
+  /** Each holding kept separately: its return in every plan month. */
+  sleeveMonthly?: Float64Array[]
 }
 
 const MIN_RETURN = -0.9999
@@ -205,12 +222,9 @@ export function buildPath(prep: PreparedPrediction, run: number, reuse?: BuiltPa
   const sample = sampledMonths(prep, run)
   const warnings: string[] = []
 
-  // Each phase's return for each month it touches.
-  const monthly = reuse?.monthly ?? prep.sources.map(() => new Float64Array(months))
-  prep.sources.forEach((src, p) => {
-    const { first, last } = prep.phaseMonths[p]
+  /** One investment's return for plan months first..last, read from the sampled months (or drawn, for a custom asset). */
+  const fill = (src: Source, first: number, last: number, out: Float64Array, seedKey: string) => {
     const count = last - first + 1
-    const out = monthly[p]
     if (src.kind === 'column') {
       for (let k = first; k <= last; k++) out[k] = src.values[sample[k]]
     } else if (src.kind === 'mix') {
@@ -221,7 +235,7 @@ export function buildPath(prep: PreparedPrediction, run: number, reuse?: BuiltPa
       })
       out.set(mixReturns(parts, src.weights, count), first)
     } else {
-      out.set(customReturns(src.params, count, hashSeed(prep.options.seed, 'custom', src.id, run)), first)
+      out.set(customReturns(src.params, count, hashSeed(prep.options.seed, seedKey, src.id, run)), first)
     }
     for (let k = first; k <= last; k++) {
       if (out[k] < MIN_RETURN) {
@@ -229,7 +243,11 @@ export function buildPath(prep: PreparedPrediction, run: number, reuse?: BuiltPa
         if (!warnings.length) warnings.push('A month’s return was −100% or lower, so it was treated as −99.99%.')
       }
     }
-  })
+  }
+
+  // Each phase's return for each month it touches.
+  const monthly = reuse?.monthly ?? prep.sources.map(() => new Float64Array(months))
+  prep.sources.forEach((src, p) => fill(src, prep.phaseMonths[p].first, prep.phaseMonths[p].last, monthly[p], 'custom'))
 
   // Spread each month over its days.
   const growth = reuse?.growth ?? new Float64Array(c.n)
@@ -259,7 +277,25 @@ export function buildPath(prep: PreparedPrediction, run: number, reuse?: BuiltPa
     // A savings account's whole return is interest (taxed as income). 0 = use the phase's yield.
     income[t] = prep.cashPhase[p] ? g : 0
   }
-  return { growth, inflation, income, warnings, monthly }
+  if (prep.sleeveSources.length === 0) return { growth, inflation, income, warnings, monthly }
+
+  // Holdings kept separately: every month of the plan, from the same sampled months.
+  const sleeveMonthly = reuse?.sleeveMonthly ?? prep.sleeveSources.map(() => new Float64Array(months))
+  const sleeves: SleevePath[] =
+    reuse?.sleeves ?? prep.sleeveSources.map((_, j) => (prep.sleeveCash[j] ? { growth: new Float64Array(c.n), income: new Float64Array(c.n) } : { growth: new Float64Array(c.n) }))
+  prep.sleeveSources.forEach((src, j) => {
+    const out = sleeveMonthly[j]
+    fill(src, 0, months - 1, out, 'holding')
+    const sg = sleeves[j].growth
+    const si = sleeves[j].income
+    for (let k = 0; k < months; k++) {
+      const f = out[k] === 0 ? 1 : Math.pow(1 + out[k], 1 / monthDays[k])
+      sg.fill(f, prep.monthFirstT[k], prep.monthFirstT[k + 1])
+      // A savings account's whole return is interest.
+      if (si) si.fill(f, prep.monthFirstT[k], prep.monthFirstT[k + 1])
+    }
+  })
+  return { growth, inflation, income, warnings, monthly, sleeves, sleeveMonthly }
 }
 
 /** The plan's investments' value (per dollar, before fees) at each month end, for one simulation. */
@@ -355,7 +391,8 @@ export function runPrediction(prep: PreparedPrediction): PredictionResult {
   const medianRun = order[Math.floor((runs - 1) / 2)]
   const medianPath = buildPath(prep, medianRun)
   const detail = withPhaseInfo(c, simulate(c, medianPath, { switches: sw }))
-  const dd = drawdownOf(marketIndex(prep, medianPath))
+  // With holdings kept separately, the drop is measured across all your investments together.
+  const dd = drawdownOf(detail.portfolioIndex ?? marketIndex(prep, medianPath))
   const drawdown = dd && {
     drop: dd.drop,
     peakDay: dd.peak === 0 ? c.startDay : prep.monthLastDay[dd.peak - 1],

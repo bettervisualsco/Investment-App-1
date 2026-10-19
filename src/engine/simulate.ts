@@ -25,12 +25,20 @@
 // With Tax on, every purchase is kept as its own lot (units, cost base, date)
 // for capital gains tax. Sales use the oldest lots first.
 //
+// Money you have now (holdings.ts): holdings in the plan's own investment are
+// lots with their real cost base and purchase date. Holdings kept separately
+// are their own "sleeves", tracked the same way but with their own returns
+// (MarketPath.sleeves), fee and distributions. Deposits and buys go into the
+// plan's investment. Withdrawals, tax and platform fees that need a sale take
+// from every investment in proportion to its value (pro-rata).
+//
 // Tax is estimated per Australian financial year. Each time something taxable
 // happens (a distribution, a sale), the year's tax is re-worked from the year's
 // running totals and only the difference is charged, so by 30 June the year's
 // total is exactly the tax on the whole year's income.
 
-import type { CompiledPlan } from './compile'
+import type { CompiledHolding, CompiledPlan } from './compile'
+import type { ResolvedHolding } from './defaults'
 import { brokerageFor, grossForNet, saleCosts } from './fees'
 import type { MarketPath } from './path'
 import { emptyYearIncome, frankingCredit, tableFor, yearTax, type TaxYearContext, type YearIncome } from './tax'
@@ -191,7 +199,76 @@ export interface SimResult {
   phases: PhaseDeposits[]
   goal: GoalCheck | null
   warnings: string[]
+  /**
+   * Only with holdings kept separately (and detail on): what each invested dollar is worth across all your investments,
+   * before fees, at the start (index 0) and each month end. Used for the biggest drop in Prediction mode.
+   */
+  portfolioIndex?: Float64Array
 }
+
+/** One investment you hold: the plan's own (it follows each day's phase), or a holding kept separately. */
+interface Sleeve {
+  /** Cents per unit; units start as whole cents. */
+  price: number
+  units: number
+  /** Distribution income built up since the last payout (part of the balance). */
+  accrued: number
+  /** Tax on: how much of `accrued` is franked, and the foreign tax already taken from its foreign part. */
+  accFranked: number
+  accForeignTax: number
+  /** Fees on: the management fee built up so far this month (sum of each day's yearly MER %). */
+  merDays: number
+  /** Purchase lots (Tax on only), oldest first. `head` is the oldest lot still held. */
+  lotUnits: number[]
+  lotCost: number[]
+  lotFrom: number[]
+  /** Price level when the cost base was set (for cost base indexation). */
+  lotCpi: number[]
+  /** Gain (or loss) up to 30 June 2027, kept for when the lot is sold. */
+  lotPre: number[]
+  head: number
+  /** A holding kept separately: its own fee and distributions. Null = the plan's own investment (each day's phase). */
+  own: ResolvedHolding | null
+  /** A holding kept separately: its own daily growth and income factors, its distribution accrual factors by month length 28–31, and its payout days. */
+  growth: Float64Array | null
+  income: Float64Array | null
+  incomeFactor: Float64Array | null
+  payoutDay: Uint8Array | null
+  /**
+   * A holding kept separately grows lazily, for speed: the growth and income factors since it was last brought up to
+   * date. Its value is (units × price + accrued) × pendingGrowth; anything that touches it brings it up to date first
+   * (see bringUpToDate in simulate). Always 1 for the plan's own investment.
+   */
+  pendingGrowth: number
+  pendingIncome: number
+}
+
+function newSleeve(own: ResolvedHolding | null): Sleeve {
+  return {
+    price: 1,
+    units: 0,
+    accrued: 0,
+    accFranked: 0,
+    accForeignTax: 0,
+    merDays: 0,
+    lotUnits: [],
+    lotCost: [],
+    lotFrom: [],
+    lotCpi: [],
+    lotPre: [],
+    head: 0,
+    own,
+    growth: null,
+    income: null,
+    incomeFactor: null,
+    payoutDay: null,
+    pendingGrowth: 1,
+    pendingIncome: 1,
+  }
+}
+
+/** What an investment is worth now, cents (including growth not yet brought up to date). */
+const valueOf = (s: Sleeve) => (s.units * s.price + s.accrued) * s.pendingGrowth
 
 export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {}): SimResult {
   const r = c.realism
@@ -205,6 +282,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   const ph = r.phases
   const plan = c.plan
   const n = c.n
+  const start = c.startingBalance
   const warnings: string[] = [...c.warnings, ...path.warnings]
   const warnOnce = new Set<string>()
   const warn = (key: string, text: string) => {
@@ -214,22 +292,21 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   }
 
   // ---- Holdings -----------------------------------------------------------
-  let price = 1 // cents per unit; units start as whole cents
-  let units = 0
-  let accrued = 0
-  // Tax on: how much of `accrued` is franked, and the foreign tax already taken from its foreign part.
-  let accFranked = 0
-  let accForeignTax = 0
+  // The plan's own investment, plus any holdings kept separately (each with its own returns, fee and distributions).
+  const main = newSleeve(null)
+  const sleeves: Sleeve[] = [main]
+  if (c.kept.length > 0) {
+    if (!path.sleeves || path.sleeves.length !== c.kept.length) throw new Error('The market path is missing the returns of a holding kept separately.')
+    c.kept.forEach((h, i) => {
+      const s = newSleeve(h.settings)
+      s.growth = path.sleeves![i].growth
+      s.income = path.sleeves![i].income ?? null
+      s.payoutDay = h.payoutDay
+      s.incomeFactor = Float64Array.from([28, 29, 30, 31], (d) => Math.pow(1 + h.settings.distribution.yield / 100, 1 / (12 * d)))
+      sleeves.push(s)
+    })
+  }
   let cash = 0
-  // Fees on: the management fee built up so far this month (sum of each day's yearly MER %).
-  let merDays = 0
-  // Purchase lots (Tax on only), oldest first. `head` is the oldest lot still held.
-  const lotUnits: number[] = []
-  const lotCost: number[] = []
-  const lotFrom: number[] = []
-  const lotCpi: number[] = [] // price level when the cost base was set (for cost base indexation)
-  const lotPre: number[] = [] // gain (or loss) up to 30 June 2027, kept for when the lot is sold
-  let head = 0
   // First day of the 1 July 2027 capital gains rules (Infinity = old rules for ever).
   const reformT = ts.cgtRules === 'law' ? toDayNumber(CGT_REFORM.startDate) - c.startDay : Infinity
 
@@ -275,45 +352,106 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   const goalCheckT = goalDayRaw === null ? -1 : Math.min(Math.max(goalDayRaw, c.startDay), c.endDay - 1) - c.startDay
   let goalBalance = 0
   let firstReachedT = -1
+  // With holdings kept separately (detail runs): what each invested dollar is worth across all of them, before fees, at month ends.
+  const trackIndex = detail && sleeves.length > 1
+  const portfolioIndex: number[] = [1]
+  let indexNow = 1
 
-  const holdings = () => units * price + accrued
+  const holdings = () => {
+    let h = main.units * main.price + main.accrued
+    for (let i = 1; i < sleeves.length; i++) h += valueOf(sleeves[i])
+    return h
+  }
+  /** The fee and distribution settings of a sleeve on day t: its own, or the phase's. */
+  const settingsOf = (s: Sleeve, t: number): ResolvedHolding => s.own ?? ph[c.phaseOf[t]]
   /** Buying and selling on day t pays trading costs (Fees on, and not a cash/savings account). */
-  const costsOn = (t: number) => feesOn && ph[c.phaseOf[t]].tradingCosts
+  const costsOn = (s: Sleeve, t: number) => feesOn && settingsOf(s, t).tradingCosts
+
+  /**
+   * A holding kept separately: applies the growth since it was last brought up to date. Over days with nothing else
+   * happening, the day-by-day steps below multiply out exactly: the value grows by the product of the growth factors,
+   * the unit price by growth ÷ income, and the income built up (with its franked part and foreign tax) by what's left.
+   */
+  const bringUpToDate = (s: Sleeve) => {
+    const g = s.pendingGrowth
+    const h = s.pendingIncome
+    if (g === 1 && h === 1) return
+    s.pendingGrowth = s.pendingIncome = 1
+    const before = s.units * s.price + s.accrued
+    const after = before * g
+    const grown = s.accrued * g
+    s.price = (s.price * g) / h
+    s.accrued = after - s.units * s.price
+    if (taxOn) {
+      const dist = s.own!.distribution
+      const earned = s.accrued - grown
+      const foreign = (earned * dist.foreignPct) / 100
+      s.accFranked = s.accFranked * g + (earned * dist.frankedPct) / 100
+      s.accForeignTax = s.accForeignTax * g + (dist.foreignTaxPct < 100 ? (foreign * dist.foreignTaxPct) / (100 - dist.foreignTaxPct) : 0)
+    }
+    const growth = after - before
+    totalGrowth += growth
+    year.growth += growth
+  }
+  const bringAllUpToDate = () => {
+    for (let i = 1; i < sleeves.length; i++) bringUpToDate(sleeves[i])
+  }
 
   // ---- Buying and selling -------------------------------------------------
 
-  /** Puts money into the investment. A "trade" pays brokerage, currency fee and spread (Fees on). */
-  const invest = (amount: number, t: number, trade: boolean) => {
+  const addLot = (s: Sleeve, u: number, cost: number, from: number, lotCpi: number, pre: number) => {
+    s.lotUnits.push(u)
+    s.lotCost.push(cost)
+    s.lotFrom.push(from)
+    s.lotCpi.push(lotCpi)
+    s.lotPre.push(pre)
+  }
+
+  /** Puts money into an investment. A "trade" pays brokerage, currency fee and spread (Fees on). */
+  const invest = (s: Sleeve, amount: number, t: number, trade: boolean) => {
     if (amount <= 0) return
+    bringUpToDate(s)
     let invested = amount
-    if (trade && costsOn(t)) {
+    if (trade && costsOn(s, t)) {
       const brokerage = brokerageFor(fs.brokerage, amount)
       const afterBrokerage = amount - brokerage
-      const currency = ph[c.phaseOf[t]].usListed ? (afterBrokerage * fs.fxFeePct) / 100 : 0
+      const currency = settingsOf(s, t).usListed ? (afterBrokerage * fs.fxFeePct) / 100 : 0
       const spread = ((afterBrokerage - currency) * fs.spreadPct) / 100
       invested = afterBrokerage - currency - spread
       addFee('brokerage', brokerage)
       addFee('currency', currency)
       addFee('spread', spread)
     }
-    const u = invested / price
-    units += u
-    if (taxOn) {
-      // The cost base includes brokerage and other buying costs.
-      lotUnits.push(u)
-      lotCost.push(amount)
-      lotFrom.push(c.discountFrom[t])
-      lotCpi.push(cpi)
-      lotPre.push(0)
+    const u = invested / s.price
+    s.units += u
+    // The cost base includes brokerage and other buying costs.
+    if (taxOn) addLot(s, u, amount, c.discountFrom[t], cpi, 0)
+  }
+
+  /** Something you own at the start: its value, with its own cost base and purchase date (no buying costs). */
+  const addHolding = (s: Sleeve, h: CompiledHolding) => {
+    const u = h.value / s.price
+    s.units += u
+    if (taxOn) addLot(s, u, h.lotCost, h.lotFrom, h.lotCpi, h.lotPre)
+  }
+
+  /** 1 July 2027: what you own is treated as sold and bought back at its value (the gain up to then keeps the 50% discount). */
+  const revalueAtReform = (s: Sleeve) => {
+    bringUpToDate(s)
+    for (let i = s.head; i < s.lotUnits.length; i++) {
+      const value = s.units > 0 ? s.lotUnits[i] * s.price + (s.accrued * s.lotUnits[i]) / s.units : 0
+      s.lotPre[i] += value - s.lotCost[i]
+      s.lotCost[i] = value
+      s.lotCpi[i] = cpi
     }
   }
 
   /** Records the capital gain or loss from selling `take` units of lot `i` for `perUnit` cents each, into `into`. Doesn't change the lot. */
-  const realise = (i: number, take: number, perUnit: number, t: number, into: YearIncome) => {
-    const share = lotUnits[i] > 0 ? take / lotUnits[i] : 0
+  const realise = (s: Sleeve, i: number, take: number, perUnit: number, t: number, into: YearIncome) => {
+    const share = s.lotUnits[i] > 0 ? take / s.lotUnits[i] : 0
     const proceeds = take * perUnit
-    const cost = lotCost[i] * share
-    const longTerm = t >= lotFrom[i]
+    const cost = s.lotCost[i] * share
+    const longTerm = t >= s.lotFrom[i]
     const addGain = (gain: number) => {
       if (gain >= 0) {
         if (longTerm) into.discountableGains += gain
@@ -323,13 +461,13 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     if (t < reformT) return addGain(proceeds - cost)
     // From 1 July 2027: the gain up to then is a "deferred" gain under the old rules (with the 50% discount if held
     // at least 12 months by the day of this sale); the gain after uses an inflation-adjusted cost base.
-    const pre = lotPre[i] * share
+    const pre = s.lotPre[i] * share
     if (pre >= 0) {
       if (longTerm) into.deferredDiscountableGains += pre
       else into.deferredOtherGains += pre
     } else into.losses += -pre
     if (proceeds < cost) into.losses += cost - proceeds
-    else if (longTerm) into.indexedGains += Math.max(0, proceeds - Math.max(cost, (cost * cpi) / lotCpi[i]))
+    else if (longTerm) into.indexedGains += Math.max(0, proceeds - Math.max(cost, (cost * cpi) / s.lotCpi[i]))
     else into.otherGains += proceeds - cost
   }
 
@@ -343,17 +481,18 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   }
 
   /**
-   * Sells `gross` cents' worth (capped at what you hold). Returns the cash you get.
+   * Sells `gross` cents' worth of one investment (capped at what it holds). Returns the cash you get.
    * With Tax on, records the capital gain or loss on each lot sold.
    */
-  const sell = (gross: number, t: number, trade: boolean): number => {
-    const h = holdings()
+  const sellFrom = (s: Sleeve, gross: number, t: number, trade: boolean): number => {
+    bringUpToDate(s)
+    const h = valueOf(s)
     if (h <= 0 || gross <= 0) return 0
     const all = gross >= h - 1e-9
     if (all) gross = h
     let net = gross
-    if (trade && costsOn(t)) {
-      const costs = saleCosts(gross, fs.brokerage, fs.spreadPct, ph[c.phaseOf[t]].usListed ? fs.fxFeePct : 0)
+    if (trade && costsOn(s, t)) {
+      const costs = saleCosts(gross, fs.brokerage, fs.spreadPct, settingsOf(s, t).usListed ? fs.fxFeePct : 0)
       addFee('brokerage', costs.brokerage)
       addFee('currency', costs.fx)
       addFee('spread', costs.spread)
@@ -361,30 +500,45 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     }
     const share = gross / h
     if (taxOn) {
-      let toSell = all ? Infinity : units * share
-      const unitsSelling = all ? units : toSell
+      let toSell = all ? Infinity : s.units * share
+      const unitsSelling = all ? s.units : toSell
       const proceedsPerUnit = unitsSelling > 0 ? net / unitsSelling : 0
-      while (head < lotUnits.length && toSell > 0) {
-        const take = Math.min(lotUnits[head], toSell)
-        realise(head, take, proceedsPerUnit, t, income)
-        const keep = lotUnits[head] > 0 ? 1 - take / lotUnits[head] : 0
-        lotUnits[head] -= take
-        lotCost[head] *= keep
-        lotPre[head] *= keep
+      while (s.head < s.lotUnits.length && toSell > 0) {
+        const head = s.head
+        const take = Math.min(s.lotUnits[head], toSell)
+        realise(s, head, take, proceedsPerUnit, t, income)
+        const keep = s.lotUnits[head] > 0 ? 1 - take / s.lotUnits[head] : 0
+        s.lotUnits[head] -= take
+        s.lotCost[head] *= keep
+        s.lotPre[head] *= keep
         toSell -= take
-        if (lotUnits[head] <= 1e-9) head++
+        if (s.lotUnits[head] <= 1e-9) s.head++
       }
     }
     if (all) {
-      units = 0
-      accrued = 0
-      accFranked = accForeignTax = 0
-      head = lotUnits.length
+      s.units = 0
+      s.accrued = 0
+      s.accFranked = s.accForeignTax = 0
+      s.head = s.lotUnits.length
     } else {
-      units -= units * share
-      accrued -= accrued * share
-      accFranked -= accFranked * share
-      accForeignTax -= accForeignTax * share
+      s.units -= s.units * share
+      s.accrued -= s.accrued * share
+      s.accFranked -= s.accFranked * share
+      s.accForeignTax -= s.accForeignTax * share
+    }
+    return net
+  }
+
+  /** Sells `gross` cents' worth across everything you hold, from each investment in proportion to its value (pro-rata). */
+  const sell = (gross: number, t: number, trade: boolean): number => {
+    if (sleeves.length === 1) return sellFrom(main, gross, t, trade)
+    const h = holdings()
+    if (h <= 0 || gross <= 0) return 0
+    const all = gross >= h - 1e-9
+    let net = 0
+    for (const s of sleeves) {
+      const v = valueOf(s)
+      if (v > 0) net += sellFrom(s, all ? v : (gross * v) / h, t, trade)
     }
     return net
   }
@@ -444,7 +598,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
   const putBack = (amount: number, t: number) => {
     if (amount <= 0) return
     if (feesOn) cash += amount
-    else invest(amount, t, false)
+    else invest(main, amount, t, false)
   }
 
   const withdraw = (name: string, wanted: number, t: number) => {
@@ -452,9 +606,27 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     cash -= got
     const remaining = wanted - got
     if (remaining > 0 && holdings() > 0) {
-      const usListed = ph[c.phaseOf[t]].usListed
-      const gross = costsOn(t) ? grossForNet(remaining, fs.brokerage, fs.spreadPct, usListed ? fs.fxFeePct : 0) : remaining
-      const net = sell(gross, t, true)
+      let net = 0
+      if (sleeves.length === 1) {
+        const usListed = ph[c.phaseOf[t]].usListed
+        const gross = costsOn(main, t) ? grossForNet(remaining, fs.brokerage, fs.spreadPct, usListed ? fs.fxFeePct : 0) : remaining
+        net = sellFrom(main, gross, t, true)
+      } else {
+        // Holdings kept separately: taken from every investment in proportion to its value (pro-rata). If one can't
+        // cover its share after its own selling costs, the rest comes from the others.
+        for (let pass = 0; pass < 3 && remaining - net > 0.005; pass++) {
+          const total = holdings()
+          if (total <= 0) break
+          const need = remaining - net
+          for (const s of sleeves) {
+            const v = valueOf(s)
+            if (v <= 0) continue
+            const want = (need * v) / total
+            const gross = costsOn(s, t) ? grossForNet(want, fs.brokerage, fs.spreadPct, settingsOf(s, t).usListed ? fs.fxFeePct : 0) : want
+            net += sellFrom(s, gross, t, true)
+          }
+        }
+      }
       if (net > remaining) {
         cash += net - remaining
         got += remaining
@@ -493,19 +665,21 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     addFee('platform', got)
   }
 
-  const payDistribution = (t: number) => {
-    const d = accrued
+  const payDistribution = (s: Sleeve, t: number) => {
+    bringUpToDate(s)
+    const d = s.accrued
     // Each phase's franked %, foreign % and foreign tax % applied to the income built up while it was in force.
-    const credits = frankingCredit(accFranked)
-    const foreignTax = accForeignTax
-    accrued = accFranked = accForeignTax = 0
+    const credits = frankingCredit(s.accFranked)
+    const foreignTax = s.accForeignTax
+    s.accrued = s.accFranked = s.accForeignTax = 0
     income.distributions += d
     income.frankingCredits += credits
     income.foreignTax += foreignTax
     tax.distributionsReceived += d
     tax.frankingCredits += credits
     const pot = settle(t, d)
-    if (ts.distributions === 'reinvest') invest(pot, t, false)
+    // Reinvested into the investment that paid it.
+    if (ts.distributions === 'reinvest') invest(s, pot, t, false)
     else {
       totalPaidOut += pot
       year.paidOut += pot
@@ -513,6 +687,25 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
       real.paidOut += pot / cpi
     }
   }
+
+  /**
+   * "Move them into my plan's investments": holdings in something different are sold on the start date (brokerage,
+   * spread and currency fee with Fees on; capital gains tax with Tax on, paid from the sale) and the money is put
+   * into the first phase's investment straight away (buying costs with Fees on).
+   */
+  const moveHoldings = (t: number) => {
+    let proceeds = 0
+    for (const h of c.holdings) {
+      if (h.role !== 'move') continue
+      const s = newSleeve(h.settings)
+      addHolding(s, h)
+      if (taxOn && t === reformT) revalueAtReform(s)
+      proceeds += sellFrom(s, h.value, t, true)
+    }
+    const pot = taxOn ? settle(t, proceeds) : proceeds
+    invest(main, pot, t, true)
+  }
+  const moving = c.holdings.some((h) => h.role === 'move')
 
   const startYear = (k: number, t: number) => {
     fyIndex = k
@@ -577,13 +770,19 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     tax.interest += income.interest
   }
 
-  // ---- The starting balance is already invested on day one (no buying costs). ----
+  // ---- The money you have now is already invested on day one (no buying costs). ----
+  // Part of the plan's investment (with its own cost base and purchase date), or kept separately.
   startYear(0, 0)
-  if (plan.startingBalance > 0) invest(plan.startingBalance, 0, false)
-  year.opening = year.closing = year.real.opening = year.real.closing = plan.startingBalance
-  if (detail) series.push({ day: c.startDay, balance: plan.startingBalance, netContributed: plan.startingBalance, cpi: 1, realNet: plan.startingBalance })
+  for (const h of c.holdings) {
+    if (h.role === 'plan') {
+      if (h.plain) invest(main, h.value, 0, false)
+      else addHolding(main, h)
+    } else if (h.role === 'keep') addHolding(sleeves[1 + c.kept.indexOf(h)], h)
+  }
+  year.opening = year.closing = year.real.opening = year.real.closing = start
+  if (detail) series.push({ day: c.startDay, balance: start, netContributed: start, cpi: 1, realNet: start })
   cpis[sampleCount] = 1
-  balances[sampleCount++] = plan.startingBalance
+  balances[sampleCount++] = start
 
   let phase = 0
   for (let t = 0; t < n; t++) {
@@ -597,14 +796,10 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
 
     // 1 July 2027: what you already own is treated as sold and bought back at its value, so the
     // gain up to then keeps the 50% discount and the gain after it uses the new rules.
-    if (t === reformT && taxOn) {
-      for (let i = head; i < lotUnits.length; i++) {
-        const value = units > 0 ? lotUnits[i] * price + (accrued * lotUnits[i]) / units : 0
-        lotPre[i] += value - lotCost[i]
-        lotCost[i] = value
-        lotCpi[i] = cpi
-      }
-    }
+    if (t === reformT && taxOn) for (const s of sleeves) revalueAtReform(s)
+
+    // Start date: holdings being moved into the plan's investment are sold and the money reinvested.
+    if (t === 0 && moving) moveHoldings(0)
 
     // 1. Money in and out at the start of the day.
     let incoming = 0
@@ -625,7 +820,7 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
       year.real.deposits += incoming / cpi
       real.deposited += incoming / cpi
       if (feesOn) cash += incoming
-      else invest(incoming, t, false)
+      else invest(main, incoming, t, false)
     }
     if (events) for (const e of events) if (e.amount < 0) withdraw(e.name, -e.amount, t)
 
@@ -635,33 +830,43 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
       if (!rp.tradingCosts || cash > brokerageFor(fs.brokerage, cash)) {
         const amount = cash
         cash = 0
-        invest(amount, t, true)
+        invest(main, amount, t, true)
       } else {
         warn('tooSmall', 'Some buys were put off because the brokerage would have been as much as the cash waiting. The cash waited for the next buying day.')
       }
     }
 
     // 3. One day of growth. Each month is 1/12 of a year, spread over its days.
+    //    The plan's own investment follows the phase; a holding kept separately follows its own returns.
+    const indexBefore = trackIndex ? holdings() : 0
     const g = path.growth[t]
     const h = taxOn ? (path.income && path.income[t] > 0 ? path.income[t] : incomeFactor[p * 4 + c.dim[t] - 28]) : 1
-    if ((g !== 1 || h !== 1) && (units !== 0 || accrued !== 0)) {
-      const before = holdings()
+    if ((g !== 1 || h !== 1) && (main.units !== 0 || main.accrued !== 0)) {
+      const before = main.units * main.price + main.accrued
       const after = before * g
-      price = (price * g) / h
-      const grown = accrued * g
-      accrued = after - units * price
+      main.price = (main.price * g) / h
+      const grown = main.accrued * g
+      main.accrued = after - main.units * main.price
       if (taxOn) {
         // Split today's income by this phase's settings; what was already built up just grows.
-        const earned = accrued - grown
+        const earned = main.accrued - grown
         const dist = rp.distribution
         const foreign = (earned * dist.foreignPct) / 100
-        accFranked = accFranked * g + (earned * dist.frankedPct) / 100
-        accForeignTax = accForeignTax * g + (dist.foreignTaxPct < 100 ? (foreign * dist.foreignTaxPct) / (100 - dist.foreignTaxPct) : 0)
+        main.accFranked = main.accFranked * g + (earned * dist.frankedPct) / 100
+        main.accForeignTax = main.accForeignTax * g + (dist.foreignTaxPct < 100 ? (foreign * dist.foreignTaxPct) / (100 - dist.foreignTaxPct) : 0)
       }
       const growth = after - before
       totalGrowth += growth
       year.growth += growth
     }
+    // Holdings kept separately follow their own returns (brought up to date at least every month end).
+    for (let i = 1; i < sleeves.length; i++) {
+      const s = sleeves[i]
+      s.pendingGrowth *= s.growth![t]
+      if (taxOn) s.pendingIncome *= s.income && s.income[t] > 0 ? s.income[t] : s.incomeFactor![c.dim[t] - 28]
+    }
+    if (sleeves.length > 1 && c.monthEndShare[t] > 0) bringAllUpToDate()
+    if (trackIndex && indexBefore > 0) indexNow *= holdings() / indexBefore
     if (cash > 0) {
       const f = path.cash ? path.cash[t] : cashFactor[c.dim[t] - 28]
       if (f !== 1) {
@@ -674,25 +879,40 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     }
 
     // 4. Last day of a month: management fee (MER) and monthly platform fee, for the part of the month in the plan.
-    //    The MER is 1/12 of the yearly fee for a whole month, built up day by day at the rate of each day's phase.
-    if (feesOn) merDays += rp.mer
+    //    The MER is 1/12 of the yearly fee for a whole month, built up day by day at the rate of each day's phase
+    //    (a holding kept separately: its own fee).
+    if (feesOn) main.merDays += rp.mer
     const monthShare = c.monthEndShare[t]
+    if (trackIndex && monthShare > 0) portfolioIndex.push(indexNow)
     if (feesOn && monthShare > 0) {
-      if (merDays > 0) {
-        const keep = 1 - merDays / (100 * 12 * c.dim[t])
-        merDays = 0
-        const fee = holdings() * (1 - keep)
-        price *= keep
-        accrued *= keep
-        accFranked *= keep
-        accForeignTax *= keep
-        addFee('mer', fee)
+      // A holding kept separately has the same fee every day: its fee for this month's days in the plan.
+      for (let i = 1; i < sleeves.length; i++) sleeves[i].merDays = sleeves[i].own!.mer * Math.round(monthShare * c.dim[t])
+      for (const s of sleeves) {
+        if (s.merDays > 0) {
+          const keep = 1 - s.merDays / (100 * 12 * c.dim[t])
+          s.merDays = 0
+          const fee = valueOf(s) * (1 - keep)
+          s.price *= keep
+          s.accrued *= keep
+          s.accFranked *= keep
+          s.accForeignTax *= keep
+          addFee('mer', fee)
+        }
       }
       if (fs.platformFeePer === 'month') chargeFee(fs.platformFee * monthShare, t)
     }
 
-    // 5. Distributions.
-    if (taxOn && c.payoutDay[t] && accrued > 0) payDistribution(t)
+    // 5. Distributions (each holding kept separately pays on its own days).
+    if (taxOn) {
+      if (c.payoutDay[t] && main.accrued > 0) payDistribution(main, t)
+      // (Payouts are always on a month end, or the plan's last day, which is one too.)
+      if (monthShare > 0) {
+        for (let i = 1; i < sleeves.length; i++) {
+          const s = sleeves[i]
+          if (s.payoutDay![t] && s.accrued > 0) payDistribution(s, t)
+        }
+      }
+    }
 
     // 6. End of a financial year (or of the plan).
     const isLast = t === n - 1
@@ -712,44 +932,53 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     }
 
     cpi *= path.inflation[t]
-    const balance = holdings() + cash
     year.lastDay = c.startDay + t
-    year.closing = balance
     year.cpiClosing = cpi
-    const yr = year.real
-    yr.closing = balance / cpi
-    yr.growth = yr.closing - yr.opening - yr.deposits + yr.withdrawals + yr.fees + yr.tax + yr.paidOut
+    // The balance is only needed on chart days, the last day of a year, and every day for a goal.
+    const chartDay = isLast || (t + 1) % sampleEvery === 0
+    if (chartDay || plan.goal || t === c.fys[fyIndex].lastT) {
+      const balance = holdings() + cash
+      year.closing = balance
+      const yr = year.real
+      yr.closing = balance / cpi
+      yr.growth = yr.closing - yr.opening - yr.deposits + yr.withdrawals + yr.fees + yr.tax + yr.paidOut
 
-    if (plan.goal) {
-      const goalValue = inflOn ? balance / cpi : balance
-      if (firstReachedT < 0 && goalValue >= plan.goal.amount) firstReachedT = t
-      if (t === goalCheckT) goalBalance = goalValue
-    }
-    if (isLast || (t + 1) % sampleEvery === 0) {
-      cpis[sampleCount] = cpi
-      balances[sampleCount++] = balance
-      if (detail) {
-        series.push({
-          day: c.startDay + t + 1,
-          balance,
-          netContributed: plan.startingBalance + totalDeposited - totalWithdrawn,
-          cpi,
-          realNet: plan.startingBalance + real.deposited - real.withdrawn,
-        })
+      if (plan.goal) {
+        const goalValue = inflOn ? balance / cpi : balance
+        if (firstReachedT < 0 && goalValue >= plan.goal.amount) firstReachedT = t
+        if (t === goalCheckT) goalBalance = goalValue
+      }
+      if (chartDay) {
+        cpis[sampleCount] = cpi
+        balances[sampleCount++] = balance
+        if (detail) {
+          series.push({
+            day: c.startDay + t + 1,
+            balance,
+            netContributed: start + totalDeposited - totalWithdrawn,
+            cpi,
+            realNet: start + real.deposited - real.withdrawn,
+          })
+        }
       }
     }
   }
 
   /** "Don't sell": the tax you'd owe if you sold everything on the last day. Changes nothing. */
   function imaginedSale(t: number): EndSale {
+    bringAllUpToDate()
     const marketValue = holdings()
-    const usListed = ph[c.phaseOf[t]].usListed
-    const costs = costsOn(t) ? saleCosts(marketValue, fs.brokerage, fs.spreadPct, usListed ? fs.fxFeePct : 0) : null
-    const net = costs ? costs.net : marketValue
     const extra: YearIncome = { ...income }
-    if (units > 0) {
-      const perUnit = net / units
-      for (let i = head; i < lotUnits.length; i++) realise(i, lotUnits[i], perUnit, t, extra)
+    let net = 0
+    for (const s of sleeves) {
+      const v = valueOf(s)
+      const costs = costsOn(s, t) ? saleCosts(v, fs.brokerage, fs.spreadPct, settingsOf(s, t).usListed ? fs.fxFeePct : 0) : null
+      const sleeveNet = costs ? costs.net : v
+      net += sleeveNet
+      if (s.units > 0) {
+        const perUnit = sleeveNet / s.units
+        for (let i = s.head; i < s.lotUnits.length; i++) realise(s, i, s.lotUnits[i], perUnit, t, extra)
+      }
     }
     const saleTax = yearTax(ctx, extra).tax - charged
     return { mode: 'hold', marketValue, costs: marketValue - net, tax: saleTax, afterTax: cash + net - saleTax }
@@ -770,25 +999,25 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     }
   }
 
-  return {
+  const result: SimResult = {
     switches: sw,
     startDay: c.startDay,
     endDay: c.endDay,
     finalBalance,
     finalReal: finalBalance / cpi,
     cpiEnd: cpi,
-    startingBalance: plan.startingBalance,
+    startingBalance: start,
     totalDeposited,
     totalWithdrawn,
     totalGrowth,
-    netContributed: plan.startingBalance + totalDeposited - totalWithdrawn,
+    netContributed: start + totalDeposited - totalWithdrawn,
     totalPaidOut,
     fees,
     tax,
     real: {
       ...real,
-      netContributed: plan.startingBalance + real.deposited - real.withdrawn,
-      growth: finalBalance / cpi - (plan.startingBalance + real.deposited - real.withdrawn - real.fees - real.tax - real.paidOut),
+      netContributed: start + real.deposited - real.withdrawn,
+      growth: finalBalance / cpi - (start + real.deposited - real.withdrawn - real.fees - real.tax - real.paidOut),
     },
     endSale,
     balances: balances.subarray(0, sampleCount),
@@ -799,4 +1028,6 @@ export function simulate(c: CompiledPlan, path: MarketPath, opts: SimOptions = {
     goal,
     warnings,
   }
+  if (trackIndex) result.portfolioIndex = Float64Array.from(portfolioIndex)
+  return result
 }

@@ -3,6 +3,7 @@
 // No data loading here: the history table is handed in (see prediction.ts).
 
 import { makeRng } from './bootstrap'
+import { keptHoldings } from './holdings'
 import type { CustomAsset, Investment, Plan } from './types'
 
 /** History column key for an ETF's monthly total return. */
@@ -10,20 +11,27 @@ export const etfKey = (id: string) => `etf:${id}`
 /** History column key for the cash/savings account (RBA cash rate in AUD plans). */
 export const CASH_KEY = 'cash'
 
-/** The ETF ids a plan's phases are invested in (single ETFs and every part of a mix). */
+/** The ETF ids an investment uses (one ETF, or every part of a mix). */
+export function etfsOf(inv: Investment | undefined): string[] {
+  if (inv?.kind === 'etf') return [inv.etf]
+  if (inv?.kind === 'mix') return inv.parts.map((p) => p.etf)
+  return []
+}
+
+/**
+ * The ETF ids a plan is invested in (single ETFs and every part of a mix): its phases, then any holdings kept
+ * separately (they need their own history too).
+ */
 export function etfsUsed(plan: Plan): string[] {
   const ids = new Set<string>()
-  for (const phase of plan.phases) {
-    const inv = phase.investment
-    if (inv?.kind === 'etf') ids.add(inv.etf)
-    if (inv?.kind === 'mix') inv.parts.forEach((p) => ids.add(p.etf))
-  }
+  for (const phase of plan.phases) etfsOf(phase.investment).forEach((id) => ids.add(id))
+  for (const h of keptHoldings(plan)) etfsOf(h.investment).forEach((id) => ids.add(id))
   return [...ids]
 }
 
-/** True if any phase is a cash/savings account. */
+/** True if any phase, or any holding kept separately, is a cash/savings account. */
 export function usesCash(plan: Plan): boolean {
-  return plan.phases.some((p) => p.investment?.kind === 'cash')
+  return plan.phases.some((p) => p.investment?.kind === 'cash') || keptHoldings(plan).some((h) => h.investment?.kind === 'cash')
 }
 
 /** The history columns an investment reads. */

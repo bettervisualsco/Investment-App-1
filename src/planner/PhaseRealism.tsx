@@ -2,15 +2,10 @@ import { useId } from 'react'
 import { InfoTip } from '../components/InfoTip'
 import { Field, MoneyInput, NumberInput, Select } from '../components/inputs'
 import { resolvePhase } from '../engine/defaults'
-import type { Currency, DistributionFrequency, DistributionSettings, Phase, Realism } from '../engine/types'
+import type { Currency, DistributionSettings, Phase, Realism } from '../engine/types'
+import { distFrequencyOptions } from './investmentChoices'
 import { Toggle } from './RealismPanel'
 
-const distFrequencyOptions: { value: DistributionFrequency; label: string }[] = [
-  { value: 'monthly', label: 'Every month' },
-  { value: 'quarterly', label: 'Every quarter' },
-  { value: 'halfYearly', label: 'Every 6 months' },
-  { value: 'yearly', label: 'Once a year (30 June)' },
-]
 
 const rateOptions = [
   { value: '0', label: '0% (income up to $18,200)' },

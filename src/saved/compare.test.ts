@@ -53,3 +53,20 @@ describe('comparing plans', () => {
     expect(Math.round(rows[rows.length - 1].values[0]!)).toBe(Math.round(1_000_000 * 1.07 ** 10))
   })
 })
+
+describe('comparing plans with money you have now', () => {
+  it('includes holdings kept separately: $6,000 at 7% plus $4,000 in savings at 4% for 10 years', () => {
+    const p: Plan = {
+      ...plan('2026-01-01', 10, 7),
+      startingBalance: 1_000_000,
+      startingMoney: { entry: 'holdings', holdings: [{ id: 'a', value: 600_000 }, { id: 'b', value: 400_000, investment: { kind: 'cash', rate: 4 } }] },
+    }
+    const out = runPlan(p)
+    if (!out.ok) throw new Error(out.problems.join(' '))
+    expect(out.result.startingBalance).toBe(1_000_000)
+    expect(out.result.finalBalance).toBeCloseTo(600_000 * 1.07 ** 10 + 400_000 * 1.04 ** 10, 3)
+    // A damaged holding is explained instead of breaking Compare.
+    const bad = runPlan({ ...p, startingMoney: { entry: 'holdings', holdings: [{ id: 'a', value: -1 }] } })
+    expect(bad).toEqual({ ok: false, problems: ['Holding 1: today’s value can’t be negative.'] })
+  })
+})
