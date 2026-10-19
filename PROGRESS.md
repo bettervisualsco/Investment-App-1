@@ -45,6 +45,7 @@ Stages are built in batches (see SPEC.md section 8). Full notes for each stage a
 - **22 more ETFs (33 in total)**, grouped by type, with checked facts, corrections for Yahoo's mistakes (frozen prices around splits, missing or estimated distributions), and long-run stand-in histories (new: international shares outside the US, and gold from the World Bank). Markets has a search box and groups. See `notes/etfs-added.md`.
 - **Money you have now:** one amount, or your real holdings with what you paid and when, kept as they are or moved into the plan; works in Manual and Prediction mode and makes tax on existing gains right. See `notes/holdings.md`.
 - Tests: 355 app tests and 84 pipeline tests.
+- **App updates now take over as soon as they've downloaded.** Before, a new version waited until every window of the app was closed, so an iPhone could keep showing an old version for days. Checked on the live site: an old copy switched to the new version on the next open.
 
 ## Online (19 Oct 2026)
 - **App:** https://bettervisualsco.github.io/Investment-App-1/ (repository github.com/bettervisualsco/Investment-App-1, public). Commits are signed with bettervisuals.co@gmail.com.
