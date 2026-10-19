@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Tuple
 from .config import Ticker
 from .meta import Meta
 from .safety import ValidationError, daily_dates, save_validated, validate_daily, validate_intraday
-from .schedule import MARKETS, Market
+from .schedule import MARKETS, Market, latest_closed_session
 from .sources import yahoo
 from .static_build import read_static
 from .util import DATA_DIR, STATIC_DIR, iso, load_json, round_price
@@ -28,6 +28,13 @@ def _drop_rows(h: yahoo.DailyHistory, keep) -> List[str]:
         rows = [(d, c, a) for d, c, a in zip(h.dates, h.close, h.adj) if keep(d)]
         h.dates, h.close, h.adj = [r[0] for r in rows], [r[1] for r in rows], [r[2] for r in rows]
     return dropped
+
+
+def drop_unfinished(h: yahoo.DailyHistory, market: Market, now: datetime) -> List[str]:
+    """Drop rows for trading days that haven't closed yet. During trading hours Yahoo's daily history
+    includes today's price so far; saving it would label a midday price as the day's close."""
+    latest = latest_closed_session(market, now).isoformat()
+    return _drop_rows(h, lambda d: d <= latest)
 
 
 def drop_weekends(h: yahoo.DailyHistory) -> List[str]:
@@ -240,6 +247,8 @@ def update_daily(tickers: List[Ticker], meta: Meta, now: datetime) -> Tuple[bool
                 if main_error:
                     used_backup.append(t.id)
                     meta.problem("yahoo", f"{t.yahoo}: yfinance failed ({main_error}); used the backup route")
+            # AUD/USD follows Sydney: the RBA's official rate is set at 4pm Sydney time.
+            drop_unfinished(h, MARKETS["asx"] if t.kind == "fx" else MARKETS[t.market], now)
             if not h.dates:
                 raise ValidationError(f"{t.yahoo}: no data returned")
             if t.kind == "etf":

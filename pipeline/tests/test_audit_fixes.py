@@ -181,3 +181,20 @@ def test_etfs_json_keeps_the_name_fact_and_listing_date():
     t.name = "New Name ETF"
     e = build_etfs([t])["etfs"][0]
     assert e["name"] == "New Name ETF" and e["nameInfo"] == name and e["listed"] == listed
+
+
+def test_todays_unfinished_price_is_not_saved_as_a_close():
+    from datapipe.schedule import ASX, NYSE
+
+    # Monday 19 Oct 2026, 12:45pm in Sydney (01:45 UTC): the ASX is open, so Monday's row is still moving.
+    midday = datetime(2026, 10, 19, 1, 45, tzinfo=timezone.utc)
+    h = hist(["2026-10-15", "2026-10-16", "2026-10-19"], [107.78, 108.86, 108.81])
+    assert prices.drop_unfinished(h, ASX, midday) == ["2026-10-19"]
+    assert h.dates == ["2026-10-15", "2026-10-16"]
+    # After the close (plus the settling margin) Monday's row stays.
+    evening = datetime(2026, 10, 19, 8, 0, tzinfo=timezone.utc)  # 7pm Sydney
+    h = hist(["2026-10-16", "2026-10-19"], [108.86, 108.81])
+    assert prices.drop_unfinished(h, ASX, evening) == []
+    # New York on the same instant is still Sunday evening, so Friday's close is the latest finished one.
+    h = hist(["2026-10-15", "2026-10-16"], [700.0, 701.61])
+    assert prices.drop_unfinished(h, NYSE, midday) == []
