@@ -23,11 +23,11 @@ from ..util import USER_AGENT
 Point = Tuple[str, float]  # ("YYYY-MM" or "YYYY-MM-DD" or "YYYY-Qn", value)
 
 
-def http_get(url: str, *, accept: str = "*/*", tries: int = 3, timeout: int = 60) -> bytes:
+def http_get(url: str, *, accept: str = "*/*", tries: int = 3, timeout: int = 60, user_agent: str = USER_AGENT) -> bytes:
     last: Exception = RuntimeError("no attempt")
     for i in range(tries):
         try:
-            r = requests.get(url, headers={"User-Agent": USER_AGENT, "Accept": accept}, timeout=timeout)
+            r = requests.get(url, headers={"User-Agent": user_agent, "Accept": accept}, timeout=timeout)
             r.raise_for_status()
             return r.content
         except Exception as e:  # network blips are common on shared runners
@@ -57,11 +57,14 @@ def abs_cpi() -> Dict[str, object]:
 
 # ---- FRED --------------------------------------------------------------------------
 FRED_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={id}"
+# FRED's bot protection (checked 19 Oct 2026) drops connections from unfamiliar program names, including
+# ours, but accepts the standard Python requests library's name. We keep our own name after it.
+FRED_USER_AGENT = f"python-requests/{requests.__version__} investment-planner/1.0"
 
 
 def fred_points(series_id: str) -> List[Point]:
     """[(YYYY-MM-DD, value)]; FRED marks missing values with '.' or a blank, which are skipped."""
-    raw = http_get(FRED_URL.format(id=series_id), accept="text/csv").decode("utf-8-sig")
+    raw = http_get(FRED_URL.format(id=series_id), accept="text/csv", user_agent=FRED_USER_AGENT).decode("utf-8-sig")
     out: List[Point] = []
     for row in csv.reader(io.StringIO(raw)):
         if len(row) < 2 or not re.match(r"\d{4}-\d{2}-\d{2}", row[0]):
