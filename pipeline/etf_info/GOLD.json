@@ -1,0 +1,64 @@
+{
+  "name": {
+    "value": "Global X Physical Gold Structured",
+    "note": "Listed in 2003 as Gold Bullion Securities, later ETFS Physical Gold (prospectus). The issuer was renamed Global X Metal Securities Australia Ltd on 16 Sep 2022 after Mirae Asset bought ETF Securities Australia (prospectus). The 'Structured' suffix seems to date from an ASX announcement titled 'MSAL Securities - New naming convention' (14 Apr 2025); only the title was seen. Not technically an ETF: each unit is a share plus a claim to a fixed, slowly shrinking amount of physical gold (ASX security type: structured product).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.globalxetfs.com.au/funds/gold/"
+  },
+  "index": {
+    "value": "Spot gold price in Australian dollars (US$ spot gold converted to A$, not currency hedged)",
+    "note": "Global X: aims to track 'the Gold Price in Australian dollars'; benchmark 'Gold Spot Price' (a US-dollar price); 'Currency Hedged: No'. Valuation uses the US$ spot price at 3:00pm London time converted to A$ at the prevailing exchange rate (Global X notice; in force since 13 Jul 2026). Prospectus (13 Aug 2026): the gold is held as allocated LBMA Good Delivery bars by JPMorgan Chase Bank (custodian) in vaults in London, with the Bank of England as a sub-custodian for gold. Each unit is backed by about 0.00914 troy oz of gold (0.009136336 oz for 19 Oct 2026 in Global X's metal entitlement file), which shrinks daily by the 0.40% fee.",
+    "checkedOn": "2026-10-19",
+    "source": "https://files.globalxetfs.com.au/GOLD_Factsheet_916d352b62.pdf"
+  },
+  "mer": {
+    "value": 0.4,
+    "unit": "% p.a.",
+    "note": "Management fees and costs; taken by reducing each unit's gold entitlement daily",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.globalxetfs.com.au/funds/gold/"
+  },
+  "yield": {
+    "value": 0,
+    "unit": "% a year",
+    "note": "GOLD pays no distributions: holders have no right to dividends (prospectus). All returns come from the A$ gold price.",
+    "checkedOn": "2026-10-19",
+    "source": "https://files.globalxetfs.com.au/Global_X_Metal_Securities_Aust_Ltd_Prospectus_39194762a8.pdf"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Not applicable: no distributions are paid",
+    "checkedOn": "2026-10-19",
+    "source": "https://files.globalxetfs.com.au/Global_X_Metal_Securities_Aust_Ltd_Prospectus_39194762a8.pdf"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.globalxetfs.com.au/funds/gold/"
+  },
+  "listed": {
+    "value": "2003-03-28",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/GOLD/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "note": "Quoted and traded in A$; the price follows the A$ gold price times the gold entitlement per unit",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.globalxetfs.com.au/funds/gold/"
+  },
+  "inception": {
+    "value": "2003-03-28",
+    "note": "Inception and first day of ASX trading (28 Mar 2003). 10-for-1 share split on 8 Jun 2022 (gold per unit cut from 0.092977039 to 0.009297704 oz).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.globalxetfs.com.au/funds/gold/"
+  },
+  "distributions": {
+    "value": "none",
+    "note": "No distributions are paid",
+    "checkedOn": "2026-10-19",
+    "source": "https://files.globalxetfs.com.au/Global_X_Metal_Securities_Aust_Ltd_Prospectus_39194762a8.pdf"
+  }
+}

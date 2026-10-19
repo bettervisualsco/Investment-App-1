@@ -1,0 +1,62 @@
+{
+  "name": {
+    "value": "iShares Core S&P/ASX 200 ETF",
+    "note": "Tracked the MSCI Australia 200 Index until 1 Dec 2015 (BlackRock), when it switched to the S&P/ASX 200; no recent name change found.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/literature/fact-sheet/ioz-ishares-core-s-p-asx-200-etf-fund-fact-sheet-en-au.pdf"
+  },
+  "index": {
+    "value": "S&P/ASX 200 Accumulation Index (BlackRock: S&P/ASX 200 Index (AUD))",
+    "note": "Benchmark changed from the MSCI Australia 200 Index on 1 Dec 2015.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251852/ishares-core-s-p-asx-200-etf"
+  },
+  "mer": {
+    "value": 0.05,
+    "unit": "% p.a.",
+    "note": "Management fee as stated in the PDS",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251852/ishares-core-s-p-asx-200-etf"
+  },
+  "yield": {
+    "value": 3.52,
+    "unit": "% a year",
+    "note": "BlackRock's '12m Trailing Yield' at 15 Oct 2026: all income distributions with ex-dates in the past 12 months (8 Oct 2026, 1 Jul 2026, 9 Apr 2026, 7 Jan 2026; A$1.2266 a unit in total) divided by the latest NAV. The September 2026 fact sheet showed 3.40% at 30 Sep 2026. Excludes franking credits.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251852/ishares-core-s-p-asx-200-etf"
+  },
+  "franking": {
+    "value": 67.64,
+    "unit": "%",
+    "note": "BlackRock's 'Franking Level of distributed income' for the year ended 30 Jun 2026 (Tax Summary tab of the product page; BlackRock labels these figures estimates). Franking credits that year were 35.56 cents a unit on 121.15 cents of cash distributions.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251852/ishares-core-s-p-asx-200-etf/1478358644058.ajax?tab=tax-distributions"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251852/ishares-core-s-p-asx-200-etf"
+  },
+  "listed": {
+    "value": "2010-12-09",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/IOZ/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251852/ishares-core-s-p-asx-200-etf"
+  },
+  "inception": {
+    "value": "2010-12-06",
+    "note": "Fund inception (first unit creation); listed on the ASX 9 Dec 2010",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251852/ishares-core-s-p-asx-200-etf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251852/ishares-core-s-p-asx-200-etf"
+  }
+}

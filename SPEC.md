@@ -40,8 +40,15 @@ The calculation engine must be plain TypeScript with **no UI code in it**, so it
 ### 3.1 What we track
 - **ETFs are the focus** (no need for individual-stock features).
 - Default watchlist, editable in a config file `pipeline/tickers.json`:
-  - ASX-listed: VAS, VGS, IVV (ASX), NDQ, A200, VDHG, DHHF, VAF (bonds)
+  - ASX-listed, grouped by type (33 ETFs since 19 Oct 2026):
+    - Australian shares: VAS, A200, IOZ, STW, VHY, VAP
+    - Global shares: VGS, IVV (ASX), NDQ, IWLD, BGBL, WXOZ, VEU, VTS, ETHI, VESG, QUAL, MOAT
+    - Currency-hedged: VGAD, IHVV, HGBL
+    - Diversified: VDHG, DHHF, VDGR, VDBA, VDCO
+    - Bonds: VAF, VBND, IAF
+    - Gold: GOLD
   - US-listed: VOO, VTI, QQQ
+  - Where an ETF's long-run stand-in history tracks it only loosely (e.g. VAP, VHY, GOLD, VBND), the app says so (`warning` in monthly.json).
   - Indexes for the dashboard: ASX 200, All Ordinaries, S&P 500, Nasdaq 100, plus AUD/USD
 - Adding a new ETF means adding it to `tickers.json` (Claude Code can do this when asked); the next pipeline run fetches its full history.
 - For each ETF, keep a small info file: name, what index it tracks, management fee (MER), typical distribution yield, franking % (Australian share ETFs), listing exchange and currency, inception date. Mark each value with the date it was checked.
@@ -54,6 +61,7 @@ The calculation engine must be plain TypeScript with **no UI code in it**, so it
   - Global shares, bonds, cash: best free long-run sources available
   - Splice the proxy onto the ETF's real history, and subtract the ETF's fee from proxy periods.
 - **Currency:** AUD/USD history (so US-listed ETFs can be shown and simulated in AUD).
+- **Gold:** World Bank "Pink Sheet" monthly gold price (US$, from 1968, converted to A$) as GOLD's long-run history.
 - **Inflation:** Australian CPI (ABS) and US CPI (BLS/FRED), as far back as available. Check whether ABS now publishes a full monthly CPI or only quarterly, and handle both.
 - **Cash rate:** RBA cash rate history (for a "cash / savings account" asset).
 - Claude Code must research free sources, check they're free for personal use, and record every source, date range and gap in `DATA_SOURCES.md`.
@@ -86,7 +94,9 @@ Bottom tab bar on iPhone and sidebar on Mac: **Planner · Markets · Inflation �
 
 ### 4.1 Planner tab: the timeline builder
 
-**Plan basics:** plan name, start date, starting balance, currency (AUD default).
+**Plan basics:** plan name, start date, money you have now, currency (AUD default).
+
+**Money you have now** (added 19 Oct 2026): one amount (with what it's invested in, and optionally what you paid and when), or a list of holdings (what each is in, today's value, what you paid incl. brokerage, roughly when you bought it, and in Manual mode its expected return). Holdings in something different from the first phase are either kept as they are (own investment, returns, fee and distributions for the whole plan) or moved into the plan's investments on the start date (CGT with Tax on, trading costs with Fees on). Deposits and events follow the phases; withdrawals, and sales to pay tax or fees, take from all investments pro-rata (waiting cash first). Holdings keep their real cost base and purchase date for CGT (12-month discount, 1 July 2027 split). In Prediction mode each kept holding replays its own history from the same sampled months.
 
 **Phases:** unlimited, can be added, reordered (drag), duplicated or deleted. Each phase has:
 - Name (e.g. "Uni days", "First job", "Promotion")

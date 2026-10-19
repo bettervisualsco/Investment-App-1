@@ -1,0 +1,62 @@
+{
+  "name": {
+    "value": "Vanguard MSCI Index International Shares (Hedged) ETF",
+    "note": "Name on Vanguard's fact sheet dated 30 Sep 2026 and the PDS dated 1 Sep 2026 (unlike VGS, not renamed so far).",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_Hedged_ETF_8213_FS_VGAD.pdf"
+  },
+  "index": {
+    "value": "MSCI World ex-Australia Index (net dividends reinvested), hedged to AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_Hedged_ETF_8213_FS_VGAD.pdf"
+  },
+  "mer": {
+    "value": 0.21,
+    "unit": "% p.a.",
+    "note": "Management fee. The PDS (1 Sep 2026) adds 0.01% estimated indirect costs: 0.22% p.a. in total.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_Hedged_ETF_8213_FS_VGAD.pdf"
+  },
+  "yield": {
+    "value": 2.83,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions (two half-yearly payouts) / NAV on 16 Oct 2026. Vanguard's 1-year income return was 3.34% to 30 Sep 2026 (fact sheet). Payouts swing a lot because currency-hedging gains and losses flow into them (nil in Jan 2023, Jul 2023 and Jan 2024).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8213/overview"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Franking credits are effectively nil (overseas shares)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8213/overview"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_Hedged_ETF_8213_FS_VGAD.pdf"
+  },
+  "listed": {
+    "value": "2014-11-20",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VGAD/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_Hedged_ETF_8213_FS_VGAD.pdf"
+  },
+  "inception": {
+    "value": "2014-11-18",
+    "note": "Fund inception; listed on the ASX 20 Nov 2014",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_Hedged_ETF_8213_FS_VGAD.pdf"
+  },
+  "distributions": {
+    "value": "twice a year",
+    "note": "Half-yearly (periods ending 30 Jun and 31 Dec; ex-dates in early Jan and early Jul)",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_MSCI_Index_International_Shares_Hedged_ETF_8213_FS_VGAD.pdf"
+  }
+}

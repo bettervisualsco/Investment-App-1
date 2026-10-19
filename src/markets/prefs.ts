@@ -13,6 +13,10 @@ export interface MarketPrefs {
   /** The watchlist in the order the person chose (ids not listed go at the end). */
   order: string[]
   sort: SortKey
+  /** Show the watchlist in groups (Australian shares, Global shares, ...). */
+  grouped: boolean
+  /** Groups the person has folded away. */
+  collapsed: string[]
   range: RangeKey
   totalReturn: boolean
   inAud: boolean
@@ -28,6 +32,8 @@ export const DEFAULT_PREFS: MarketPrefs = {
   favourites: [],
   order: [],
   sort: 'mine',
+  grouped: true,
+  collapsed: [],
   range: '1Y',
   totalReturn: false,
   inAud: true,
@@ -90,5 +96,19 @@ export function swapIds(all: string[], order: string[], a: string, b: string): s
   const j = list.indexOf(b)
   if (i < 0 || j < 0) return list
   ;[list[i], list[j]] = [list[j], list[i]]
+  return list
+}
+
+/**
+ * Move `id` to just before (`side` 'before') or just after its neighbour in a shorter list the
+ * person sees (a group, or the favourites), leaving everything else where it was. In a single list
+ * of adjacent rows this is the same as swapping them; with groups, the ETFs between the two (from
+ * other groups) don't get shuffled.
+ */
+export function moveIdNextTo(all: string[], order: string[], id: string, neighbour: string, side: 'before' | 'after'): string[] {
+  const list = orderedIds(all, order).filter((x) => x !== id)
+  const j = list.indexOf(neighbour)
+  if (j < 0 || !all.includes(id)) return orderedIds(all, order)
+  list.splice(side === 'before' ? j : j + 1, 0, id)
   return list
 }

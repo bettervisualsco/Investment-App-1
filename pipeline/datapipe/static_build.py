@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 
 from .sources.official import http_get
 from .util import STATIC_DIR
@@ -21,6 +22,11 @@ RBA_BONDS_DAILY_HIST = "https://www.rba.gov.au/statistics/tables/xls-hist/f02dhi
 # Daily exchange rates (historical F11.1). 2023 onwards comes live from the current table's CSV.
 RBA_FX_DAILY_HIST = ["2003-2006", "2007-2009", "2010-2013", "2014-2017", "2018-2022"]
 RBA_FX_DAILY_URL = "https://www.rba.gov.au/statistics/tables/xls-hist/{years}.xls"
+# World Bank Commodity Price Data ("Pink Sheet"). The spreadsheet's address changes with every monthly
+# update, so it is looked up on the Commodity Markets page. CC BY 4.0 (attribute "World Bank").
+WORLD_BANK_PAGE = "https://www.worldbank.org/en/research/commodity-markets"
+WORLD_BANK_XLSX = re.compile(r'https://thedocs\.worldbank\.org/[^"\s]*CMO-Historical-Data-Monthly\.xlsx')
+GOLD_STATIC = "worldbank_gold_monthly.csv"
 
 
 def _write(name: str, header, rows) -> None:
@@ -99,10 +105,43 @@ def rba_fx_daily() -> None:
     _write("rba_audusd_daily_2003_2022.csv", ["date", "audusd"], rows)
 
 
+def gold_rows(xlsx: bytes) -> list:
+    """[(YYYY-MM, US$ per troy ounce)] from the Pink Sheet's "Monthly Prices" sheet (column "Gold")."""
+    import openpyxl
+
+    ws = openpyxl.load_workbook(io.BytesIO(xlsx), read_only=True, data_only=True)["Monthly Prices"]
+    col = None
+    rows = []
+    for r in ws.iter_rows(values_only=True):
+        if col is None:
+            col = next((i for i, x in enumerate(r) if isinstance(x, str) and x.strip() == "Gold"), None)
+            continue
+        m = re.fullmatch(r"(\d{4})M(\d{2})", str(r[0] or ""))
+        if m and isinstance(r[col], (int, float)) and r[col] > 0:
+            rows.append([f"{m.group(1)}-{m.group(2)}", r[col]])
+    if col is None or len(rows) < 600:
+        raise ValueError(f"World Bank Pink Sheet: gold column not found or too short ({len(rows)} months)")
+    return rows
+
+
+def world_bank_gold() -> None:
+    """Monthly gold price (US$ per troy ounce, the average of each month's daily prices: the London
+    afternoon fixing, then spot from June 2025), 1960 onwards. Frozen here; the months after the
+    frozen copy come from the GOLD ETF (see monthly.py)."""
+    page = http_get(WORLD_BANK_PAGE).decode("utf-8", "ignore")
+    m = WORLD_BANK_XLSX.search(page)
+    if not m:
+        raise ValueError("World Bank Commodity Markets page: no link to CMO-Historical-Data-Monthly.xlsx")
+    rows = gold_rows(http_get(m.group(0)))
+    print(f"World Bank gold: {rows[0][0]} to {rows[-1][0]} from {m.group(0)}")
+    _write(GOLD_STATIC, ["month", "usd_per_oz"], rows)
+
+
 def main() -> None:
     shiller()
     rba()
     rba_fx_daily()
+    world_bank_gold()
 
 
 def read_static(name: str) -> list:

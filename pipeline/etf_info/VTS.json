@@ -1,0 +1,63 @@
+{
+  "name": {
+    "value": "Vanguard Morningstar US Total Market Shares Index ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Morningstar_US_Total_Market_Shares_Index_ETF_970_FS_VTS.pdf",
+    "note": "Name on Vanguard's fact sheet dated 31 Aug 2026 (the latest published for VTS on 19 Oct 2026); the ASX company list shows 'Vanguard Morningstar US Total Mkt Shares Index ETF'. Earlier name: Vanguard US Total Market Shares Index ETF (still used in Vanguard's 25 Sep 2026 distribution announcement). The ASX listing is a CHESS Depositary Interest (CDI) over the US-domiciled Vanguard Total Stock Market ETF (NYSE: VTI), which Vanguard renamed Vanguard Morningstar Total Stock Market ETF in 2026."
+  },
+  "index": {
+    "value": "Morningstar US Total Market Index",
+    "note": "Formerly the CRSP US Total Market Index (Vanguard says the CRSP indexes were rebranded to Morningstar after Morningstar acquired CRSP; name change expected July 2026). Before 3 Jun 2013 the benchmark was the MSCI US Broad Market Index.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Morningstar_US_Total_Market_Shares_Index_ETF_970_FS_VTS.pdf"
+  },
+  "mer": {
+    "value": 0.03,
+    "unit": "% p.a.",
+    "note": "Management cost on the fact sheet dated 31 Aug 2026 (the US fund's expense ratio)",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Morningstar_US_Total_Market_Shares_Index_ETF_970_FS_VTS.pdf"
+  },
+  "yield": {
+    "value": 1.06,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026, both in US dollars: US$3.9482 (0.9508 + 0.9982 + 1.0437 + 0.9555, ex-dates 22 Dec 2025 to 28 Sep 2026) / US$374.06 NAV. Distributions are declared in US$ per CDI and paid to Australian holders in A$, gross of US withholding tax. Vanguard's 1-year income (distribution) return was 1.25% to 30 Sep 2026 (1.27% to 31 Aug 2026 on the fact sheet).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/0970/overview"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "No franking credits: US-domiciled fund holding US shares; distributions are subject to US withholding tax instead",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/0970/overview"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Morningstar_US_Total_Market_Shares_Index_ETF_970_FS_VTS.pdf"
+  },
+  "listed": {
+    "value": "2009-05-08",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here. Vanguard's fact sheet says 'ETF listed on ASX 12 May 2009'.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VTS/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "note": "The ASX CDIs trade in AUD; the underlying US fund's NAV and distributions are in USD (distributions are paid to Australian holders in AUD).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/0970/overview"
+  },
+  "inception": {
+    "value": "2001-05-24",
+    "note": "Inception of the US fund (Vanguard Total Stock Market ETF, NYSE: VTI), 24 May 2001; the ASX listing is a CDI cross-listing of that fund, listed on the ASX 12 May 2009 per Vanguard (8 May 2009 per ASX company data).",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Morningstar_US_Total_Market_Shares_Index_ETF_970_FS_VTS.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Morningstar_US_Total_Market_Shares_Index_ETF_970_FS_VTS.pdf"
+  }
+}

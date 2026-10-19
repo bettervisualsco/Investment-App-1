@@ -70,7 +70,8 @@ that has data in time has an `asOf` field: the latest date/time/month it covers.
   "trFrom": "2013-01-02",         // ETFs only: total return is reliable from this date
   "trNote": "...",                // why, if trFrom is later than first
   "repairs": ["..."],             // fixes made to Yahoo's data, if any (bad days, unrecorded splits,
-                                  // placeholder rows before listing, corrections from pipeline/static/corrections.json)
+                                  // placeholder rows before listing, corrected closes and distributions
+                                  // from pipeline/static/corrections.json)
   "source": "...",                // AUDUSD only: where the rates come from
   "approxFrom": "2026-10-19"      // AUDUSD only, optional: rows from here are Yahoo's approximate rate (RBA not published yet)
 }
@@ -120,6 +121,7 @@ hours to show "Closed"). These files are only on the website, not in git.
       "fee": 0.0007,                        // yearly fee taken off proxy months
       "proxy": [ { "series": "au_shares", "weight": 1, "hedged": false } ],
       "proxyCheck": { "months": 156, "from": "...", "to": "...", "correlation": 0.995, "realYearly": 0.092, "proxyYearly": 0.094, "trackingError": 0.013 },
+      "warning": "optional: how rough the proxy is (e.g. VAP uses all Australian shares as a stand-in)",
       "values": [ ... ]
     }
   }
@@ -135,8 +137,14 @@ hours to show "Closed"). These files are only on the website, not in git.
   months where every requested series has data.
 - **Currency**: ETF columns are already in the ETF's trading currency (A$ for ASX ETFs). To show a
   US-dollar series in A$: `(1 + r_usd) / (1 + audusd) − 1`.
-- Series: `au_shares`, `us_shares`, `global_shares`, `us_tech`, `au_bonds`, `us_bonds`, `cash_au`,
-  `cash_us`, `au_cpi`, `us_cpi`, `audusd`. See DATA_SOURCES.md for sources, gaps and stand-ins.
+- Series: `au_shares`, `us_shares`, `global_shares`, `intl_shares` (shares outside the US, from 1975),
+  `us_tech`, `au_bonds`, `us_bonds`, `gold` (US$ gold price, from 1968-04; monthly averages before
+  Oct 2026), `cash_au`, `cash_us`, `au_cpi`, `us_cpi`, `audusd`. See DATA_SOURCES.md for sources, gaps
+  and stand-ins. (`intl_shares` and `gold` were added on 19 Oct 2026; they are not core series, so
+  `allSeriesFrom`/`allSeriesTo` don't depend on them.)
+- ETF columns: a proxy part marked `hedged` is the series' return in its own currency plus the
+  Australian minus US cash rate that month (what a currency hedge earns or costs); unhedged parts are
+  converted with AUD/USD. `warning` (optional) says in plain words when the proxy is only a stand-in.
   `interpolated` lists filled months (`us_cpi`: Oct 2025) or partly estimated ones (`au_bonds`:
   May-Sep 2013, when the RBA had no 5-year yield).
 - `au_cpi`: before April 2024 each ABS quarterly index (the average of its 3 months) is placed at the
@@ -172,6 +180,7 @@ hours to show "Closed"). These files are only on the website, not in git.
   "asOf": "2026-10-18",
   "etfs": [ {
     "id": "VAS", "symbol": "VAS.AX", "market": "asx", "currency": "AUD", "name": "...",
+    "category": "Australian shares",    // group for the app (see below)
     "mer": { "value": 0.07, "unit": "% p.a.", "note": "...", "checkedOn": "2026-10-18", "source": "https://..." },
     "index": {...}, "yield": {...}, "franking": {...}, "exchange": {...}, "inception": {...},
     "listed": {...},                    // ASX listing date (ASX ETFs), a "fact" like mer
@@ -182,6 +191,13 @@ hours to show "Closed"). These files are only on the website, not in git.
   "indexes": [ { "id": "ASX200", "symbol": "^AXJO", "name": "S&P/ASX 200", "kind": "index", "market": "asx", "currency": "AUD" } ]
 }
 ```
+
+- `category` (from `pipeline/tickers.json`, every ETF has one) is the group the app shows it in, one
+  of: `"Australian shares"`, `"Global shares"` (overseas shares, unhedged, listed on the ASX),
+  `"Currency-hedged"`, `"Diversified"` (multi-asset funds), `"Bonds"`, `"Gold"`, `"US-listed"` (VOO,
+  VTI, QQQ, traded in US$). Optional in the TypeScript type (`EtfInfo.category`) because older copies of
+  `etfs.json` saved on a device don't have it; `src/markets/watchlist.ts` puts those in "Other ETFs".
+- `distributions.value` is one of `"monthly"`, `"quarterly"`, `"twice a year"`, `"yearly"` or `"none"` (GOLD).
 
 A fact with `"verified": false` is an estimate or from a secondary source: say so in the app.
 Edit facts in `pipeline/etf_info/<ID>.json` (with a new `checkedOn` date), not in `data/`.

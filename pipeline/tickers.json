@@ -1,49 +1,207 @@
 {
   "_howTo": [
     "This is the watchlist. To add an ETF, copy one of the blocks under 'etfs', change id/yahoo/market/currency,",
-    "choose its long-run proxy (what it invests in), and add pipeline/etf_info/<id>.json with its facts.",
+    "choose its category and long-run proxy (what it invests in), and add pipeline/etf_info/<id>.json with its facts.",
     "The next pipeline run downloads its full history. ASX symbols end in .AX on Yahoo.",
-    "Proxy series you can use: au_shares, us_shares, global_shares, us_tech, au_bonds, us_bonds, cash_au, cash_us.",
-    "Weights must add up to 1. 'hedged': true means the part is currency-hedged (no AUD/USD conversion)."
+    "category (the group the app shows it in): Australian shares, Global shares, Currency-hedged, Diversified, Bonds, Gold, US-listed.",
+    "Proxy series you can use: au_shares, us_shares, global_shares, intl_shares (outside the US), us_tech, au_bonds, us_bonds, cash_au, cash_us, gold.",
+    "Weights must add up to 1. 'hedged': true means the part is currency-hedged (no AUD/USD conversion).",
+    "proxyWarning (optional): one or two plain sentences on how rough the proxy is; copied into data/monthly.json.",
+    "trFrom (optional): 'listing' or a date, when the issuer confirms Yahoo's distribution records are complete from there (VGAD paid nothing before Jul 2016)."
   ],
   "etfs": [
-    { "id": "VAS", "yahoo": "VAS.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "au_shares", "weight": 1 }] },
-    { "id": "VGS", "yahoo": "VGS.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "global_shares", "weight": 1 }] },
-    { "id": "IVV", "yahoo": "IVV.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "us_shares", "weight": 1 }] },
-    { "id": "NDQ", "yahoo": "NDQ.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "us_tech", "weight": 1 }] },
-    { "id": "A200", "yahoo": "A200.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "au_shares", "weight": 1 }] },
+    { "id": "VAS", "yahoo": "VAS.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "au_shares", "weight": 1 }], "category": "Australian shares" },
+    { "id": "VGS", "yahoo": "VGS.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "global_shares", "weight": 1 }], "category": "Global shares" },
+    { "id": "IVV", "yahoo": "IVV.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "us_shares", "weight": 1 }], "category": "Global shares" },
+    { "id": "NDQ", "yahoo": "NDQ.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "us_tech", "weight": 1 }], "category": "Global shares" },
+    { "id": "A200", "yahoo": "A200.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "au_shares", "weight": 1 }], "category": "Australian shares" },
     {
-      "id": "VDHG", "yahoo": "VDHG.AX", "market": "asx", "currency": "AUD",
+      "id": "VDHG", "yahoo": "VDHG.AX", "market": "asx", "currency": "AUD", "category": "Diversified",
       "proxy": [
-        { "series": "au_shares", "weight": 0.36 },
-        { "series": "global_shares", "weight": 0.38 },
-        { "series": "global_shares", "weight": 0.16, "hedged": true },
-        { "series": "au_bonds", "weight": 0.03 },
-        { "series": "us_bonds", "weight": 0.07, "hedged": true }
+        {"series": "au_shares", "weight": 0.36},
+        {"series": "global_shares", "weight": 0.38},
+        {"series": "global_shares", "weight": 0.16, "hedged": true},
+        {"series": "au_bonds", "weight": 0.03},
+        {"series": "us_bonds", "weight": 0.07, "hedged": true}
       ]
     },
     {
-      "id": "DHHF", "yahoo": "DHHF.AX", "market": "asx", "currency": "AUD",
+      "id": "DHHF", "yahoo": "DHHF.AX", "market": "asx", "currency": "AUD", "category": "Diversified",
       "proxy": [
-        { "series": "au_shares", "weight": 0.37 },
-        { "series": "global_shares", "weight": 0.63 }
+        {"series": "au_shares", "weight": 0.37},
+        {"series": "global_shares", "weight": 0.63}
       ]
     },
-    { "id": "VAF", "yahoo": "VAF.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "au_bonds", "weight": 1 }] },
-    { "id": "VOO", "yahoo": "VOO", "market": "us", "currency": "USD", "proxy": [{ "series": "us_shares", "weight": 1 }] },
-    { "id": "VTI", "yahoo": "VTI", "market": "us", "currency": "USD", "proxy": [{ "series": "us_shares", "weight": 1 }] },
-    { "id": "QQQ", "yahoo": "QQQ", "market": "us", "currency": "USD", "proxy": [{ "series": "us_tech", "weight": 1 }] }
+    { "id": "VAF", "yahoo": "VAF.AX", "market": "asx", "currency": "AUD", "proxy": [{ "series": "au_bonds", "weight": 1 }], "category": "Bonds" },
+    { "id": "VOO", "yahoo": "VOO", "market": "us", "currency": "USD", "proxy": [{ "series": "us_shares", "weight": 1 }], "category": "US-listed" },
+    { "id": "VTI", "yahoo": "VTI", "market": "us", "currency": "USD", "proxy": [{ "series": "us_shares", "weight": 1 }], "category": "US-listed" },
+    { "id": "QQQ", "yahoo": "QQQ", "market": "us", "currency": "USD", "proxy": [{ "series": "us_tech", "weight": 1 }], "category": "US-listed" },
+    {
+      "id": "IWLD", "yahoo": "IWLD.AX", "market": "asx", "currency": "AUD", "category": "Global shares",
+      "proxy": [
+        {"series": "global_shares", "weight": 1}
+      ],
+      "proxyWarning": "Tracks developed markets outside Australia with ESG screens (some companies left out); developed-world shares overall stand in for it."
+    },
+    { "id": "BGBL", "yahoo": "BGBL.AX", "market": "asx", "currency": "AUD", "category": "Global shares", "proxy": [{ "series": "global_shares", "weight": 1 }] },
+    {
+      "id": "WXOZ", "yahoo": "WXOZ.AX", "market": "asx", "currency": "AUD", "category": "Global shares",
+      "proxy": [
+        {"series": "global_shares", "weight": 1}
+      ],
+      "proxyWarning": "Tracks developed markets outside Australia with a carbon tilt (less in heavy emitters); developed-world shares overall stand in for it."
+    },
+    {
+      "id": "VEU", "yahoo": "VEU.AX", "market": "asx", "currency": "AUD", "category": "Global shares",
+      "proxy": [
+        {"series": "intl_shares", "weight": 1}
+      ],
+      "proxyWarning": "Before 2013 uses shares outside the US from Kenneth French's data, which are mostly developed markets (VEU also holds emerging markets). No data before 1975."
+    },
+    { "id": "VTS", "yahoo": "VTS.AX", "market": "asx", "currency": "AUD", "category": "Global shares", "proxy": [{ "series": "us_shares", "weight": 1 }] },
+    {
+      "id": "ETHI", "yahoo": "ETHI.AX", "market": "asx", "currency": "AUD", "category": "Global shares",
+      "proxy": [
+        {"series": "global_shares", "weight": 1}
+      ],
+      "proxyWarning": "A concentrated ethical fund (about 200 large companies, more technology and no fossil fuels); developed-world shares overall are only a rough stand-in."
+    },
+    {
+      "id": "VESG", "yahoo": "VESG.AX", "market": "asx", "currency": "AUD", "category": "Global shares",
+      "proxy": [
+        {"series": "global_shares", "weight": 1}
+      ],
+      "proxyWarning": "Ethical screens leave out some industries (e.g. fossil fuels, weapons); developed-world shares overall stand in for it."
+    },
+    {
+      "id": "QUAL", "yahoo": "QUAL.AX", "market": "asx", "currency": "AUD", "category": "Global shares",
+      "proxy": [
+        {"series": "global_shares", "weight": 1}
+      ],
+      "proxyWarning": "Holds only 'quality' companies (high profits, low debt), so it can do better or worse than the whole developed market for years at a time; developed-world shares overall stand in for it."
+    },
+    {
+      "id": "MOAT", "yahoo": "MOAT.AX", "market": "asx", "currency": "AUD", "category": "Global shares",
+      "proxy": [
+        {"series": "us_shares", "weight": 1}
+      ],
+      "proxyWarning": "A concentrated fund of about 40-50 US companies chosen by Morningstar; the whole US market stands in for it, so its real returns can differ a lot in any year."
+    },
+    { "id": "IOZ", "yahoo": "IOZ.AX", "market": "asx", "currency": "AUD", "category": "Australian shares", "proxy": [{ "series": "au_shares", "weight": 1 }] },
+    { "id": "STW", "yahoo": "STW.AX", "market": "asx", "currency": "AUD", "category": "Australian shares", "proxy": [{ "series": "au_shares", "weight": 1 }] },
+    {
+      "id": "VHY", "yahoo": "VHY.AX", "market": "asx", "currency": "AUD", "category": "Australian shares",
+      "proxy": [
+        {"series": "au_shares", "weight": 1}
+      ],
+      "proxyWarning": "No high-dividend share series exists, so Australian shares overall stand in. VHY holds about 70 higher-yielding companies (more banks and miners), so its returns can differ a lot from the whole market in any year."
+    },
+    {
+      "id": "VAP", "yahoo": "VAP.AX", "market": "asx", "currency": "AUD", "category": "Australian shares",
+      "proxy": [
+        {"series": "au_shares", "weight": 1}
+      ],
+      "proxyWarning": "No Australian listed property series exists, so Australian shares overall stand in. Listed property is bumpier than the whole market (it fell roughly three-quarters in 2007-09, versus about half for all shares), so proxy months understate its risk."
+    },
+    { "id": "VGAD", "yahoo": "VGAD.AX", "market": "asx", "currency": "AUD", "category": "Currency-hedged", "proxy": [{ "series": "global_shares", "weight": 1, "hedged": true }], "trFrom": "listing" },
+    { "id": "IHVV", "yahoo": "IHVV.AX", "market": "asx", "currency": "AUD", "category": "Currency-hedged", "proxy": [{ "series": "us_shares", "weight": 1, "hedged": true }] },
+    { "id": "HGBL", "yahoo": "HGBL.AX", "market": "asx", "currency": "AUD", "category": "Currency-hedged", "proxy": [{ "series": "global_shares", "weight": 1, "hedged": true }] },
+    {
+      "id": "VDGR", "yahoo": "VDGR.AX", "market": "asx", "currency": "AUD", "category": "Diversified",
+      "proxy": [
+        {"series": "au_shares", "weight": 0.28},
+        {"series": "global_shares", "weight": 0.295},
+        {"series": "global_shares", "weight": 0.125, "hedged": true},
+        {"series": "au_bonds", "weight": 0.09},
+        {"series": "us_bonds", "weight": 0.21, "hedged": true}
+      ],
+      "proxyWarning": "International bonds (21%, hedged) are approximated by US 10-year Treasuries (hedged). Small companies and emerging markets use developed-world shares as a stand-in."
+    },
+    {
+      "id": "VDBA", "yahoo": "VDBA.AX", "market": "asx", "currency": "AUD", "category": "Diversified",
+      "proxy": [
+        {"series": "au_shares", "weight": 0.2},
+        {"series": "global_shares", "weight": 0.21},
+        {"series": "global_shares", "weight": 0.09, "hedged": true},
+        {"series": "au_bonds", "weight": 0.15},
+        {"series": "us_bonds", "weight": 0.35, "hedged": true}
+      ],
+      "proxyWarning": "International bonds (35%, hedged) are approximated by US 10-year Treasuries (hedged), which swing more with interest rates than VBND's mix of shorter government and company bonds. Small companies and emerging markets use developed-world shares as a stand-in."
+    },
+    {
+      "id": "VDCO", "yahoo": "VDCO.AX", "market": "asx", "currency": "AUD", "category": "Diversified",
+      "proxy": [
+        {"series": "au_shares", "weight": 0.12},
+        {"series": "global_shares", "weight": 0.125},
+        {"series": "global_shares", "weight": 0.055, "hedged": true},
+        {"series": "au_bonds", "weight": 0.18},
+        {"series": "us_bonds", "weight": 0.42, "hedged": true},
+        {"series": "cash_au", "weight": 0.1}
+      ],
+      "proxyWarning": "International bonds (42%, hedged) are approximated by US 10-year Treasuries (hedged), which swing more with interest rates than VBND's mix of shorter government and company bonds. Small companies and emerging markets use developed-world shares as a stand-in."
+    },
+    {
+      "id": "VBND", "yahoo": "VBND.AX", "market": "asx", "currency": "AUD", "category": "Bonds",
+      "proxy": [
+        {"series": "us_bonds", "weight": 1, "hedged": true}
+      ],
+      "proxyWarning": "No free long-run global bond series exists, so US 10-year Treasuries (hedged to A$) stand in. VBND's bonds are shorter (about 6 years' duration, versus about 8 for a 10-year Treasury) and include company and non-US government bonds, so the proxy swings more with interest rates."
+    },
+    { "id": "IAF", "yahoo": "IAF.AX", "market": "asx", "currency": "AUD", "category": "Bonds", "proxy": [{ "series": "au_bonds", "weight": 1 }] },
+    {
+      "id": "GOLD", "yahoo": "GOLD.AX", "market": "asx", "currency": "AUD", "category": "Gold",
+      "proxy": [
+        {"series": "gold", "weight": 1}
+      ],
+      "proxyWarning": "Before 2008 (when its Yahoo prices start) uses the World Bank's monthly average gold price, converted to A$. Averages smooth the moves (about 10% less bumpy month to month than GOLD's real month-end prices) and only loosely match them month by month, though the long-run growth matched well (2008-2026: 9.3% a year real, 9.8% proxy)."
+    }
   ],
   "indexes": [
-    { "id": "ASX200", "yahoo": "^AXJO", "name": "S&P/ASX 200", "market": "asx", "currency": "AUD" },
-    { "id": "ALLORDS", "yahoo": "^AORD", "name": "All Ordinaries", "market": "asx", "currency": "AUD" },
-    { "id": "SP500", "yahoo": "^GSPC", "name": "S&P 500", "market": "us", "currency": "USD" },
-    { "id": "NDX", "yahoo": "^NDX", "name": "Nasdaq 100", "market": "us", "currency": "USD" }
+    {
+      "id": "ASX200",
+      "yahoo": "^AXJO",
+      "name": "S&P/ASX 200",
+      "market": "asx",
+      "currency": "AUD"
+    },
+    {
+      "id": "ALLORDS",
+      "yahoo": "^AORD",
+      "name": "All Ordinaries",
+      "market": "asx",
+      "currency": "AUD"
+    },
+    {
+      "id": "SP500",
+      "yahoo": "^GSPC",
+      "name": "S&P 500",
+      "market": "us",
+      "currency": "USD"
+    },
+    {
+      "id": "NDX",
+      "yahoo": "^NDX",
+      "name": "Nasdaq 100",
+      "market": "us",
+      "currency": "USD"
+    }
   ],
   "fx": [
-    { "id": "AUDUSD", "yahoo": "AUDUSD=X", "name": "AUD/USD", "market": "asx", "currency": "USD" }
+    {
+      "id": "AUDUSD",
+      "yahoo": "AUDUSD=X",
+      "name": "AUD/USD",
+      "market": "asx",
+      "currency": "USD"
+    }
   ],
   "helpers": [
-    { "id": "NASDAQCOMP", "yahoo": "^IXIC", "name": "Nasdaq Composite (used for the tech proxy before 1985)", "market": "us", "currency": "USD" }
+    {
+      "id": "NASDAQCOMP",
+      "yahoo": "^IXIC",
+      "name": "Nasdaq Composite (used for the tech proxy before 1985)",
+      "market": "us",
+      "currency": "USD"
+    }
   ]
 }

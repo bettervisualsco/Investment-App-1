@@ -8,9 +8,20 @@ times). Both are unofficial and for personal use only (see DATA_SOURCES.md).
 from __future__ import annotations
 
 import math
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Sequence, Tuple
+
+
+# A short pause between requests to Yahoo, to keep the request rate polite (37 ETFs + indexes means
+# about 40 requests per market each run; with the pause that is about one request a second).
+REQUEST_GAP_SECONDS = 0.4
+
+
+def pause() -> None:
+    if REQUEST_GAP_SECONDS > 0:
+        time.sleep(REQUEST_GAP_SECONDS)
 
 
 @dataclass
@@ -71,7 +82,9 @@ def intraday_yfinance(symbols: Sequence[str]) -> Dict[str, Bars]:
     import yfinance as yf
 
     out: Dict[str, Bars] = {}
-    for sym in symbols:
+    for i, sym in enumerate(symbols):
+        if i:
+            pause()
         try:
             df = yf.Ticker(sym).history(period="1d", interval="5m", auto_adjust=False, prepost=False)
         except Exception:  # one bad symbol shouldn't stop the others
@@ -136,7 +149,9 @@ def daily_direct(symbol: str) -> DailyHistory:
 
 def intraday_direct(symbols: Sequence[str]) -> Dict[str, Bars]:
     out: Dict[str, Bars] = {}
-    for sym in symbols:
+    for i, sym in enumerate(symbols):
+        if i:
+            pause()
         try:
             res = _chart(sym, {"range": "1d", "interval": "5m"})
         except Exception:

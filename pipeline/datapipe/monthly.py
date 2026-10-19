@@ -24,6 +24,9 @@ from .util import DATA_DIR, PIPELINE_DIR, add_months, load_json, month_num, mont
 SCALE = 100_000
 AU_BOND_W5 = 0.85
 TECH_DIVIDEND_YIELD = 0.007  # values are stored as whole numbers: 0.01234 (1.234%) -> 1234
+GOLD_STATIC = "worldbank_gold_monthly.csv"  # World Bank Pink Sheet, frozen by static_build.py
+# The London Gold Pool held gold at about US$35 until March 1968; the free market price starts in April.
+GOLD_FROM = "1968-04"
 Series = Dict[str, float]  # "YYYY-MM" -> change during that month, as a fraction
 
 
@@ -230,6 +233,28 @@ def au_cpi_monthly(inflation: dict) -> Tuple[Series, str]:
     return dict(sorted(out.items())), month_str(first)
 
 
+HEDGE_CARRY = False
+
+
+def hedged_return(r: Series, cash_au: Series, cash_us: Series, src: str, dst: str) -> Series:
+    """A currency-hedged return: the asset's return in its own currency, plus the gap between the two
+    currencies' cash rates. A hedge is a rolling forward contract, and forwards are priced at that
+    gap, so e.g. hedging US$ back to A$ earned about 3% a year extra in 1975-2008, when Australian
+    rates were much higher, and cost a little in 2022-2024. (Ignores the hedge's small costs.)"""
+    home, away = (cash_au, cash_us) if dst == "AUD" else (cash_us, cash_au)
+    return {m: (1 + v) * (1 + home[m]) / (1 + away[m]) - 1 for m, v in r.items() if m in home and m in away}
+
+
+def gold_series(wb_rows: List[dict], etf_usd: Series) -> Tuple[Series, str]:
+    """Monthly change in the US$ gold price: the World Bank's monthly averages (rows of month,
+    usd_per_oz) from GOLD_FROM, then the GOLD ETF's own monthly total return in US$ for the months
+    after the frozen World Bank copy ends. Returns (series, last World Bank month)."""
+    levels = [(r["month"], float(r["usd_per_oz"])) for r in wb_rows if r["month"] >= add_months(GOLD_FROM, -1)]
+    wb = changes_from_levels(levels)
+    end = last_month(wb)
+    return splice((wb, None, None), (etf_usd, add_months(end, 1), None)), end
+
+
 # ---- the build ---------------------------------------------------------------------------
 
 
@@ -284,6 +309,10 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
         (vgs_usd, add_months(last_month(developed), 1), None),
     )
 
+    # Shares outside the US in US$ (for VEU): French "all countries" international index (the non-US
+    # markets in the French data, from 1975), then VEU (converted to US$) once that runs out.
+    intl_shares = splice((intl, None, None), (to_currency(etf_tr("VEU"), fx, "AUD", "USD"), add_months(last_month(intl), 1), None))
+
     # Australian shares in A$: French (MSCI-based, local currency) from 1975, then VAS.
     aus = pct_points(cache["aus_local"])
     au_shares = splice((aus, None, None), (etf_tr("VAS"), add_months(last_month(aus), 1), None))
@@ -292,6 +321,10 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
     ixic = {m: v + TECH_DIVIDEND_YIELD / 12 for m, v in index_price("NASDAQCOMP").items()}
     ndx = {m: v + TECH_DIVIDEND_YIELD / 12 for m, v in index_price("NDX").items()}
     us_tech = splice((ixic, None, "1985-10"), (ndx, "1985-11", None))
+
+    # Gold in US$: the World Bank's monthly average price (frozen copy), then the GOLD ETF (in US$) for
+    # the months after the frozen copy ends.
+    gold, wb_gold_end = gold_series(read_static(GOLD_STATIC), to_currency(etf_tr("GOLD"), fx, "AUD", "USD"))
 
     # Bonds: 10-year US Treasury. Australian government bonds: 85% 5-year + 15% 10-year, which gives
     # about the same interest-rate sensitivity (duration ~4.8 years) as the AusBond Composite index
@@ -343,6 +376,14 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
             "segments": [["1871-02", "1953-03", "Calculated from Shiller's long-term interest rate (monthly average)"],
                          ["1953-04", "1961-12", "Calculated from FRED GS10 (monthly average)"],
                          ["1962-01", None, "Calculated from FRED DGS10, end of month"]]}),
+        "intl_shares": (intl_shares, {"label": "Shares outside the US (total return)", "kind": "return", "currency": "USD",
+            "segments": [["1975-01", last_month(intl), "Kenneth French Data Library: international 'all countries' index (the markets outside the US in its data), US$, dividends included"],
+                         [add_months(last_month(intl), 1), None, "VEU (Vanguard All-World ex-US Shares ETF) adjusted close, converted to US$, Yahoo"]],
+            "gap": "No free data before 1975. Mostly developed markets; emerging markets are only partly covered, so it is a stand-in for VEU's all-world-ex-US index."}),
+        "gold": (gold, {"label": "Gold (US$ price)", "kind": "return", "currency": "USD",
+            "segments": [[first_month(gold), wb_gold_end, "World Bank Commodity Price Data (Pink Sheet): gold, US$ per troy ounce, average of each month's daily prices (London afternoon fixing; spot from June 2025)"],
+                         [add_months(wb_gold_end, 1), None, "GOLD (Global X Physical Gold) adjusted close, converted to US$, Yahoo"]],
+            "gap": "Starts April 1968, when the free market price began (gold was held at about US$35 before). The World Bank figures are monthly averages, which smooth the month-to-month moves a little (true month-end prices swing more), and are whole dollars, so months before about 1973 (gold under US$100) are rounded by up to 1-2%. No income: gold pays nothing."}),
         "cash_au": (cash_au, {"label": "Australian cash rate", "kind": "return", "currency": "AUD",
             "segments": [["1969-06", None, "RBA: bank bills to 1976, interbank cash rate to 1990, cash rate target after (monthly average / 12)"]]}),
         "cash_us": (cash_us, {"label": "US 1-month Treasury bills", "kind": "return", "currency": "USD",
@@ -367,6 +408,8 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
     from_etf: Dict[str, set] = {k: set() for k in asset_series}
     from_etf["us_shares"] = {m for m in us_shares if m > fr_us_end}
     from_etf["au_shares"] = {m for m in au_shares if m > last_month(aus)}
+    from_etf["gold"] = {m for m in gold if m > wb_gold_end}
+    from_etf["intl_shares"] = {m for m in intl_shares if m > last_month(intl)}
     from_etf["global_shares"] = {m for m in global_shares if m > last_month(developed) or (m <= "1990-06" and m in from_etf["us_shares"])}
 
     out_series = {}
@@ -390,7 +433,9 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
             for c in t.proxy:
                 s = assets[c.series]
                 src = asset_series[c.series][1]["currency"]
-                parts.append((c.weight, s if c.hedged else to_currency(s, fx, src, t.currency)))
+                if src != t.currency:
+                    s = hedged_return(s, cash_au, cash_us, src, t.currency) if c.hedged else to_currency(s, fx, src, t.currency)
+                parts.append((c.weight, s))
             months = set.intersection(*(set(p[1]) for p in parts))
             fee = (mer or 0) / 12
             proxy = {m: (1 + sum(w * s[m] for w, s in parts)) * (1 - fee) - 1 for m in sorted(months)}
@@ -409,8 +454,13 @@ def build(tickers: List[Ticker], now: datetime) -> dict:
             "proxyCheck": proxy_check(real, {m: v for m, v in proxy.items() if not any(m in from_etf[c.series] for c in t.proxy)}) if real and proxy else None,
             "values": vals,
         }
+        warnings = []
+        if t.proxy_warning:
+            warnings.append(t.proxy_warning)
         if mer is None:
-            out_etfs[t.id]["warning"] = "Management fee unknown, so no fee was taken off the proxy months."
+            warnings.append("Management fee unknown, so no fee was taken off the proxy months.")
+        if warnings:
+            out_etfs[t.id]["warning"] = " ".join(warnings)
 
     core = ["au_shares", "us_shares", "global_shares", "au_bonds", "cash_au", "au_cpi", "us_cpi", "audusd"]
     last_full = min(last_month(assets[k]) for k in core)

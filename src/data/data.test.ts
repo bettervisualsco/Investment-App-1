@@ -73,7 +73,8 @@ describe('the real data matches well-known history', () => {
       expect(e.realFrom, id).not.toBeNull()
       expect(e.start <= (e.realFrom as string), id).toBe(true)
       expect(e.fee, id).not.toBeNull()
-      if (e.proxyCheck) expect(e.proxyCheck.correlation as number, id).toBeGreaterThan(0.9)
+      // A stand-in history that tracks loosely is allowed only if the app warns about it.
+      if (e.proxyCheck) expect(e.proxyCheck.correlation as number, id).toBeGreaterThan(e.warning ? 0.6 : 0.9)
     }
   })
 })

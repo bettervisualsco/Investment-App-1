@@ -1,0 +1,62 @@
+{
+  "name": {
+    "value": "iShares S&P 500 (AUD Hedged) ETF",
+    "note": "BlackRock's name has the brackets; the ASX lists it as 'iShares S&P 500 AUD Hedged ETF'. 10-for-1 unit split in December 2022 (first post-split NAV 7 Dec 2022).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/literature/fact-sheet/ihvv-ishares-s-p-500-aud-hedged-etf-fund-fact-sheet-en-au.pdf"
+  },
+  "index": {
+    "value": "S&P 500 Hedged to AUD (BlackRock: S&P 500 Hedged AUD Index Net TR), hedged to AUD",
+    "note": "Holds the US-listed iShares Core S&P 500 ETF (IVV) plus currency forwards that hedge the US dollar back to Australian dollars.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/271027/ishares-s-p-500-aud-hedged-etf"
+  },
+  "mer": {
+    "value": 0.1,
+    "unit": "% p.a.",
+    "note": "Management fee as stated in the PDS",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/271027/ishares-s-p-500-aud-hedged-etf"
+  },
+  "yield": {
+    "value": 3.98,
+    "unit": "% a year",
+    "note": "BlackRock's '12m Trailing Yield' at 15 Oct 2026: income distributions with ex-dates in the past 12 months divided by the latest NAV. IHVV pays once a year, so this is a single distribution (270.27 cents, ex 1 Jul 2026), which was unusually large: the three before it were 49.5-57.7 cents (about 0.7-0.9% of today's price). The size of the yearly payment swings with currency-hedging gains. Fact sheet: 4.03% at 30 Sep 2026.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/271027/ishares-s-p-500-aud-hedged-etf"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "BlackRock's published 'Franking Level of distributed income' for the year ended 30 Jun 2026 is 0%; US shares carry no franking credits.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/271027/fund/1478358644058.ajax?tab=tax-distributions"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/271027/ishares-s-p-500-aud-hedged-etf"
+  },
+  "listed": {
+    "value": "2014-12-18",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/IHVV/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/271027/ishares-s-p-500-aud-hedged-etf"
+  },
+  "inception": {
+    "value": "2014-12-15",
+    "note": "Fund inception (first unit creation); listed on the ASX 18 Dec 2014. 10-for-1 unit split in Dec 2022: prices and distributions before then are 10x larger per unit.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/271027/ishares-s-p-500-aud-hedged-etf"
+  },
+  "distributions": {
+    "value": "yearly",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/271027/ishares-s-p-500-aud-hedged-etf"
+  }
+}

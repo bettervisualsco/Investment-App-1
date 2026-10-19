@@ -1,0 +1,63 @@
+{
+  "name": {
+    "value": "Betashares Global Sustainability Leaders ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-sustainability-leaders-etf/"
+  },
+  "index": {
+    "value": "Nasdaq Future Global Sustainability Leaders Index",
+    "note": "About 200 large global 'climate leader' companies after fossil-fuel and other ethical screens (199 components at 30 Sep 2026). Not currency hedged.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-sustainability-leaders-etf/"
+  },
+  "mer": {
+    "value": 0.59,
+    "unit": "% p.a.",
+    "note": "Management fee 0.49% + expenses capped at 0.10% (fund page shows management fee and costs 0.59%)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/files/factsheets/ETHI-Factsheet.pdf"
+  },
+  "yield": {
+    "value": 1.8,
+    "unit": "% a year",
+    "note": "12-month distribution yield as at 30 Sep 2026 (prior 12 months' distributions / closing NAV at period end)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-sustainability-leaders-etf/"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Not stated; global (ex-Australia) shares carry no franking credits",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-sustainability-leaders-etf/",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-sustainability-leaders-etf/"
+  },
+  "listed": {
+    "value": "2017-01-09",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/ETHI/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-sustainability-leaders-etf/"
+  },
+  "inception": {
+    "value": "2017-01-05",
+    "note": "Fund inception; listed on the ASX 9 Jan 2017",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-sustainability-leaders-etf/"
+  },
+  "distributions": {
+    "value": "twice a year",
+    "note": "Semi-annual; ex-dates early January (small) and 1 July (larger)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-sustainability-leaders-etf/"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "name": {
+    "value": "Vanguard Diversified Conservative Index ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Conservative_Index_ETF_8219_FS_VDCO.pdf"
+  },
+  "index": {
+    "value": "Conservative Composite Index (blend of the underlying funds' indexes)",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Conservative_Index_ETF_8219_FS_VDCO.pdf"
+  },
+  "mer": {
+    "value": 0.27,
+    "unit": "% p.a.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Conservative_Index_ETF_8219_FS_VDCO.pdf"
+  },
+  "yield": {
+    "value": 5.74,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026. Vanguard's 1-year income return was 5.62% to 30 Sep 2026 (fact sheet). The Apr and Jul 2026 payouts were unusually large, mostly 'Australian income: other income' (probably currency-hedging gains in the bond funds), so this may not repeat.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8219/overview"
+  },
+  "franking": {
+    "value": 5,
+    "unit": "%",
+    "note": "ESTIMATE: Vanguard doesn't publish one. Worked out from the FY2026 distribution breakdown (franking credits / (cash x 30/70)): 0.06636 / (2.92691 x 30/70) = 5.3%.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8219/overview",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Conservative_Index_ETF_8219_FS_VDCO.pdf"
+  },
+  "listed": {
+    "value": "2017-11-22",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VDCO/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Conservative_Index_ETF_8219_FS_VDCO.pdf"
+  },
+  "inception": {
+    "value": "2017-11-20",
+    "note": "Fund inception; listed on the ASX 22 Nov 2017",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Conservative_Index_ETF_8219_FS_VDCO.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Conservative_Index_ETF_8219_FS_VDCO.pdf"
+  },
+  "allocation": {
+    "value": {
+      "Australian shares": 12,
+      "International shares (unhedged)": 8.5,
+      "International shares (hedged to AUD)": 5.5,
+      "International small companies": 2,
+      "Emerging markets shares": 2,
+      "Australian bonds": 18,
+      "International bonds (hedged to AUD)": 42,
+      "Cash": 10
+    },
+    "unit": "% target",
+    "note": "Strategic asset allocation (30% growth / 70% income); each part can drift about 2% either way. Cash is held through the Vanguard Cash Reserve Fund. Same in the PDS dated 1 Sep 2026.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Conservative_Index_ETF_8219_FS_VDCO.pdf"
+  }
+}

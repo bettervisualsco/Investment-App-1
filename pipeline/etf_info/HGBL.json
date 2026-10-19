@@ -1,0 +1,63 @@
+{
+  "name": {
+    "value": "Betashares Global Shares Currency Hedged ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/"
+  },
+  "index": {
+    "value": "Solactive GBS Developed Markets ex Australia Large & Mid Cap Index AUD Hedged",
+    "note": "Same share index as BGBL, hedged into Australian dollars (factsheet writes it as '... Index (AUD Hedged)'; Bloomberg SADLMCAH)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/"
+  },
+  "mer": {
+    "value": 0.11,
+    "unit": "% p.a.",
+    "note": "Management fee and costs; Betashares notes certain additional costs (e.g. transaction costs) apply, see PDS",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/"
+  },
+  "yield": {
+    "value": 1.2,
+    "unit": "% a year",
+    "note": "12-month distribution yield as at 30 Sep 2026 (prior 12 months' distributions / closing NAV at period end)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Not stated; global (ex-Australia) shares carry no franking credits",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/"
+  },
+  "listed": {
+    "value": "2023-05-18",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/HGBL/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/"
+  },
+  "inception": {
+    "value": "2023-05-16",
+    "note": "Fund inception; listed on the ASX 18 May 2023",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/"
+  },
+  "distributions": {
+    "value": "twice a year",
+    "note": "Betashares says 'at least annually'; so far it has paid twice a year (ex-dates early January and 1 July)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.betashares.com.au/fund/global-shares-currency-hedged-etf/"
+  }
+}

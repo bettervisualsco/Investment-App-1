@@ -21,7 +21,7 @@ def build(tickers: List[Ticker]) -> dict:
     checked = []
     for t in tickers:
         if t.kind == "etf":
-            entry = {"id": t.id, "symbol": t.yahoo, "market": t.market, "currency": t.currency, "name": t.name}
+            entry = {"id": t.id, "symbol": t.yahoo, "market": t.market, "currency": t.currency, "name": t.name, "category": t.category}
             if isinstance(t.info.get("name"), dict):
                 entry["nameInfo"] = t.info["name"]  # the name as a checked fact (note, date, source)
             for k in INFO_FIELDS:

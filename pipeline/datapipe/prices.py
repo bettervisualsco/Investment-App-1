@@ -92,8 +92,61 @@ def apply_corrections(t: Ticker, h: yahoo.DailyHistory, corrections: List[dict])
         h.close[i] = c["close"]
         h.adj[i] = h.adj[i] * ratio
         fixed.append(c["date"])
+    fixed.sort()
     if fixed:
         notes.append(f"{len(fixed)} close(s) from {fixed[0]} to {fixed[-1]} corrected from an independent source (pipeline/static/corrections.json)")
+    return notes, problems
+
+
+def apply_distribution_corrections(t: Ticker, h: yahoo.DailyHistory, corrections: List[dict]) -> Tuple[List[str], List[str]]:
+    """Checked fixes to Yahoo's distribution records (pipeline/static/corrections.json "distributions"),
+    re-applied after every download. Each entry gives the ex-date, the right amount per unit, and the
+    amount Yahoo shows ("replaces"; null when Yahoo has no record of that distribution at all).
+    An amount of 0 removes a distribution Yahoo shows that the issuer never paid.
+    The adjusted close before the ex-date is rescaled the way Yahoo builds it: each distribution
+    multiplies the earlier adjusted prices by (1 - amount / the close the day before the ex-date).
+    A fix is only applied while Yahoo still shows what it was written for; otherwise it is skipped
+    (silently if Yahoo now has the right amount, with a problem for meta.json if something else).
+    Returns (notes for the file's "repairs", problems for meta.json)."""
+    notes: List[str] = []
+    problems: List[str] = []
+    for c in corrections:
+        if c.get("id") != t.id:
+            continue
+        ex, amount, replaces = c["date"], float(c["amount"]), c.get("replaces")
+        divs = dict(h.dividends)
+        if amount == 0 and ex not in divs:
+            continue  # Yahoo no longer shows the one the issuer never paid
+        if ex in divs:
+            y = divs[ex]
+            if amount > 0 and abs(y / amount - 1) < 0.001:
+                continue  # Yahoo already has the right amount
+            if replaces is None or abs(y / replaces - 1) > 0.005:
+                problems.append(f"{t.id}: distribution fix for {ex} not applied: Yahoo now shows {y:g}, not {'nothing' if replaces is None else f'{replaces:g}'}; please check pipeline/static/corrections.json")
+                continue
+            old = y
+        else:
+            near = [d for d in divs if abs((date.fromisoformat(d) - date.fromisoformat(ex)).days) <= 7]
+            if replaces is not None or near:
+                what = f"one on {near[0]}" if near else "no record of it"
+                problems.append(f"{t.id}: distribution fix for {ex} not applied: Yahoo now has {what}; please check pipeline/static/corrections.json")
+                continue
+            old = 0.0
+        k = next((i for i, d in enumerate(h.dates) if d >= ex), None)
+        if not k:  # no price before the ex-date (or none from it) to scale against
+            problems.append(f"{t.id}: distribution fix for {ex} not applied: no close the day before; please check pipeline/static/corrections.json")
+            continue
+        prev = h.close[k - 1]
+        ratio = (1 - amount / prev) / (1 - old / prev)
+        for j in range(k):
+            h.adj[j] *= ratio
+        if amount > 0:
+            divs[ex] = amount
+            notes.append(f"distribution on {ex} set to {amount:g} per unit (Yahoo: {'none' if not old else f'{old:g}'}), from the issuer (pipeline/static/corrections.json)")
+        else:
+            del divs[ex]
+            notes.append(f"distribution of {old:g} on {ex} removed: the issuer paid none that day (pipeline/static/corrections.json)")
+        h.dividends = sorted(divs.items())
     return notes, problems
 
 
@@ -216,7 +269,13 @@ def daily_file(t: Ticker, h: yahoo.DailyHistory, approx_from: Optional[str] = No
         # Yahoo has no distribution records for ASX ETFs before about 2013. Where the records start
         # well after the first trading day, adjusted closes before that are really price-only.
         f["trFrom"] = h.dates[0]
-        if t.market == "asx" and h.dividends and (date.fromisoformat(h.dividends[0][0]) - days[0]).days > 400:
+        if t.tr_from:
+            # Checked with the issuer (pipeline/tickers.json "trFrom"): overrides the guess below.
+            if t.tr_from != "listing" and t.tr_from > h.dates[0]:
+                f["trFrom"] = t.tr_from
+            if t.tr_note:
+                f["trNote"] = t.tr_note
+        elif t.market == "asx" and h.dividends and (date.fromisoformat(h.dividends[0][0]) - days[0]).days > 400:
             f["trFrom"] = h.dividends[0][0]
             f["trNote"] = f"Yahoo has no distribution records before {h.dividends[0][0]}, so total return (adjusted close) before then leaves distributions out."
         f["a"] = [round_price(x) for x in h.adj]
@@ -235,7 +294,9 @@ def update_daily(tickers: List[Ticker], meta: Meta, now: datetime) -> Tuple[bool
     failures = 0
     used_backup = []
     fixes = load_corrections()
-    for t in tickers:
+    for n, t in enumerate(tickers):
+        if n:
+            yahoo.pause()  # polite request rate (see sources/yahoo.py)
         rel = f"daily/{t.id}.json"
         try:
             approx_from = None
@@ -254,7 +315,9 @@ def update_daily(tickers: List[Ticker], meta: Meta, now: datetime) -> Tuple[bool
             if t.kind == "etf":
                 repairs = trim_before_listing(t, h) + repair_history(h)
                 notes, problems = apply_corrections(t, h, fixes.get("closes", []))
-                repairs += notes
+                notes2, problems2 = apply_distribution_corrections(t, h, fixes.get("distributions", []))
+                repairs += notes + notes2
+                problems += problems2
                 for msg in problems:
                     meta.problem_once("corrections", msg, now)
                 # Anything still jumping this much is suspicious; flag it so a person can check.

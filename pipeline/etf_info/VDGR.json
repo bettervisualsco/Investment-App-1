@@ -1,0 +1,75 @@
+{
+  "name": {
+    "value": "Vanguard Diversified Growth Index ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Growth_Index_ETF_8220_FS_VDGR.pdf"
+  },
+  "index": {
+    "value": "Growth Composite Index (blend of the underlying funds' indexes)",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Growth_Index_ETF_8220_FS_VDGR.pdf"
+  },
+  "mer": {
+    "value": 0.27,
+    "unit": "% p.a.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Growth_Index_ETF_8220_FS_VDGR.pdf"
+  },
+  "yield": {
+    "value": 4.3,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026. Vanguard's 1-year income return was 4.46% to 30 Sep 2026 (fact sheet). The Apr and Jul 2026 payouts were unusually large, mostly 'Australian income: other income' (probably currency-hedging gains in the bond funds), so this may not repeat.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8220/overview"
+  },
+  "franking": {
+    "value": 15,
+    "unit": "%",
+    "note": "ESTIMATE: Vanguard doesn't publish one. Worked out from the FY2026 distribution breakdown (franking credits / (cash x 30/70)): 0.18213 / (2.77777 x 30/70) = 15.3%.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8220/overview",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Growth_Index_ETF_8220_FS_VDGR.pdf"
+  },
+  "listed": {
+    "value": "2017-11-22",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VDGR/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Growth_Index_ETF_8220_FS_VDGR.pdf"
+  },
+  "inception": {
+    "value": "2017-11-20",
+    "note": "Fund inception; listed on the ASX 22 Nov 2017",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Growth_Index_ETF_8220_FS_VDGR.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Growth_Index_ETF_8220_FS_VDGR.pdf"
+  },
+  "allocation": {
+    "value": {
+      "Australian shares": 28,
+      "International shares (unhedged)": 20.5,
+      "International shares (hedged to AUD)": 12.5,
+      "International small companies": 5,
+      "Emerging markets shares": 4,
+      "Australian bonds": 9,
+      "International bonds (hedged to AUD)": 21
+    },
+    "unit": "% target",
+    "note": "Strategic asset allocation (70% growth / 30% income); each part can drift about 2% either way. Same in the PDS dated 1 Sep 2026.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Diversified_Growth_Index_ETF_8220_FS_VDGR.pdf"
+  }
+}

@@ -2,7 +2,8 @@
 
 Every number the app shows comes from one of the sources below. All are free and need no account
 or key. This file records where each series comes from, what dates it covers, the gaps, and the
-terms of use. Checked on **18 October 2026**.
+terms of use. Checked on **18 October 2026** (22 more ETFs, gold and the "outside the US" series
+added and checked **19 October 2026**, see notes/etfs-added.md).
 
 **Important:** all of this is for **personal use**. Some sources (especially Yahoo) only allow
 personal use, and the GitHub repo and website are public (see "Terms" below).
@@ -19,6 +20,8 @@ personal use, and the GitHub repo and website are public (see "Terms" below).
 | **Reserve Bank of Australia** statistical tables (CSV) | Cash rate target decisions (A2), monthly cash/bank-bill rates (F1.1), government bond yields (F2 daily, F2.1), AUD/USD month-end (F11) and daily (F11.1) | 1969 onwards (see section 3) | Checked daily | RBA website material is CC BY 4.0, but **statistical data is "Excluded Material"** with its own terms (use at your own risk, can change without notice). AUD/USD since July 2008 is the WM/Reuters 4pm fix (third-party data). Fine for personal use |
 | **Kenneth French Data Library** (Dartmouth) | Monthly total returns: all US stocks (1926+), developed markets (1990+), Australia and an all-country ex-US index (1975+) | US & developed: to Aug 2026. International: to Dec 2025 (updated about once a year) | Checked weekly | Freely published for research and teaching; no formal licence. Cite "Kenneth R. French Data Library" |
 | **Robert Shiller's data** (`ie_data.xls`, Yale) | S&P Composite prices and dividends, US CPI and long-term interest rate for **1871 to 1953 only** | 1871-01 to 1953-12 (frozen copy) | Never (frozen in `pipeline/static/`) | Freely published by Prof. Shiller for research |
+| **World Bank Commodity Price Data ("Pink Sheet")** | Gold price, US$ per troy ounce, monthly average of daily prices (London afternoon fixing; spot from June 2025), for the long-run `gold` series | 1960-01 to 2026-09 (frozen copy; used from 1968-04) | Never (frozen in `pipeline/static/worldbank_gold_monthly.csv`; rebuild with `build-static` to extend) | CC BY 4.0 (World Bank datasets), attribute "World Bank Commodity Price Data (The Pink Sheet)" |
+| **Issuers' own data files** (Vanguard, BlackRock, Betashares, VanEck, State Street, Global X) | Not read by the scheduled job. Used once, by hand, to check Yahoo's closes and distributions and to write the fixes in `pipeline/static/corrections.json` (NAV histories, distribution histories, VanEck's "last traded price") | Each fund's whole history | Checked 19 Oct 2026 | Published for investors; a handful of figures are quoted with their source |
 | **RBA historical spreadsheets** | AUD/USD monthly 1969-2009 and daily 2003-2022, bond yields monthly 1969-2013 and daily 1995-2013 | Frozen | Never (frozen in `pipeline/static/`) | As RBA above |
 
 The frozen copies are made by `python pipeline/run.py build-static`. They are small CSV files kept
@@ -41,6 +44,28 @@ in git, so the scheduled job never depends on old spreadsheets still being onlin
 | VOO | VOO | 2010-09-09 → | |
 | VTI | VTI | 2001-06-15 → | Fund started 24 May 2001 (first 3 weeks missing) |
 | QQQ | QQQ | 1999-03-10 → | First dividend Dec 2003 (it genuinely paid none before) |
+| IWLD | IWLD.AX | 2016-04-28 → | One Yahoo distribution (1 Jul 2016) differs 5% from BlackRock's: corrected |
+| BGBL | BGBL.AX | 2023-05-11 → | Yahoo's 1 Jul 2026 distribution is Betashares' early estimate (2% low): corrected |
+| WXOZ | WXOZ.AX | 2013-03-19 → | One bad close (18 Feb 2025, 53.50 between 50.45 and 50.69): corrected from State Street's NAV. Thinly traded |
+| VEU | VEU.AX | 2009-05-08 → | US-domiciled Vanguard fund, ASX CDIs priced in A$; Yahoo's distributions are the A$ amounts. **No distributions on Yahoo before Mar 2013** (`trFrom`). One bad close (4 Oct 2011, 45.86): replaced with an estimate from the NYSE close and the RBA rate |
+| VTS | VTS.AX | 2009-05-08 → | As VEU (US-domiciled; no distributions before Mar 2013). **Yahoo didn't have VTS's 28 Sep 2026 distribution yet on 19 Oct 2026** (US$0.9555 a unit, about A$1.35; the A$ amount is set at the payment date, 26 Oct): Yahoo normally adds it once paid; total return is about 0.25% too low until then |
+| ETHI | ETHI.AX | 2017-01-09 → | |
+| VESG | VESG.AX | 2018-09-13 → | |
+| QUAL | QUAL.AX | 2014-10-31 → | One bad close (1 Dec 2016): corrected. Closes match VanEck's published last traded price within 0.5% on 99.7% of days since 2017 |
+| MOAT | MOAT.AX | 2015-06-26 → | Pays one large distribution a year (e.g. $11.61 in Jul 2026), so the price drops 7-9% each 1 July. Closes match VanEck's last traded price within 0.5% on 98.7% of days since 2017 (the rest are closing-auction vs last-trade differences, up to 2.2%) |
+| IOZ | IOZ.AX | 2010-12-09 → | No distributions on Yahoo before Apr 2013 (`trFrom`). Two bad closes (10 Feb 2012, 13 Dec 2013): corrected from BlackRock's NAV |
+| STW | STW.AX | 2008-01-02 → | **Yahoo starts in 2008**; STW listed 27 Aug 2001 (Australia's first ETF), so 2001-2007 are missing. No distributions before Jun 2013 (`trFrom`). Four bad closes in 2009: corrected from State Street's NAV |
+| VHY | VHY.AX | 2011-05-26 → | No distributions before 2013 (`trFrom`) |
+| VAP | VAP.AX | 2010-10-15 → | No distributions before 2013 (`trFrom`). Its big March 2020 swings (−17% in a day) are real (the A-REIT index moved the same way) |
+| VGAD | VGAD.AX | 2014-11-20 → | Paid nothing until Jul 2016 (Vanguard's records), so total return is complete from listing (`trFrom` set in tickers.json). Yahoo's 1 Jul 2026 distribution was an early estimate 20% too low: corrected |
+| IHVV | IHVV.AX | 2014-12-18 → | **Yahoo's close is stuck at 37.43 (no volume) from 8 Dec 2022 to 3 Jan 2023**, around its 10-for-1 unit split (like IVV): the 16 closes are replaced with BlackRock's NAV for the day before (the best stand-in: ASX closes are typically within 0.4% of it). One bad close on 17 Mar 2020 (35.25) also replaced. Pays once a year |
+| HGBL | HGBL.AX | 2023-05-18 → | |
+| VDGR | VDGR.AX | 2017-11-22 → | |
+| VDBA | VDBA.AX | 2017-11-22 → | A tiny distribution Vanguard never paid (8 Dec 2020) is removed |
+| VDCO | VDCO.AX | 2017-11-22 → | Thinly traded at first: several runs of identical closes in 2017-2018 are days with no trades (checked) |
+| VBND | VBND.AX | 2017-10-12 → | As VDCO (no-trade days in 2017-2018) |
+| IAF | IAF.AX | 2012-03-14 → | Yahoo was missing its Jul and Dec 2012 distributions, dated one 8 days early (Oct 2020) and had one BlackRock never paid (Feb 2022): all corrected, so total return is complete from listing |
+| GOLD | GOLD.AX | 2008-01-02 → | Physical gold (Global X); **no distributions**, so price = total return. **Yahoo starts in 2008** (listed 28 Mar 2003). Yahoo's prices before 2011 weren't adjusted for the Jun 2022 10-for-1 split (repaired automatically). Its close is stuck at 24.07 (no volume) 10-17 Jun 2022, just after that split: replaced with Global X's NAV. One bad close (10 Jul 2013) replaced |
 | ASX200 | ^AXJO | 1992-11-23 → | Price index (no dividends) |
 | ALLORDS | ^AORD | 1984-08-03 → | Price index |
 | SP500 | ^GSPC | 1927-12-30 → | Price index |
@@ -53,11 +78,25 @@ measures total return. Prices are delayed about 15-20 minutes. ASX ETF histories
 listing day (from the ASX's company listing, recorded as `listed` in `pipeline/etf_info`): Yahoo has a
 few placeholder rows (often 50.00) before some of them listed, which are dropped.
 
-**Known Yahoo limitation (not corrected):** for some end-of-financial-year (June) distributions Yahoo
-keeps the issuer's early estimate instead of the final amount, e.g. VGS ex 1 Jul 2026: Yahoo 0.799838
-vs Vanguard's final 0.815432; VAS 0.489963 vs 0.48829897; DHHF 0.213373 vs 0.21268; A200 0.98188 vs
-0.98102; IVV ex 28 Mar 2025 0.160375 vs 0.1601609. The effect on total return is tiny (a few
-hundredths of a percent in that year), so the data is left as Yahoo has it.
+**Known Yahoo limitation:** for some end-of-financial-year (June) distributions Yahoo keeps the
+issuer's early estimate instead of the final amount. Differences over 1% are now corrected in
+`pipeline/static/corrections.json` (`distributions`): VGS ex 1 Jul 2026 (Yahoo 0.799838, Vanguard's
+final 0.815432), VGAD (2.337 vs 2.935), BGBL (0.5949 vs 0.6073). Smaller ones are left as Yahoo has
+them (a few hundredths of a percent of total return in that year): VAS 0.489963 vs 0.48829897; DHHF
+0.213373 vs 0.21268; A200 0.98188 vs 0.98102; IVV ex 28 Mar 2025 0.160375 vs 0.1601609; VDGR, VDBA,
+VDCO, VHY, ETHI and VESG (Jul 2026, 0.1-0.8%). Yahoo also has a few tiny distributions the issuers
+never paid (VDHG 2 Nov 2020, VDBA 8 Dec 2020, VDCO/VHY/VAP 9 Nov 2020, IAF 18 Feb 2022): removed.
+
+**How the new ETFs were checked (19 Oct 2026):** every ASX listing date from the ASX; the latest close
+of each against the ASX's own last price; every close against the issuer's daily NAV where one is
+published (BlackRock, State Street, Betashares, VanEck, Global X: Yahoo's closes are typically within
+0.05% of NAV for the Australian-share funds and within 0.2-0.5% for overseas funds, whose NAV is struck
+at a different time), VanEck's published last traded prices (QUAL, MOAT), every distribution against
+the issuer's full history (Vanguard, BlackRock, Betashares) or the latest four (VanEck, State Street),
+a scan for one-day spikes that come straight back, and the stuck-price check. What was wrong is
+corrected in `pipeline/static/corrections.json`, each with its source; runs of identical closes that
+are genuine no-trade days are listed there under `checkedFlatRuns` (including DHHF's two 2020 runs:
+no trades on those days).
 
 **Automatic checks on Yahoo data** (`pipeline/datapipe/prices.py`, `safety.py`):
 - a one-day spike that comes straight back (3x or more) is dropped;
@@ -83,6 +122,8 @@ All in `data/monthly.json`, lined up by calendar month (see docs/DATA_FORMAT.md)
 | `global_shares` | USD | 1871-02 | **Stand-in: US shares only** to 1974 → rough 50% US + 50% French all-country ex-US index 1975 to Jun 1990 → French developed markets Jul 1990 to Aug 2026 → VGS (converted to US$) after |
 | `au_shares` | AUD | 1975-01 | French "Australia" market portfolio in A$ (dividends included; MSCI data before 2007) to Dec 2025 → VAS after |
 | `us_tech` | USD | 1971-03 | Nasdaq Composite price index to Oct 1985 → Nasdaq-100 price index, **plus an assumed 0.7% a year dividend** |
+| `intl_shares` | USD | 1975-01 | French "all countries" international index (the markets outside the US in its data) to Dec 2025 → VEU (converted to US$) after. Used for VEU |
+| `gold` | USD | 1968-04 | World Bank monthly average gold price (frozen copy) to Sep 2026 → GOLD (converted to US$) after |
 | `au_bonds` | AUD | 1969-08 | Worked out from RBA government bond yields: 85% 5-year + 15% 10-year (gives about VAF's 4.8-year duration). 10-year only before 1972. May-Sep 2013 partly estimated (see gaps) |
 | `us_bonds` | USD | 1871-02 | Worked out from the US 10-year yield (Shiller → FRED GS10 → FRED DGS10) |
 | `cash_au` | AUD | 1969-06 | RBA: 3-month bank bills to Apr 1976, interbank cash rate to Jul 1990, cash rate target after (monthly average ÷ 12) |
@@ -125,6 +166,17 @@ of the month, earn the coupon, and revalue it at the end-of-month yield.
 - **The tech proxy is a price index** plus an assumed dividend yield (QQQ yields about 0.44-0.7%).
 - **French international data is updated about once a year** (currently to Dec 2025); the months
   after that come from VAS/VGS. US and developed-market French data are updated monthly.
+- **Gold** starts in April 1968, when the free London market price began (the London Gold Pool held
+  it near US$35 before; the World Bank file goes back to 1960 at that fixed price). The World Bank
+  figures are **monthly averages** of daily prices, which smooth the moves: over 2008-2026 they were
+  about 10% less bumpy month to month than GOLD's real month-end prices and match them only loosely
+  month by month (correlation 0.63), but the long-run growth matched (9.8% a year proxy vs 9.3% real,
+  in A$). They are also **whole dollars**, so months before about 1973 (gold under US$100) are rounded
+  by up to 1-2%. No free month-end gold price was found: FRED removed the LBMA series in 2022, and the
+  Bundesbank's gold series stop in 1998 (DM). Gold pays no income.
+- **`intl_shares`** covers mostly developed markets; VEU also holds emerging markets. Over 2013-2025 it
+  tracked VEU with correlation 0.93 (10.5% a year real vs 11.3% proxy), far better than developed-world
+  shares including the US (0.86; 14.5% a year, because the US did much better than the rest).
 - **The Shiller file at Yale stopped at Sept 2023** (Prof. Shiller moved his data to shillerdata.com).
   We only use it up to 1953, so this doesn't matter.
 
@@ -139,12 +191,34 @@ Each ETF uses its own real total return from `realFrom`, and its proxy **minus i
 | IVV | 100% us_shares (in A$) | 2013-03 | 162 months to Aug 2026, 0.93, 17.6% vs 17.7% |
 | NDQ | 100% us_tech (in A$) | 2015-06 | 136 months to Sep 2026, 0.94, 19.7% vs 19.6% |
 | A200 | 100% au_shares | 2018-06 | 91 months to Dec 2025, 0.994, 9.2% vs 9.3% |
-| VDHG | 36% au_shares, 38% global (A$), 16% global hedged, 3% au_bonds, 7% us_bonds hedged | 2017-12 | 97 months to Dec 2025, 0.97, 9.7% vs 9.9% |
+| VDHG | 36% au_shares, 38% global (A$), 16% global hedged, 3% au_bonds, 7% us_bonds hedged | 2017-12 | 97 months to Dec 2025, 0.97, 9.7% vs 9.8% |
 | DHHF | 37% au_shares, 63% global (A$) | 2020-01 | 72 months to Dec 2025, 0.97, 10.8% vs 11.6% |
 | VAF | 100% au_bonds | 2012-11 | 167 months to Sep 2026, 0.97, 2.4% vs 1.6% |
 | VOO | 100% us_shares | 2010-10 | 191 months to Aug 2026, 0.995, 14.7% vs 14.6% |
 | VTI | 100% us_shares | 2001-07 | 302 months to Aug 2026, 0.999, 9.7% vs 9.8% |
 | QQQ | 100% us_tech | 1999-04 | 330 months to Sep 2026, 0.999, 10.8% vs 10.8% |
+| IWLD | 100% global_shares (A$) | 2016-05 | 124 months to Aug 2026, 0.92, 14.1% vs 13.3% (ESG screens) |
+| BGBL | 100% global_shares (A$) | 2023-06 | 39 months to Aug 2026, 0.93, 17.6% vs 16.7% (short) |
+| WXOZ | 100% global_shares (A$) | 2013-04 | 161 months to Aug 2026, 0.94, 14.4% vs 14.5% |
+| VEU | 100% intl_shares (A$) | 2013-03 | 154 months to Dec 2025, 0.93, 10.5% vs 11.3% |
+| VTS | 100% us_shares (A$) | 2013-03 | 162 months to Aug 2026, 0.94, 17.3% vs 17.7% |
+| ETHI | 100% global_shares (A$) | 2017-02 | 115 months to Aug 2026, 0.87, 16.1% vs 12.7% (rough stand-in: concentrated ethical fund) |
+| VESG | 100% global_shares (A$) | 2018-10 | 95 months to Aug 2026, 0.90, 13.4% vs 12.0% (ethical screens) |
+| QUAL | 100% global_shares (A$) | 2014-11 | 142 months to Aug 2026, 0.88, 14.9% vs 12.6% (quality tilt) |
+| MOAT | 100% us_shares (A$) | 2015-07 | 134 months to Aug 2026, 0.82, 14.5% vs 14.3% (concentrated, ~40-50 stocks) |
+| IOZ | 100% au_shares | 2013-04 | 153 months to Dec 2025, 0.99, 8.6% vs 8.9% |
+| STW | 100% au_shares | 2013-06 | 151 months to Dec 2025, 0.99, 8.9% vs 9.1% |
+| VHY | 100% au_shares (stand-in) | 2013-01 | 156 months to Dec 2025, 0.95, 9.2% vs 9.2% (high-dividend shares: no own series) |
+| VAP | 100% au_shares (stand-in) | 2013-01 | 156 months to Dec 2025, 0.83, 9.6% vs 9.2% (listed property: no own series; tracking error 11% a year) |
+| VGAD | 100% global_shares hedged | 2014-12 | 141 months to Aug 2026, 0.94, 11.4% vs 11.0% |
+| IHVV | 100% us_shares hedged | 2015-01 | 140 months to Aug 2026, 0.95, 12.2% vs 13.7% |
+| HGBL | 100% global_shares hedged | 2023-06 | 39 months to Aug 2026, 0.92, 19.9% vs 19.7% (short) |
+| VDGR | 28% au_shares, 29.5% global (A$), 12.5% global hedged, 9% au_bonds, 21% us_bonds hedged | 2017-12 | 97 months to Dec 2025, 0.97, 7.8% vs 7.8% |
+| VDBA | 20% au_shares, 21% global (A$), 9% global hedged, 15% au_bonds, 35% us_bonds hedged | 2017-12 | 97 months to Dec 2025, 0.95, 5.9% vs 5.7% |
+| VDCO | 12% au_shares, 12.5% global (A$), 5.5% global hedged, 18% au_bonds, 42% us_bonds hedged, 10% cash_au | 2017-12 | 97 months to Dec 2025, 0.90, 4.1% vs 3.8% |
+| VBND | 100% us_bonds hedged (stand-in) | 2017-11 | 106 months to Aug 2026, 0.81, 0.9% vs 0.0% |
+| IAF | 100% au_bonds | 2012-04 | 174 months to Sep 2026, 0.96, 2.7% vs 2.0% |
+| GOLD | 100% gold (A$) | 2008-02 | 224 months to Sep 2026, 0.63, 9.3% vs 9.8% (monthly averages, see gaps) |
 
 **The proxy check only uses months where the proxy comes from independent index data.** Once the
 French data runs out, `au_shares` is made from VAS (from Jan 2026), `global_shares` from VGS and
@@ -153,16 +227,45 @@ itself (or a near twin), so they are left out. That is why the Australian checks
 The ASX-listed ETFs of US/global shares show lower correlation (0.93-0.94) mainly because the ASX
 closes before New York opens, so month-end prices are taken about 15 hours apart; the long-run
 averages still line up well. These checks are recalculated on every run (`proxyCheck` in `monthly.json`).
-VDHG's small-company and emerging-market parts use `global_shares` as a stand-in, and hedged parts
-use the underlying return without the currency move (ignoring the small interest-rate difference).
-**VDHG's 7% international bonds** (hedged to A$; Vanguard's global aggregate bond fund, which tracks the
-Bloomberg Global Aggregate index hedged to A$) are approximated with `us_bonds` (US 10-year Treasuries,
-hedged), because there is no free long-run global bond series. Global aggregate bonds are shorter
-(lower duration) and include corporate and non-US government bonds, so this part is rougher than the rest.
+The Vanguard diversified funds' small-company and emerging-market parts use `global_shares` as a
+stand-in. **Hedged parts** (VGAD, IHVV, HGBL, and the hedged parts of VDHG/VDGR/VDBA/VDCO/VBND) use the
+underlying return in its own currency **plus the gap between the Australian and US cash rates**
+(`cash_au` − `cash_us`, month by month): a currency hedge is a rolling forward contract, and forwards
+are priced at that gap. (Before 19 Oct 2026 the gap was ignored. It is not small over the long run:
+Australian cash rates were about 3% a year above US rates in 1975-2008, which hedged investors
+earned; in 2022-2024 it went the other way. Over the real overlap since 2015 the gap was small and the
+checks above barely change.) Hedged ETF histories therefore start in mid-1969, when `cash_au` starts.
+**International bonds** (VBND, and the hedged international bond part of VDHG 7%, VDGR 21%, VDBA 35%
+and VDCO 42%: Vanguard's global aggregate bond fund, which tracks the Bloomberg Global Aggregate index
+hedged to A$) are approximated with `us_bonds` (US 10-year Treasuries, hedged), because there is no
+free long-run global bond series. Global aggregate bonds are shorter (VBND's duration is about 6 years,
+a 10-year Treasury's about 8) and include corporate and non-US government bonds, so this part is
+rougher than the rest (VBND: correlation 0.81). **VHY and VAP** use all Australian shares as a
+stand-in (no free long-run high-dividend or listed-property series); VAP's tracking error is large
+(listed property fell much further in 2007-09). Every ETF whose proxy is only a stand-in has a
+plain-English `warning` in `monthly.json` (from `proxyWarning` in `pipeline/tickers.json`).
 
 ---
 
 ## 4. ETF facts (`pipeline/etf_info/*.json`)
+
+Each ETF's group in the app (`category`: Australian shares, Global shares, Currency-hedged,
+Diversified, Bonds, Gold, US-listed) is set in `pipeline/tickers.json` and copied into `data/etfs.json`.
+
+**The 22 ETFs added on 19 Oct 2026** were checked that day on the issuer's site, fact sheet, PDS or data
+feed (Vanguard's API, BlackRock's product pages and data downloads, Betashares, VanEck, State Street,
+Global X). Values marked `"verified": false`: franking for VDGR (~15%), VDBA (~9%), VDCO (~5%) and VAP
+(~10.7%) (worked out from Vanguard's FY2026 tax components, as for VDHG), STW (~65%, from State
+Street's per-unit franking credits), and BGBL/HGBL/ETHI/QUAL/MOAT (0%, not stated; overseas shares).
+Yields are each issuer's own definition (stated in each note): Vanguard's are trailing 12 months of
+cash distributions / NAV (VEU and VTS worked out in US$), BlackRock's "12m Trailing Yield",
+Betashares' and VanEck's 12-month distribution yield, State Street's 1-year "Fund Distribution
+Return". Several are inflated by one unusually large 2026 payout (VBND 9.6%, VDBA/VDCO 5.5-5.7%,
+IHVV 4.0%, MOAT 10%, WXOZ 6.1%; mostly currency-hedging gains or realised capital gains); the notes
+say so. Names changed recently: VTS (now "Vanguard Morningstar US Total Market Shares Index ETF"),
+STW and WXOZ ("State Street SPDR ..." since 19 Dec 2025; WXOZ is now "Carbon Aware"), IWLD ("iShares
+Core MSCI World ex Australia ESG ETF"; was "World All Cap" until June 2021), GOLD ("Global X Physical
+Gold Structured"; was ETFS Physical Gold).
 
 Name, fee, yield, franking, exchange, ASX listing date (`listed`, from the ASX's company listing),
 inception and (for VDHG/DHHF) asset allocation, each with the date checked and the source link: mostly
@@ -191,9 +294,9 @@ those 12 months happened to include five quarterly distributions, and the latest
 4. **If Yahoo stops working for good**, the free no-account options have run out: Stooq (a common
    alternative) now blocks automated downloads with a bot check (checked 18 Oct 2026), and we won't try
    to get around that. The next options all need a **free account and key** (ask Soham first):
-   - **Alpha Vantage** (free tier ~25 requests a day: enough for daily closes of ~11 ETFs, not intraday),
-   - **EODHD** (free tier 20 requests a day, includes ASX),
-   - **Twelve Data** (free tier 800 a day; ASX coverage needs checking).
+   - **Alpha Vantage** (free tier ~25 requests a day: no longer enough for the 33 ETFs' daily closes, and no intraday),
+   - **EODHD** (free tier 20 requests a day, includes ASX; also too few for 33 ETFs),
+   - **Twelve Data** (free tier 800 a day, enough for daily closes; ASX coverage needs checking).
    These would slot in as a third route in `pipeline/datapipe/sources/yahoo.py`'s `daily()`.
 
 ---

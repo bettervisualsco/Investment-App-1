@@ -155,6 +155,8 @@ export type AssetSeriesKey =
   | 'us_shares'
   | 'global_shares'
   | 'us_tech'
+  | 'intl_shares'
+  | 'gold'
   | 'au_bonds'
   | 'us_bonds'
   | 'cash_au'
@@ -212,6 +214,9 @@ export interface EtfInfo {
   market: MarketKey
   currency: 'AUD' | 'USD'
   name: string
+  /** Group the app shows it in: "Australian shares", "Global shares", "Currency-hedged", "Diversified",
+   * "Bonds", "Gold" or "US-listed" (from pipeline/tickers.json). Missing in files made before Oct 2026. */
+  category?: string
   /** The issuer's full name, with when and where it was checked (and any rename note). */
   nameInfo?: Fact<string>
   /** Date the ETF listed on its exchange; price rows before it are dropped. */

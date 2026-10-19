@@ -1,9 +1,11 @@
 {
   "_about": [
-    "Checked fixes to Yahoo's daily closes. The pipeline re-applies them after every download (datapipe/prices.py apply_corrections),",
-    "so a new Yahoo download can't undo them. 'close' is the right close (split-adjusted, like Yahoo's), 'replaces' is the wrong",
-    "value Yahoo shows; a fix is only applied while Yahoo still shows that value, otherwise it is skipped and reported in meta.json.",
-    "The adjusted close on that day is scaled by the same ratio as the close.",
+    "Checked fixes to Yahoo's data. The pipeline re-applies them after every download (datapipe/prices.py apply_corrections and",
+    "apply_distribution_corrections), so a new Yahoo download can't undo them.",
+    "closes: 'close' is the right close (split-adjusted, like Yahoo's), 'replaces' is the wrong value Yahoo shows; a fix is only applied",
+    "while Yahoo still shows that value, otherwise it is skipped and reported in meta.json. The adjusted close that day is scaled by the same ratio.",
+    "distributions: 'amount' is the issuer's amount per unit on that ex-date ('replaces' = Yahoo's amount, null if Yahoo has none; amount 0",
+    "removes a distribution the issuer never paid). Adjusted closes before the ex-date are rescaled the way Yahoo builds them.",
     "checkedFlatRuns: runs of identical closes a person has checked and found genuine, so the stuck-price check stops reporting them."
   ],
   "closes": [
@@ -150,7 +152,509 @@
       "source": "https://stockanalysis.com/api/symbol/a/ASX-IVV/history?range=5Y&period=daily",
       "checkedOn": "2026-10-18",
       "note": "Yahoo repeats 39.35 from 7 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading (code IVVDB) around IVV's 15-for-1 unit split."
+    },
+    {
+      "id": "IHVV",
+      "date": "2020-03-17",
+      "close": 29.196,
+      "replaces": 35.247,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data: 35.25 between 30.80 and 29.60 on a day the US market had fallen 12%. Replaced with BlackRock's NAV for 16 Mar 2020 (291.955925 before the 10-for-1 split, so 29.196), the previous day's NAV being the best stand-in for an IHVV close (typically within 0.4%)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-08",
+      "close": 37.356,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-09",
+      "close": 37.642,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-12",
+      "close": 37.367,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-13",
+      "close": 37.887,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-14",
+      "close": 38.148,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-15",
+      "close": 37.925,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-16",
+      "close": 36.995,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-19",
+      "close": 36.536,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-20",
+      "close": 36.234,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-21",
+      "close": 36.268,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-22",
+      "close": 36.813,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-23",
+      "close": 36.3,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-28",
+      "close": 36.492,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-29",
+      "close": 35.922,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2022-12-30",
+      "close": 36.533,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "IHVV",
+      "date": "2023-01-03",
+      "close": 36.459,
+      "replaces": 37.43,
+      "source": "https://www.blackrock.com/au/products/271027/fund/1535604546388.ajax?fileType=xls&fileName=iShares-SP-500-AUD-Hedged-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 37.43 with no volume from 8 Dec 2022 to 3 Jan 2023: it missed the deferred-settlement trading around IHVV's 10-for-1 unit split (Dec 2022). No independent ASX close was found, so BlackRock's NAV for the previous day is used as a stand-in (IHVV's NAV is struck at the previous US close; ASX closes are typically within 0.4% of it)."
+    },
+    {
+      "id": "GOLD",
+      "date": "2022-06-10",
+      "close": 24.137,
+      "replaces": 24.07,
+      "source": "https://files.globalxetfs.com.au/GOLD_NAV_Data_20261016.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 24.07 with no volume from 10 to 17 Jun 2022, just after GOLD's 10-for-1 split on 8 Jun 2022 (it seems to have missed the trading under a temporary code). Replaced with Global X's NAV for that day (GOLD's ASX closes are typically within 0.5% of its NAV)."
+    },
+    {
+      "id": "GOLD",
+      "date": "2022-06-14",
+      "close": 24.553,
+      "replaces": 24.07,
+      "source": "https://files.globalxetfs.com.au/GOLD_NAV_Data_20261016.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 24.07 with no volume from 10 to 17 Jun 2022, just after GOLD's 10-for-1 split on 8 Jun 2022 (it seems to have missed the trading under a temporary code). Replaced with Global X's NAV for that day (GOLD's ASX closes are typically within 0.5% of its NAV)."
+    },
+    {
+      "id": "GOLD",
+      "date": "2022-06-15",
+      "close": 24.437,
+      "replaces": 24.07,
+      "source": "https://files.globalxetfs.com.au/GOLD_NAV_Data_20261016.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 24.07 with no volume from 10 to 17 Jun 2022, just after GOLD's 10-for-1 split on 8 Jun 2022 (it seems to have missed the trading under a temporary code). Replaced with Global X's NAV for that day (GOLD's ASX closes are typically within 0.5% of its NAV)."
+    },
+    {
+      "id": "GOLD",
+      "date": "2022-06-16",
+      "close": 24.396,
+      "replaces": 24.07,
+      "source": "https://files.globalxetfs.com.au/GOLD_NAV_Data_20261016.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 24.07 with no volume from 10 to 17 Jun 2022, just after GOLD's 10-for-1 split on 8 Jun 2022 (it seems to have missed the trading under a temporary code). Replaced with Global X's NAV for that day (GOLD's ASX closes are typically within 0.5% of its NAV)."
+    },
+    {
+      "id": "GOLD",
+      "date": "2022-06-17",
+      "close": 24.8,
+      "replaces": 24.07,
+      "source": "https://files.globalxetfs.com.au/GOLD_NAV_Data_20261016.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo repeats 24.07 with no volume from 10 to 17 Jun 2022, just after GOLD's 10-for-1 split on 8 Jun 2022 (it seems to have missed the trading under a temporary code). Replaced with Global X's NAV for that day (GOLD's ASX closes are typically within 0.5% of its NAV)."
+    },
+    {
+      "id": "GOLD",
+      "date": "2013-07-10",
+      "close": 13.195,
+      "replaces": 12.7,
+      "source": "https://files.globalxetfs.com.au/GOLD_NAV_Data_20261016.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data: 12.70 between 13.29 and 13.45 (Global X's NAV that day was 13.195). Replaced with the NAV."
+    },
+    {
+      "id": "STW",
+      "date": "2009-03-23",
+      "close": 33.588,
+      "replaces": 34.8,
+      "source": "https://www.ssga.com/library-content/products/fund-data/etfs/apac/navhist-au-en-stw.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data (a round number between normal closes on both sides). Replaced with State Street's NAV for that day: STW's ASX closes are typically within 0.05% of its NAV."
+    },
+    {
+      "id": "STW",
+      "date": "2009-07-15",
+      "close": 36.638,
+      "replaces": 38.3,
+      "source": "https://www.ssga.com/library-content/products/fund-data/etfs/apac/navhist-au-en-stw.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data (a round number between normal closes on both sides). Replaced with State Street's NAV for that day: STW's ASX closes are typically within 0.05% of its NAV."
+    },
+    {
+      "id": "STW",
+      "date": "2009-08-27",
+      "close": 41.844,
+      "replaces": 38.0,
+      "source": "https://www.ssga.com/library-content/products/fund-data/etfs/apac/navhist-au-en-stw.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data (a round number between normal closes on both sides). Replaced with State Street's NAV for that day: STW's ASX closes are typically within 0.05% of its NAV."
+    },
+    {
+      "id": "STW",
+      "date": "2009-09-24",
+      "close": 44.41,
+      "replaces": 40.0,
+      "source": "https://www.ssga.com/library-content/products/fund-data/etfs/apac/navhist-au-en-stw.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data (a round number between normal closes on both sides). Replaced with State Street's NAV for that day: STW's ASX closes are typically within 0.05% of its NAV."
+    },
+    {
+      "id": "IOZ",
+      "date": "2012-02-10",
+      "close": 18.293,
+      "replaces": 18.86,
+      "source": "https://www.blackrock.com/au/products/251852/fund/1535604546388.ajax?fileType=xls&fileName=iShares-Core-SPASX-200-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data (a one-day jump that came straight back while the market barely moved). Replaced with BlackRock's NAV for that day: IOZ's ASX closes are typically within 0.05% of its NAV."
+    },
+    {
+      "id": "IOZ",
+      "date": "2013-12-13",
+      "close": 22.106,
+      "replaces": 23.2,
+      "source": "https://www.blackrock.com/au/products/251852/fund/1535604546388.ajax?fileType=xls&fileName=iShares-Core-SPASX-200-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data (a one-day jump that came straight back while the market barely moved). Replaced with BlackRock's NAV for that day: IOZ's ASX closes are typically within 0.05% of its NAV."
+    },
+    {
+      "id": "WXOZ",
+      "date": "2025-02-18",
+      "close": 50.386,
+      "replaces": 53.5,
+      "source": "https://www.ssga.com/library-content/products/fund-data/etfs/apac/navhist-au-en-wxoz.xlsx",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data: 53.50 between 50.45 and 50.69 (a thinly traded fund). Replaced with State Street's NAV for the previous day, the best stand-in for a WXOZ close (typically within 0.3%)."
+    },
+    {
+      "id": "QUAL",
+      "date": "2016-12-01",
+      "close": 18.764,
+      "replaces": 19.59,
+      "source": "https://www.vaneck.com.au/etf/equity/qual/downloads/fundhistoprices/",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data: 19.59 between 18.78 and 18.62 while world shares barely moved. Replaced with VanEck's NAV for the previous day, the best stand-in for a QUAL close (typically within 0.35%); VanEck's own 'last traded price' column is unreliable before 2017."
+    },
+    {
+      "id": "VEU",
+      "date": "2011-10-04",
+      "close": 39.674,
+      "replaces": 45.86,
+      "source": "https://www.rba.gov.au/statistics/tables/xls-hist/2010-2013.xls",
+      "checkedOn": "2026-10-19",
+      "note": "Bad price in Yahoo's data: 45.86 between 40.96 and 39.90 on a day world markets fell. Replaced with an estimate: the US-listed VEU's previous close (US$37.69 on 3 Oct 2011, NYSE) divided by the RBA's 4pm rate for 4 Oct 2011 (0.9500). The same estimate is within 0.6% of the ASX close on a typical day."
     }
   ],
-  "checkedFlatRuns": []
+  "checkedFlatRuns": [
+    {
+      "id": "VTS",
+      "from": "2009-05-12",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "MOAT",
+      "from": "2015-06-26",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "IHVV",
+      "from": "2014-12-30",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "IHVV",
+      "from": "2015-04-07",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "ETHI",
+      "from": "2017-02-20",
+      "note": "Checked 19 Oct 2026: trades every day, all closing at 6.05 while Betashares' NAV stayed between 6.01 and 6.05. Genuine."
+    },
+    {
+      "id": "VDCO",
+      "from": "2017-11-23",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VDCO",
+      "from": "2017-12-13",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VDCO",
+      "from": "2018-01-18",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VDCO",
+      "from": "2018-02-20",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VDCO",
+      "from": "2018-03-29",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VDCO",
+      "from": "2018-04-27",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VBND",
+      "from": "2017-10-12",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VBND",
+      "from": "2017-10-30",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VBND",
+      "from": "2017-12-04",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "VBND",
+      "from": "2018-03-01",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0) while the fund was new and thinly traded, so the last trade price carries over. Genuine."
+    },
+    {
+      "id": "DHHF",
+      "from": "2020-09-14",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0; DHHF traded only a few hundred units a day in 2020), so the last trade price carries over. Betashares' NAV moved about 1-3% meanwhile. Genuine."
+    },
+    {
+      "id": "DHHF",
+      "from": "2020-10-30",
+      "note": "Checked 19 Oct 2026: no trades on these days (Yahoo volume 0; DHHF traded only a few hundred units a day in 2020), so the last trade price carries over. Betashares' NAV moved about 1-3% meanwhile. Genuine."
+    }
+  ],
+  "distributions": [
+    {
+      "id": "VGS",
+      "date": "2026-07-01",
+      "amount": 0.815432,
+      "replaces": 0.799838,
+      "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8212/overview",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo keeps Vanguard's early estimate; this is the final amount."
+    },
+    {
+      "id": "VGAD",
+      "date": "2026-07-01",
+      "amount": 2.93507751,
+      "replaces": 2.337369,
+      "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8213/overview",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo keeps an early estimate (20% too low); this is Vanguard's final amount (also on the ASX's final distributions notice of 2 Oct 2026)."
+    },
+    {
+      "id": "BGBL",
+      "date": "2026-07-01",
+      "amount": 0.6073455,
+      "replaces": 0.594897,
+      "source": "https://www.betashares.com.au/files/nav/BGBL_History.csv",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo keeps an early estimate; this is Betashares' final amount."
+    },
+    {
+      "id": "IWLD",
+      "date": "2016-07-01",
+      "amount": 0.21696535,
+      "replaces": 0.205889,
+      "source": "https://www.blackrock.com/au/products/283117/fund/1535604546388.ajax?fileType=xls&fileName=iShares-Core-MSCI-World-ex-Australia-ESG-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "BlackRock's distribution history: 21.696535 cents a unit."
+    },
+    {
+      "id": "IAF",
+      "date": "2012-07-02",
+      "amount": 1.31360526,
+      "replaces": null,
+      "source": "https://www.blackrock.com/au/products/251977/fund/1535604546388.ajax?fileType=xls&fileName=iShares-Core-Composite-Bond-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Missing from Yahoo (it has no ASX distribution records before 2013). With this and the Dec 2012 one, IAF's records are complete from its listing in Mar 2012."
+    },
+    {
+      "id": "IAF",
+      "date": "2012-12-10",
+      "amount": 0.84269083,
+      "replaces": null,
+      "source": "https://www.blackrock.com/au/products/251977/fund/1535604546388.ajax?fileType=xls&fileName=iShares-Core-Composite-Bond-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Missing from Yahoo (it has no ASX distribution records before 2013)."
+    },
+    {
+      "id": "IAF",
+      "date": "2020-10-01",
+      "amount": 0,
+      "replaces": 0.425969,
+      "source": "https://www.blackrock.com/au/products/251977/fund/1535604546388.ajax?fileType=xls&fileName=iShares-Core-Composite-Bond-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Yahoo dates this distribution 1 Oct 2020; BlackRock's ex-date is 9 Oct 2020 (moved by the next entry)."
+    },
+    {
+      "id": "IAF",
+      "date": "2020-10-09",
+      "amount": 0.42596935,
+      "replaces": null,
+      "source": "https://www.blackrock.com/au/products/251977/fund/1535604546388.ajax?fileType=xls&fileName=iShares-Core-Composite-Bond-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "BlackRock's ex-date for the distribution Yahoo dates 1 Oct 2020."
+    },
+    {
+      "id": "IAF",
+      "date": "2022-02-18",
+      "amount": 0,
+      "replaces": 0.15,
+      "source": "https://www.blackrock.com/au/products/251977/fund/1535604546388.ajax?fileType=xls&fileName=iShares-Core-Composite-Bond-ETF_fund&dataType=fund",
+      "checkedOn": "2026-10-19",
+      "note": "Not in BlackRock's distribution history (IAF paid on 7 Jan and 1 Apr 2022)."
+    },
+    {
+      "id": "VDHG",
+      "date": "2020-11-02",
+      "amount": 0,
+      "replaces": 0.038237,
+      "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8221/overview",
+      "checkedOn": "2026-10-19",
+      "note": "Not in Vanguard's distribution history (VDHG paid on 1 Oct 2020 and 4 Jan 2021)."
+    },
+    {
+      "id": "VDBA",
+      "date": "2020-12-08",
+      "amount": 0,
+      "replaces": 0.005412,
+      "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8218/overview",
+      "checkedOn": "2026-10-19",
+      "note": "Not in Vanguard's distribution history."
+    },
+    {
+      "id": "VDCO",
+      "date": "2020-11-09",
+      "amount": 0,
+      "replaces": 0.0129,
+      "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8219/overview",
+      "checkedOn": "2026-10-19",
+      "note": "Not in Vanguard's distribution history."
+    },
+    {
+      "id": "VHY",
+      "date": "2020-11-09",
+      "amount": 0,
+      "replaces": 0.009954,
+      "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8210/overview",
+      "checkedOn": "2026-10-19",
+      "note": "Not in Vanguard's distribution history."
+    },
+    {
+      "id": "VAP",
+      "date": "2020-11-09",
+      "amount": 0,
+      "replaces": 0.024114,
+      "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8206/overview",
+      "checkedOn": "2026-10-19",
+      "note": "Not in Vanguard's distribution history."
+    }
+  ]
 }

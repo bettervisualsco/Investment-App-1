@@ -1,0 +1,62 @@
+{
+  "name": {
+    "value": "State Street SPDR S&P/ASX 200 ETF",
+    "note": "State Street writes it with trademark signs (State Street® SPDR® S&P®/ASX 200 ETF). Renamed on 19 Dec 2025; before that it was the SPDR S&P/ASX 200 Fund. State Street says the strategy did not change. First ETF listed in Australia (Aug 2001).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw"
+  },
+  "index": {
+    "value": "S&P/ASX 200 Index",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw"
+  },
+  "mer": {
+    "value": 0.05,
+    "unit": "% p.a.",
+    "note": "Management costs",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw"
+  },
+  "yield": {
+    "value": 3.9,
+    "unit": "% a year",
+    "note": "State Street's 1-year 'Fund Distribution Return' to 30 Sep 2026: the part of the 1-year total return that came from distributions (NAV basis, distributions reinvested). The last four distributions (ex 30 Dec 2025 to 29 Sep 2026) total A$3.02 a unit, about 3.8% of the 16 Oct 2026 NAV. State Street's 'Dividend Yield' (dividend yield of the shares it holds) was 3.40% at 16 Oct 2026. Excludes franking credits.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw"
+  },
+  "franking": {
+    "value": 65.2,
+    "unit": "%",
+    "note": "State Street does not publish a franking percentage, only franking credits per unit for each distribution. Worked out from those for FY2026 (ex-dates 29 Sep 2025 to 29 Jun 2026): 81.3 cents of credits on A$2.91 of cash distributions, so about 65% of the cash was franked (assuming a 30% company tax rate). For the last four distributions it is about 67%.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw"
+  },
+  "listed": {
+    "value": "2001-08-27",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/STW/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw"
+  },
+  "inception": {
+    "value": "2001-08-24",
+    "note": "Fund inception; ASX quotation date 27 Aug 2001 (State Street)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-spasx-200-etf-stw"
+  }
+}

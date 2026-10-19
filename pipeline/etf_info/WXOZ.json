@@ -1,0 +1,62 @@
+{
+  "name": {
+    "value": "State Street SPDR S&P World ex Australia Carbon Aware ETF",
+    "note": "State Street writes it with trademark signs. Renamed on 19 Dec 2025 (State Street); State Street says the strategy did not change. The previous name, SPDR S&P World ex Australia Carbon Control Fund, comes from third-party sites, not State Street. Before the index change on 31 Jan 2022 it was the SPDR S&P World ex Australia Fund (State Street's old page address).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  },
+  "index": {
+    "value": "S&P Developed Ex-Australia LargeMidCap Carbon Aware Index (in AUD, unhedged)",
+    "note": "Tracked the S&P Developed ex Australia LargeMidCap AUD Index from inception until 31 Jan 2022 (State Street fact sheet). Not currency hedged.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  },
+  "mer": {
+    "value": 0.07,
+    "unit": "% p.a.",
+    "note": "Management costs",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  },
+  "yield": {
+    "value": 6.08,
+    "unit": "% a year",
+    "note": "State Street's 1-year 'Fund Distribution Return' to 30 Sep 2026: the part of the 1-year total return that came from distributions (NAV basis, distributions reinvested). This is high because the one yearly distribution (A$3.00, ex 29 Jun 2026) was mostly realised gains, not dividends; 2023's was A$1.62. The dividend yield of the shares held was 1.67% at 16 Oct 2026 (State Street), which is closer to the ongoing income.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "State Street publishes 0.000000 franking credits per unit for every distribution; overseas shares carry no franking credits.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  },
+  "listed": {
+    "value": "2013-03-19",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here. State Street gives the ASX quotation date as 18 Mar 2013, one day earlier.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/WXOZ/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  },
+  "inception": {
+    "value": "2013-03-18",
+    "note": "Fund inception; ASX lists it from 19 Mar 2013 (State Street says quoted 18 Mar 2013)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  },
+  "distributions": {
+    "value": "yearly",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.ssga.com/au/en_gb/intermediary/etfs/state-street-spdr-sp-world-ex-australia-carbon-aware-etf-wxoz"
+  }
+}

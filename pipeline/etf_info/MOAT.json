@@ -1,0 +1,63 @@
+{
+  "name": {
+    "value": "VanEck Morningstar Wide Moat ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/etf/equity/moat/snapshot/"
+  },
+  "index": {
+    "value": "Morningstar Wide Moat Focus NR AUD Index",
+    "note": "VanEck writes it 'Morningstar® Wide Moat Focus NR AUD Index™'. At least 40 attractively priced US companies Morningstar rates as having a wide economic moat; two staggered sub-portfolios, equal-weighted at each reconstitution. US-only; not currency hedged (MHOT is the hedged version).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/etf/equity/moat/snapshot/"
+  },
+  "mer": {
+    "value": 0.49,
+    "unit": "% p.a.",
+    "note": "Management fee 0.49%; indirect costs 0.00%; transaction costs 0.01% p.a. (FY to 30 Jun 2026)",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/globalassets/home.au/media/managedassets/library/assets/notice-update-on-fees-and-costs-information/moat-notice-updating-the-fees-and-costs-information.pdf"
+  },
+  "yield": {
+    "value": 10.04,
+    "unit": "% a year",
+    "note": "VanEck's 12-month fund dividend yield as at 30 Sep 2026 (prior 12 months' dividends / closing NAV at period end), driven by one large $11.61 payout in Jul 2026. Its 12-month income return is 9.47%. The underlying shares' own dividend yield is only 1.70% (fact sheet), so most of the payout is not from company dividends and the figure swings a lot year to year.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/etf/equity/moat/dividends/"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "VanEck shows the franking level as '--'; US shares carry no franking credits",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/etf/equity/moat/dividends/",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/library/vaneck-etfs/MOAT-fact-sheet.pdf"
+  },
+  "listed": {
+    "value": "2015-06-26",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/MOAT/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/library/vaneck-etfs/MOAT-fact-sheet.pdf"
+  },
+  "inception": {
+    "value": "2015-06-26",
+    "note": "Fund inception (seeded before quotation); listed on the ASX the same day, 26 Jun 2015",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/etf/equity/moat/snapshot/"
+  },
+  "distributions": {
+    "value": "yearly",
+    "note": "VanEck: '1 each year'. Since 2023 the period ends 30 June (ex-date about 1 July); up to 2021 it was paid around December/January",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vaneck.com.au/etf/equity/moat/snapshot/"
+  }
+}

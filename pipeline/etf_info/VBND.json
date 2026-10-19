@@ -1,0 +1,65 @@
+{
+  "name": {
+    "value": "Vanguard Global Aggregate Bond Index (Hedged) ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  },
+  "index": {
+    "value": "Bloomberg Global Aggregate Float-Adjusted and Scaled Index, hedged to AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  },
+  "mer": {
+    "value": 0.2,
+    "unit": "% p.a.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  },
+  "yield": {
+    "value": 9.62,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026. Vanguard's 1-year income return was 8.58% to 30 Sep 2026 (fact sheet). Much higher than usual: the Apr and Jul 2026 payouts were mostly currency-hedging-type income ('Australian income: other income'). The bonds' own running yield was 3.75% at 30 Sep 2026; the 12 months to Oct 2025 paid about 2.6%.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8200/overview"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Bonds pay no franked income",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  },
+  "listed": {
+    "value": "2017-10-12",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here. (Vanguard's fact sheet says it listed on 10 Oct 2017.)",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VBND/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  },
+  "inception": {
+    "value": "2017-10-10",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  },
+  "duration": {
+    "value": 6.0,
+    "unit": "years",
+    "note": "Effective duration at 30 Sep 2026 (yield to maturity 6.17%)",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Global_Aggregate_Bond_Index_Hedged_ETF_8200_FS_VBND.pdf"
+  }
+}

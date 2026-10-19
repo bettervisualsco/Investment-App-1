@@ -295,6 +295,104 @@
   font-weight: 600;
 }
 
+/* Watchlist search and groups */
+.mk-watch-find {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-bottom: 4px;
+}
+
+.mk-search {
+  flex: 1 1 220px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-3);
+}
+
+.mk-search:focus-within {
+  outline: 2.5px solid var(--accent);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.mk-search input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 16px; /* 16px stops iPhone zooming in on focus */
+}
+
+.mk-search input::placeholder {
+  color: var(--ink-3);
+}
+
+.mk-watch-find .mk-toggle {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
+.mk-group + .mk-group {
+  margin-top: 6px;
+}
+
+.mk-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.mk-group-chev {
+  flex: 0 0 auto;
+  transition: transform 0.15s ease;
+}
+
+.mk-group-btn[aria-expanded='true'] .mk-group-chev {
+  transform: rotate(90deg);
+}
+
+.mk-group-count {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.mk-empty {
+  padding: 12px 0;
+  color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-group-chev {
+    transition: none;
+  }
+}
+
 .mk-list {
   margin: 0 -8px;
   padding: 0;
@@ -383,6 +481,11 @@
 @media (max-width: 400px) {
   .mk-row-main .mk-spark {
     width: 48px;
+  }
+
+  /* Reordering on a phone: the ↑ ↓ buttons need the sparkline's room. */
+  .mk-row:has(.mk-move) .mk-spark {
+    display: none;
   }
 
   .mk-row-price {
@@ -924,6 +1027,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.mk-chip-group + .mk-chip-group {
+  margin-top: 10px;
 }
 
 .mk-chip {

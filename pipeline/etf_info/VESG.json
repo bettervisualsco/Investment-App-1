@@ -1,0 +1,61 @@
+{
+  "name": {
+    "value": "Vanguard Ethically Conscious International Shares Index ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Ethically_Conscious_International_Shares_Index_ETF_8225_FS_VESG.pdf"
+  },
+  "index": {
+    "value": "FTSE Developed ex Australia Choice Index (with net dividends reinvested)",
+    "note": "Tracked in Australian dollars, unhedged. Named 'FTSE Developed ex Australia ex Non-renewable Energy, Vice Products, and Weapons Index' before 22 Jun 2020.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Ethically_Conscious_International_Shares_Index_ETF_8225_FS_VESG.pdf"
+  },
+  "mer": {
+    "value": 0.18,
+    "unit": "% p.a.",
+    "note": "Management fee",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Ethically_Conscious_International_Shares_Index_ETF_8225_FS_VESG.pdf"
+  },
+  "yield": {
+    "value": 1.32,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026: $1.5807 (0.2848 + 0.4393 + 0.6440 + 0.2126, ex-dates 2 Jan to 1 Oct 2026) / $119.6549. Vanguard's 1-year income (distribution) return was 1.56% to 30 Sep 2026.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8225/overview"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "Franking credits are effectively nil (overseas shares); no franking level is published",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8225/overview"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Ethically_Conscious_International_Shares_Index_ETF_8225_FS_VESG.pdf"
+  },
+  "listed": {
+    "value": "2018-09-13",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VESG/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Ethically_Conscious_International_Shares_Index_ETF_8225_FS_VESG.pdf"
+  },
+  "inception": {
+    "value": "2018-09-11",
+    "note": "Fund inception; listed on the ASX 13 Sep 2018",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Ethically_Conscious_International_Shares_Index_ETF_8225_FS_VESG.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Ethically_Conscious_International_Shares_Index_ETF_8225_FS_VESG.pdf"
+  }
+}

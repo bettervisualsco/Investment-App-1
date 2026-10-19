@@ -1,0 +1,62 @@
+{
+  "name": {
+    "value": "iShares Core MSCI World ex Australia ESG ETF",
+    "note": "Was the iShares Core MSCI World All Cap ETF until 8 Jun 2021, when it changed index and became the iShares Core MSCI World ex Australia ESG Leaders ETF (sources differ on 7 or 8 Jun). 'Leaders' was later dropped from the name; the date of that change was not found.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/literature/fact-sheet/iwld-ishares-core-msci-world-ex-australia-esg-etf-fund-fact-sheet-en-au.pdf"
+  },
+  "index": {
+    "value": "MSCI World ex Australia Custom ESG Leaders Index (AUD), unhedged",
+    "note": "On 8 Jun 2021 the benchmark changed from the MSCI World Investable Market Index to this ESG index (BlackRock). Developed-market large and mid caps outside Australia, screened for ESG.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/283117/ishares-core-msci-world-ex-australia-esg-etf"
+  },
+  "mer": {
+    "value": 0.09,
+    "unit": "% p.a.",
+    "note": "Management fee as stated in the PDS",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/283117/ishares-core-msci-world-ex-australia-esg-etf"
+  },
+  "yield": {
+    "value": 1.32,
+    "unit": "% a year",
+    "note": "BlackRock's '12m Trailing Yield' at 15 Oct 2026: income distributions with ex-dates in the past 12 months (1 Jul 2026 and 7 Jan 2026; 96.26 cents in total) divided by the latest NAV. Fact sheet: 1.34%.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/283117/ishares-core-msci-world-ex-australia-esg-etf"
+  },
+  "franking": {
+    "value": 0.01,
+    "unit": "%",
+    "note": "BlackRock's published 'Franking Level of distributed income' for the year ended 30 Jun 2026 (0.010255%), so effectively 0. Overseas shares carry almost no franking credits.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/283117/fund/1478358644058.ajax?tab=tax-distributions"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/283117/ishares-core-msci-world-ex-australia-esg-etf"
+  },
+  "listed": {
+    "value": "2016-04-28",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/IWLD/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/283117/ishares-core-msci-world-ex-australia-esg-etf"
+  },
+  "inception": {
+    "value": "2016-04-22",
+    "note": "Fund inception (first unit creation); listed on the ASX 28 Apr 2016",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/283117/ishares-core-msci-world-ex-australia-esg-etf"
+  },
+  "distributions": {
+    "value": "twice a year",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/283117/ishares-core-msci-world-ex-australia-esg-etf"
+  }
+}

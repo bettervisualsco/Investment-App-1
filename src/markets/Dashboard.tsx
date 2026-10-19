@@ -1,5 +1,5 @@
 // The Markets dashboard: the main indexes, then the watchlist ETFs with price, change, a mini chart,
-// "as of" time and whether their market is open. Sort, reorder and star favourites.
+// "as of" time and whether their market is open. Search, groups, sort, reorder and star favourites.
 
 import { useMemo, useState } from 'react'
 import { Select } from '../components/inputs'
@@ -8,10 +8,11 @@ import { ChangePill, MarketBadge, Sparkline } from './bits'
 import { asOfText } from '../data'
 import { direction, priceText } from './format'
 import { rangeStartIndex } from './maths'
-import { orderedIds, swapIds, usePrefs, type SortKey } from './prefs'
+import { moveIdNextTo, orderedIds, usePrefs, type SortKey } from './prefs'
 import { latestQuote, type LatestQuote } from './quotes'
 import { exchangeOf, unitOf, useDailyMany, useEtfs, useIntraday, useMinute, type Item } from './useMarketData'
-import { Tip } from './words'
+import { watchSections } from './watchlist'
+import { Tip, Toggle } from './words'
 
 interface Row {
   item: Item
@@ -45,6 +46,7 @@ export function Dashboard({ onOpen, onCompare }: { onOpen: (id: string) => void;
   const { etfs, indexes, loading } = useEtfs()
   const [prefs, setPrefs] = usePrefs()
   const [editing, setEditing] = useState(false)
+  const [query, setQuery] = useState('')
   const now = useMinute()
   const ids = useMemo(() => [...indexes.map((i) => i.id), ...etfs.map((e) => e.id)], [etfs, indexes])
   const daily = useDailyMany(ids)
@@ -69,10 +71,15 @@ export function Dashboard({ onOpen, onCompare }: { onOpen: (id: string) => void;
     return [...rows].sort(by[prefs.sort])
   }, [etfRows, prefs.order, prefs.sort, etfIds])
 
-  const favs = sorted.filter((r) => prefs.favourites.includes(r.item.id))
-  const rest = sorted.filter((r) => !prefs.favourites.includes(r.item.id))
+  const sections = useMemo(
+    () => watchSections(sorted, (r) => ({ id: r.item.id, name: r.item.name, category: r.item.kind === 'etf' ? r.item.category : undefined }), { favourites: prefs.favourites, grouped: prefs.grouped, query }),
+    [sorted, prefs.favourites, prefs.grouped, query],
+  )
+  const searching = query.trim() !== ''
+  const toggleGroup = (key: string) => setPrefs((p) => ({ collapsed: p.collapsed.includes(key) ? p.collapsed.filter((k) => k !== key) : [...p.collapsed, key] }))
   const toggleFav = (id: string) => setPrefs((p) => ({ favourites: p.favourites.includes(id) ? p.favourites.filter((f) => f !== id) : [...p.favourites, id] }))
-  const move = (id: string, neighbour: string) => setPrefs((p) => ({ order: swapIds(etfIds, p.order, id, neighbour), sort: 'mine' }))
+  // Moving up puts the ETF just above the one shown above it (in its group), moving down just below.
+  const move = (id: string, neighbour: string, side: 'before' | 'after') => setPrefs((p) => ({ order: moveIdNextTo(etfIds, p.order, id, neighbour, side), sort: 'mine' }))
 
   if (loading && etfs.length === 0) return <div className="loading">Loading prices…</div>
   if (etfs.length === 0)
@@ -103,12 +110,12 @@ export function Dashboard({ onOpen, onCompare }: { onOpen: (id: string) => void;
             <MarketBadge exchange={exchangeOf(r.item.market)} now={now} />
           </span>
         </button>
-        {editing && prefs.sort === 'mine' && (
+        {editing && prefs.sort === 'mine' && !searching && (
           <span className="mk-move">
-            <button type="button" className="mk-move-btn" aria-label={`Move ${r.item.id} up`} disabled={i === 0} onClick={() => move(r.item.id, list[i - 1].item.id)}>
+            <button type="button" className="mk-move-btn" aria-label={`Move ${r.item.id} up`} disabled={i === 0} onClick={() => move(r.item.id, list[i - 1].item.id, 'before')}>
               ↑
             </button>
-            <button type="button" className="mk-move-btn" aria-label={`Move ${r.item.id} down`} disabled={i === list.length - 1} onClick={() => move(r.item.id, list[i + 1].item.id)}>
+            <button type="button" className="mk-move-btn" aria-label={`Move ${r.item.id} down`} disabled={i === list.length - 1} onClick={() => move(r.item.id, list[i + 1].item.id, 'after')}>
               ↓
             </button>
           </span>
@@ -167,14 +174,60 @@ export function Dashboard({ onOpen, onCompare }: { onOpen: (id: string) => void;
           </div>
           {editing && prefs.sort !== 'mine' && <p className="block-hint">Choose “My order” to move ETFs up and down.</p>}
         </div>
-        {favs.length > 0 && (
-          <>
-            <h3 className="mk-list-head">Favourites</h3>
-            <ul className="mk-list">{favs.map((r, i, l) => renderRow(r, i, l))}</ul>
-            <h3 className="mk-list-head">Everything else</h3>
-          </>
-        )}
-        <ul className="mk-list">{rest.map((r, i, l) => renderRow(r, i, l))}</ul>
+        <div className="mk-watch-find">
+          <label className="mk-search">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" strokeWidth="2" />
+              <path d="m15.5 15.5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
+              placeholder="Search by code or name"
+              aria-label="Search the watchlist by code or name"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="search"
+            />
+          </label>
+          {!searching && <Toggle label="Group by type" checked={prefs.grouped} onChange={(on) => setPrefs({ grouped: on })} />}
+        </div>
+        {searching && sections[0].rows.length === 0 && <p className="mk-empty">No ETFs match “{query.trim()}”. Try a code like VAS or a word like “bond”.</p>}
+        {sections.map((sec) => {
+          if (sec.rows.length === 0) return null
+          const foldable = !searching && sections.length > 1
+          const open = !foldable || !prefs.collapsed.includes(sec.key)
+          const listId = `mk-watch-${sec.key.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`
+          return (
+            <div key={sec.key} className="mk-group">
+              {foldable ? (
+                <h3 className="mk-list-head">
+                  <button type="button" className="mk-group-btn" aria-expanded={open} aria-controls={listId} onClick={() => toggleGroup(sec.key)}>
+                    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" className="mk-group-chev">
+                      <path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span>{sec.title}</span>
+                    <span className="mk-group-count">
+                      <span className="visually-hidden">, </span>
+                      {sec.rows.length}
+                      <span className="visually-hidden"> {sec.rows.length === 1 ? 'ETF' : 'ETFs'}</span>
+                    </span>
+                  </button>
+                </h3>
+              ) : (
+                (searching || sections.length > 1) && <h3 className="mk-list-head">{sec.title}</h3>
+              )}
+              {open && (
+                <ul className="mk-list" id={listId}>
+                  {sec.rows.map((r, i, l) => renderRow(r, i, l))}
+                </ul>
+              )}
+            </div>
+          )
+        })}
         <p className="block-hint mk-star-hint">Tap ☆ to keep an ETF at the top. Tap an ETF for its chart, predictions and key facts.</p>
         <button type="button" className="btn btn-add" onClick={onCompare}>
           Compare ETFs on one chart

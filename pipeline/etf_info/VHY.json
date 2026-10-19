@@ -1,0 +1,60 @@
+{
+  "name": {
+    "value": "Vanguard Australian Shares High Yield ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_High_Yield_ETF_8210_FS_VHY.pdf"
+  },
+  "index": {
+    "value": "FTSE Australia High Dividend Yield Index",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_High_Yield_ETF_8210_FS_VHY.pdf"
+  },
+  "mer": {
+    "value": 0.25,
+    "unit": "% p.a.",
+    "note": "Management fee",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_High_Yield_ETF_8210_FS_VHY.pdf"
+  },
+  "yield": {
+    "value": 3.66,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026: $3.0775 (0.6583 + 0.8114 + 0.4065 + 1.2013, ex-dates 2 Jan to 1 Oct 2026) / $84.0422 (about 5.06% including franking credits). Vanguard's 1-year income (distribution) return was 4.13% to 30 Sep 2026.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8210/overview"
+  },
+  "franking": {
+    "value": 89.35,
+    "unit": "%",
+    "note": "Vanguard's published franking level for FY2026 (Jul 2025-Jun 2026). FY2025: 42.02%, FY2024: 66.90%, FY2023: 96.62%; FY2027 to date (Sep 2026 quarter): 90.5%.",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_High_Yield_ETF_8210_FS_VHY.pdf"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_High_Yield_ETF_8210_FS_VHY.pdf"
+  },
+  "listed": {
+    "value": "2011-05-26",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VHY/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_High_Yield_ETF_8210_FS_VHY.pdf"
+  },
+  "inception": {
+    "value": "2011-05-23",
+    "note": "Fund inception; listed on the ASX 26 May 2011",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_High_Yield_ETF_8210_FS_VHY.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Shares_High_Yield_ETF_8210_FS_VHY.pdf"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "name": {
+    "value": "Vanguard All-World ex-US Shares Index ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_All_World_ex_US_Shares_Index_ETF_991_FS_VEU.pdf",
+    "note": "Name on Vanguard's fact sheet dated 31 Aug 2026 (the latest published for VEU on 19 Oct 2026). The ASX listing is a CHESS Depositary Interest (CDI) over the US-domiciled Vanguard FTSE All-World ex-US ETF (NYSE: VEU)."
+  },
+  "index": {
+    "value": "FTSE All-World ex US Index",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_All_World_ex_US_Shares_Index_ETF_991_FS_VEU.pdf"
+  },
+  "mer": {
+    "value": 0.04,
+    "unit": "% p.a.",
+    "note": "Management cost on the fact sheet dated 31 Aug 2026 (the US fund's expense ratio)",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_All_World_ex_US_Shares_Index_ETF_991_FS_VEU.pdf"
+  },
+  "yield": {
+    "value": 2.41,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026, both in US dollars: US$1.9608 (0.1968 + 0.3928 + 0.1132 + 1.2580, ex-dates 19 Dec 2025 to 18 Sep 2026) / US$81.39 NAV. Distributions are declared in US$ per CDI and paid to Australian holders in A$ (e.g. Sep 2026: US$0.1968 = A$0.2790 at 1.417619), gross of US withholding tax. Vanguard's 1-year income (distribution) return was 2.88% to 30 Sep 2026 (3.23% to 31 Aug 2026 on the fact sheet).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/0991/overview"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "No franking credits: US-domiciled fund holding non-Australian shares; distributions are subject to US withholding tax instead",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/0991/overview"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_All_World_ex_US_Shares_Index_ETF_991_FS_VEU.pdf"
+  },
+  "listed": {
+    "value": "2009-05-08",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here. Vanguard's fact sheet says 'ETF listed on ASX 12 May 2009'.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VEU/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "note": "The ASX CDIs trade in AUD; the underlying US fund's NAV and distributions are in USD (distributions are paid to Australian holders in AUD).",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/0991/overview"
+  },
+  "inception": {
+    "value": "2007-03-02",
+    "note": "Inception of the US fund Vanguard FTSE All-World ex-US ETF (NYSE: VEU), 2 Mar 2007; the ASX listing is a CDI cross-listing of that fund, listed on the ASX 12 May 2009 per Vanguard (8 May 2009 per ASX company data).",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_All_World_ex_US_Shares_Index_ETF_991_FS_VEU.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_All_World_ex_US_Shares_Index_ETF_991_FS_VEU.pdf"
+  }
+}

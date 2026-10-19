@@ -1,0 +1,68 @@
+{
+  "name": {
+    "value": "iShares Core Composite Bond ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/literature/fact-sheet/iaf-ishares-core-composite-bond-etf-fund-fact-sheet-en-au.pdf"
+  },
+  "index": {
+    "value": "Bloomberg AusBond Composite 0+ Yr Index",
+    "note": "Fact sheet and Key Facts label it 'Bloomberg AusBond Composite Index (AUD)'. Investment-grade Australian government, semi-government, supranational and corporate bonds.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251977/ishares-core-composite-bond-etf"
+  },
+  "mer": {
+    "value": 0.1,
+    "unit": "% p.a.",
+    "note": "Management fee as stated in the PDS",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251977/ishares-core-composite-bond-etf"
+  },
+  "yield": {
+    "value": 3.22,
+    "unit": "% a year",
+    "note": "BlackRock's '12m Trailing Yield' at 15 Oct 2026: income distributions with ex-dates in the past 12 months (8 Oct 2026, 1 Jul 2026, 9 Apr 2026, 7 Jan 2026; 322.25 cents in total) divided by the latest NAV. Fact sheet: 3.18% at 30 Sep 2026. Other BlackRock figures at 16 Oct 2026: running yield 3.66%, weighted average yield to maturity 5.31%.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251977/ishares-core-composite-bond-etf"
+  },
+  "franking": {
+    "value": 0,
+    "unit": "%",
+    "note": "BlackRock's published 'Franking Level of distributed income' for the year ended 30 Jun 2026 is 0%; bonds pay no franked income.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251977/fund/1478358644058.ajax?tab=tax-distributions"
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251977/ishares-core-composite-bond-etf"
+  },
+  "listed": {
+    "value": "2012-03-14",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/IAF/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251977/ishares-core-composite-bond-etf"
+  },
+  "inception": {
+    "value": "2012-03-12",
+    "note": "Fund inception (first unit creation); listed on the ASX 14 Mar 2012",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251977/ishares-core-composite-bond-etf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/products/251977/ishares-core-composite-bond-etf"
+  },
+  "duration": {
+    "value": 4.79,
+    "unit": "years",
+    "note": "Effective duration in the September 2026 fact sheet (data at 30 Sep 2026; weighted average yield to maturity 5.38%, average maturity 5.83 years). The product page showed modified duration 4.78 years and YTM 5.31% at 16 Oct 2026.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.blackrock.com/au/literature/fact-sheet/iaf-ishares-core-composite-bond-etf-fund-fact-sheet-en-au.pdf"
+  }
+}

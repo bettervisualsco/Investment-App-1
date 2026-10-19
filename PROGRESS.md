@@ -41,6 +41,11 @@ Stages are built in batches (see SPEC.md section 8). Full notes for each stage a
 - Money in and out is stored in whole cents. Growth is tracked to a fraction of a cent and only rounded when shown.
 - Plans can be up to 100 years long.
 
+### After going online (19 Oct 2026)
+- **22 more ETFs (33 in total)**, grouped by type, with checked facts, corrections for Yahoo's mistakes (frozen prices around splits, missing or estimated distributions), and long-run stand-in histories (new: international shares outside the US, and gold from the World Bank). Markets has a search box and groups. See `notes/etfs-added.md`.
+- **Money you have now:** one amount, or your real holdings with what you paid and when, kept as they are or moved into the plan; works in Manual and Prediction mode and makes tax on existing gains right. See `notes/holdings.md`.
+- Tests: 355 app tests and 84 pipeline tests.
+
 ## Online (19 Oct 2026)
 - **App:** https://bettervisualsco.github.io/Investment-App-1/ (repository github.com/bettervisualsco/Investment-App-1, public). Commits are signed with bettervisuals.co@gmail.com.
 - **Data updates run by themselves** on GitHub: intraday prices during ASX and NYSE hours, closing prices after each close, and inflation, cash rate and exchange rates daily. GitHub often starts scheduled runs late (every ~40 minutes instead of 15 on day one); SPEC accepts this.

@@ -1,0 +1,61 @@
+{
+  "name": {
+    "value": "Vanguard Australian Property Securities Index ETF",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Property_Securities_Index_ETF_8206_FS_VAP.pdf"
+  },
+  "index": {
+    "value": "S&P/ASX 300 A-REIT Index",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Property_Securities_Index_ETF_8206_FS_VAP.pdf"
+  },
+  "mer": {
+    "value": 0.23,
+    "unit": "% p.a.",
+    "note": "Management fee",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Property_Securities_Index_ETF_8206_FS_VAP.pdf"
+  },
+  "yield": {
+    "value": 3.35,
+    "unit": "% a year",
+    "note": "Trailing 12 months of cash distributions / NAV on 16 Oct 2026: $2.7800 (0.4561 + 0.5050 + 1.4702 + 0.3487, ex-dates 2 Jan to 1 Oct 2026) / $82.9865 (about 3.52% including franking credits). The large July distribution is usual for this fund. Vanguard's 1-year income (distribution) return was 2.56% to 30 Sep 2026.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8206/overview"
+  },
+  "franking": {
+    "value": 10.7,
+    "unit": "%",
+    "note": "Not published by Vanguard (the VAP fact sheet has no franking level). Estimate for FY2026 (Jul 2025-Jun 2026) from the per-unit tax components in Vanguard's distribution data: imputation credits / (30/70 x distribution before credits). The same calculation gives Vanguard's published VAS and VHY levels to within about 1.5 points. FY2025 estimate: about 2.6%, FY2024: about 9.0%. A-REITs pay mostly unfranked income.",
+    "checkedOn": "2026-10-19",
+    "source": "https://www.vanguard.com.au/personal/api/products/personal/fund/8206/overview",
+    "verified": false
+  },
+  "exchange": {
+    "value": "ASX",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Property_Securities_Index_ETF_8206_FS_VAP.pdf"
+  },
+  "listed": {
+    "value": "2010-10-15",
+    "note": "First day of trading on the ASX (ASX company listing date). Daily prices start here.",
+    "checkedOn": "2026-10-19",
+    "source": "https://asx.api.markitdigital.com/asx-research/1.0/companies/VAP/header"
+  },
+  "currency": {
+    "value": "AUD",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Property_Securities_Index_ETF_8206_FS_VAP.pdf"
+  },
+  "inception": {
+    "value": "2010-10-11",
+    "note": "Fund inception; listed on the ASX 15 Oct 2010",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Property_Securities_Index_ETF_8206_FS_VAP.pdf"
+  },
+  "distributions": {
+    "value": "quarterly",
+    "checkedOn": "2026-10-19",
+    "source": "https://fund-docs.vanguard.com/ETF-Vanguard_Australian_Property_Securities_Index_ETF_8206_FS_VAP.pdf"
+  }
+}

@@ -9,6 +9,7 @@ import { MarketChart, type ChartLine } from './MarketChart'
 import { averageYearly, daysBetween, indexOnOrBefore, RANGES, rangeStartDate, type RangeKey } from './maths'
 import { usePrefs } from './prefs'
 import { shortName, useDailyMany, useEtfs, useFx, useMarketFreshness } from './useMarketData'
+import { categoryOf, CATEGORY_ORDER } from './watchlist'
 import { Tip, Toggle } from './words'
 
 export const MAX_COMPARE = 5
@@ -101,7 +102,18 @@ export function ComparePage({ onBack, onOpen }: { onBack: () => void; onOpen: (i
       return { compare: [...p.compare, id] }
     })
 
-  const all = [...etfs.map((e) => ({ id: e.id, name: e.name })), ...indexes.map((i) => ({ id: i.id, name: i.name }))]
+  // The picker in the same groups as the dashboard, then the indexes.
+  const groups = useMemo(() => {
+    const byCat = new Map<string, { id: string; name: string }[]>()
+    for (const e of etfs) {
+      const c = categoryOf(e)
+      byCat.set(c, [...(byCat.get(c) ?? []), { id: e.id, name: e.name }])
+    }
+    const order = [...CATEGORY_ORDER.filter((c) => byCat.has(c)), ...[...byCat.keys()].filter((c) => !(CATEGORY_ORDER as readonly string[]).includes(c)).sort()]
+    const out = order.map((c) => ({ title: c, items: byCat.get(c)! }))
+    if (indexes.length) out.push({ title: 'Indexes and AUD/USD', items: indexes.map((i) => ({ id: i.id, name: i.name })) })
+    return out
+  }, [etfs, indexes])
   const chartHeight = typeof window !== 'undefined' && window.matchMedia('(min-width: 900px)').matches ? 420 : 300
 
   return (
@@ -119,16 +131,21 @@ export function ComparePage({ onBack, onOpen }: { onBack: () => void; onOpen: (i
         <div className="block-head">
           <h2>Pick 2 to {MAX_COMPARE}</h2>
         </div>
-        <div className="mk-chips" role="group" aria-label="ETFs and indexes to compare">
-          {all.map((a) => {
-            const on = chosen.includes(a.id)
-            return (
-              <button key={a.id} type="button" className={`mk-chip${on ? ' is-on' : ''}`} aria-pressed={on} disabled={!on && chosen.length >= MAX_COMPARE} title={a.name} onClick={() => toggle(a.id)}>
-                {shortName(a.id)}
-              </button>
-            )
-          })}
-        </div>
+        {groups.map((g) => (
+          <div key={g.title} className="mk-chip-group">
+            <h3 className="mk-list-head">{g.title}</h3>
+            <div className="mk-chips" role="group" aria-label={`${g.title} to compare`}>
+              {g.items.map((a) => {
+                const on = chosen.includes(a.id)
+                return (
+                  <button key={a.id} type="button" className={`mk-chip${on ? ' is-on' : ''}`} aria-pressed={on} disabled={!on && chosen.length >= MAX_COMPARE} title={a.name} onClick={() => toggle(a.id)}>
+                    {shortName(a.id)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </section>
 
       <section className="block mk-chart-block">
