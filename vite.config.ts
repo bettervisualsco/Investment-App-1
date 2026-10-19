@@ -77,6 +77,10 @@ export default defineConfig({
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/\/data\//],
         cleanupOutdatedCaches: true,
+        // Switch to a new version as soon as it has downloaded, instead of waiting until every window of the
+        // app is closed (on an iPhone that can take days). Saved plans and market data are kept separately.
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ],
